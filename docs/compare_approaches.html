@@ -412,10 +412,8 @@ l(\pi_{0}^{(2,0)}, \sigma_2 \vert \hat{\beta}_{2}, b_{2}) = \sum_{i=1}^{p}\log \
 <p>This gives an average of 520 eQTLs, 20 of which are strong eQTLs and about 1000 GWAS SNPs. The average heritability of gene expression is about 0.53 and the average heritability of the phenotype is abuot 0.37.</p>
 <p>Here is one data set realized from this scenario. First we specify functions generating <span class="math inline">\(\beta_1\)</span> and <span class="math inline">\(\beta_2\)</span>. Running <code>sim_sherlock_flex</code> with <code>types=c()</code> will summarize the average heritability of the two traits and the correlation between effect sizes.</p>
 <pre class="r"><code>library(ashr)
-library(sherlockAsh)</code></pre>
-<pre><code>## Warning: replacing previous import &#39;ks::compare&#39; by &#39;loo::compare&#39; when
-## loading &#39;sherlockAsh&#39;</code></pre>
-<pre class="r"><code>set.seed(1e7)
+library(sherlockAsh)
+set.seed(1e7)
 g1n &lt;- normalmix(pi=c(0.948, 0.03, 0.02, 0.002), 
                 mean=rep(0, 4), 
                 sd=c(0, 0.08, 0.1, 0.2))
@@ -524,6 +522,8 @@ mean(corr_res1$upper &gt; 0 | corr_res1$lower &lt; 0)</code></pre>
 </div>
 <div id="compound-approach" class="section level4">
 <h4>Compound approach</h4>
+<div id="bayes-factor" class="section level5">
+<h5>Bayes factor</h5>
 <p>Next we look at the compound method. We considered three different values of <span class="math inline">\(C\)</span> in the prior for <span class="math inline">\(P[\beta_2 =0 \vert \beta_1 \neq 0]\)</span> (recall that this parameter has a Beta<span class="math inline">\((C*\pi_{0}^{(2,0)}, C*(1-\pi_{0}^{(2,0)}))\)</span> prior). We consider <span class="math inline">\(C = 100, 1000\)</span>, and <span class="math inline">\(5000\)</span>.</p>
 <pre class="r"><code>comp_res1 &lt;- data.frame(&quot;elpd-100&quot;=res1$comp[1, , 5]/res1$comp[1,,6], 
                        &quot;elpd-1000&quot;=res1$comp[2, , 5]/res1$comp[2,,6], 
@@ -574,14 +574,15 @@ apply(comp_res2, MARGIN=2, FUN=summary)</code></pre>
 ## Max.      2.3490    2.3620    1.0230  5.856  5.9040   5.906</code></pre>
 <p>First considering the Bayes factors — The value of <span class="math inline">\(C\)</span> has very little effect on the Bayes factor:</p>
 <pre class="r"><code>pairs(comp_res1[, paste0(&quot;bf.&quot;, c(100, 1000, 5000))], main=&quot;Complete independence&quot;)</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-10-1.png" width="0.5\textwidth" /></p>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
 <pre class="r"><code>pairs(comp_res2[, paste0(&quot;bf.&quot;, c(100, 1000, 5000))], main=&quot;Co-regulation&quot;)</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-10-2.png" width="0.5\textwidth" /> The Bayes factors are negative for 99% of simulations in the complete independece scenario and 82% of simulations in the co-regulation scenario ( Negative Bayes factors indicate that there is more evidence for the NC model than the CC model). The type 1 error rate (i.e. the rate of incorrectly accepting the CC model over the NC model) using the Bayes factor depends on the cutoff chosen.</p>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-10-2.png" width="672" /> The Bayes factors are negative for 99% of simulations in the complete independece scenario and 82% of simulations in the co-regulation scenario ( Negative Bayes factors indicate that there is more evidence for the NC model than the CC model). The type 1 error rate (i.e. the rate of incorrectly accepting the CC model over the NC model) using the Bayes factor depends on the cutoff chosen.</p>
 <pre class="r"><code>log_bf_cutoff &lt;- seq(0, 4, length.out=10)
 t1e_1 &lt;- sapply(log_bf_cutoff, FUN=function(s){mean(comp_res1$bf.100 &gt; s)})
 t1e_2 &lt;- sapply(log_bf_cutoff, FUN=function(s){mean(comp_res2$bf.100 &gt; s)})
 plot(log_bf_cutoff, t1e_1, ylim=range(c(t1e_1, t1e_2)), 
-     ylab=&quot;Type 1 Error Rate&quot;, xlab=&quot;Log10 Bayes factor cutoff&quot;, type=&quot;b&quot;)
+     ylab=&quot;Type 1 Error Rate&quot;, xlab=&quot;Log10 Bayes factor cutoff&quot;, 
+     main=&quot;Compound approach - Bayes factor - type 1 Error&quot;, type=&quot;b&quot;)
 points(log_bf_cutoff, t1e_2, col=&quot;red&quot;, type=&quot;b&quot;, pch=4)
 legend(&quot;topright&quot;, legend=c(&quot;complete independence&quot;, &quot;co-regulation&quot;), 
        col=c(&quot;black&quot;, &quot;red&quot;), pch=c(1, 4))
@@ -592,18 +593,22 @@ abline(v=c(log10(2), 1), lty=2)</code></pre>
 pwr1 &lt;- sapply(log_bf_cutoff, FUN=function(s){mean(comp_res1$bf.100 &lt; s)})
 pwr2 &lt;- sapply(log_bf_cutoff, FUN=function(s){mean(comp_res2$bf.100 &lt; s)})
 plot(log_bf_cutoff, pwr1, ylim=range(c(pwr1, pwr2)), 
-     ylab=&quot;Power to accept NC model over CC&quot;, xlab=&quot;Log10 Bayes factor cutoff&quot;, type=&quot;b&quot;)
+     ylab=&quot;Power to accept NC model over CC&quot;, xlab=&quot;Log10 Bayes factor cutoff&quot;, 
+     main=&quot;Compound approach - Bayes factor \n Power to choose the NC model under null&quot;, type=&quot;b&quot;)
 points(log_bf_cutoff, pwr2, col=&quot;red&quot;, type=&quot;b&quot;, pch=4)
 legend(&quot;topleft&quot;, legend=c(&quot;complete independence&quot;, &quot;co-regulation&quot;), 
        col=c(&quot;black&quot;, &quot;red&quot;), pch=c(1, 4))
 abline(v=-1*c(log10(2), 1), lty=2)</code></pre>
 <p><img src="compare_approaches_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
 <p>Not surprisingly, in the complete independence scenario, there is stronger evidence to accept the NC model over the CC model.</p>
+</div>
+<div id="elpd" class="section level5">
+<h5>elpd</h5>
 <p>Next we consider the elpd metric for comparing models. Like the BF, these are also fairly insensitive to the choice of <span class="math inline">\(C\)</span>.</p>
 <pre class="r"><code>pairs(comp_res1[, paste0(&quot;elpd.&quot;, c(100, 1000, 5000))], main=&quot;complete indepenedence&quot;)</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-13-1.png" width="0.5\textwidth" /></p>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
 <pre class="r"><code>pairs(comp_res1[, paste0(&quot;elpd.&quot;, c(100, 1000, 5000))], main=&quot;co-regulation&quot;)</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-13-2.png" width="0.5\textwidth" /></p>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-13-2.png" width="672" /></p>
 <p>For these statistics, negative values also indicate that the NC model is favored over the CC model. Treating the elpd statistics like <span class="math inline">\(t\)</span>-statistics, we can use a one-sided test to choose one model over the other. Here we plot the type 1 error as a function of the nominal level. The correlation method is include for comparison, though for the correlation approach we use a two sided test.</p>
 <pre class="r"><code>level &lt;- seq(0.01, 0.1, length.out=10)
 thresh_one_sided &lt;- qnorm(1-level)
@@ -613,7 +618,8 @@ t1e_2 &lt;- sapply(thresh_one_sided, FUN=function(s){mean(comp_res2$elpd.100 &gt
 t1e_corr_1 &lt;- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res1$lambda/corr_res1$se) &gt; s)})
 t1e_corr_2 &lt;- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res2$lambda/corr_res2$se) &gt; s)})
 plot(level, t1e_1, ylim=range(c(t1e_1, t1e_2, t1e_corr_1, t1e_corr_2)), 
-     ylab=&quot;Type 1 Error Rate&quot;, xlab=&quot;Nominal level&quot;, type=&quot;b&quot;)
+     ylab=&quot;Type 1 Error Rate&quot;, xlab=&quot;Nominal level&quot;, 
+     main=&quot;Compound approach - elpd -type 1 error&quot;, type=&quot;b&quot;)
 points(level, t1e_2, type=&quot;b&quot;, pch=4)
 points(level, t1e_corr_1, type=&quot;b&quot;, col=&quot;blue&quot;)
 points(level, t1e_corr_2, type=&quot;b&quot;, col=&quot;blue&quot;, pch=4)
@@ -629,11 +635,13 @@ thresh &lt;- -1*qnorm(1-level)
 pwr1 &lt;- sapply(thresh, FUN=function(s){mean(comp_res1$elpd.100 &lt; s)})
 pwr2 &lt;- sapply(thresh, FUN=function(s){mean(comp_res2$elpd.100 &lt; s)})
 plot(level, pwr1, ylim=range(c(pwr1, pwr2)), 
-     ylab=&quot;Power to accept NC model over CC&quot;, xlab=&quot;Nominal level&quot;, type=&quot;b&quot;)
+     ylab=&quot;Power to accept NC model over CC&quot;, xlab=&quot;Nominal level&quot;, 
+     main=&quot;Compound approach - elpd \n Power to choose the NC model under null&quot;, type=&quot;b&quot;)
 points(level, pwr2, type=&quot;b&quot;, pch=4)
 legend(&quot;topleft&quot;, legend=c(&quot;complete independence&quot;, &quot;co-regulation&quot;),  pch=c(1, 4))</code></pre>
 <p><img src="compare_approaches_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
 <p>The elpd statistic with a nominal level of 0.05 gives a somewhat lower power to conclusively choose the NC model than using the BF with a threshold of 10, but the rate of choosing the wrong model is also lower.</p>
+</div>
 </div>
 </div>
 </div>

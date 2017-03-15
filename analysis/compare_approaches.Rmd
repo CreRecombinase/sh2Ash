@@ -200,6 +200,9 @@ mean(corr_res2$upper > 0 | corr_res2$lower < 0)
 The correlation approach performs well in both settings. The average estimate of $\lambda$ is very close to zero in both cases and, in both cases there is only 1 type 1 error out of 100 simulations using a nominal type 1 error rate of 5\%. 
 
 #### Compound approach 
+
+##### Bayes factor 
+
 Next we look at the compound method. We considered three different values of $C$ in the prior for $P[\beta_2 =0 \vert \beta_1 \neq 0]$ (recall that this parameter has a Beta$(C*\pi_{0}^{(2,0)}, C*(1-\pi_{0}^{(2,0)}))$ prior). We consider $C = 100, 1000$, and $5000$. 
 ```{r}
 comp_res1 <- data.frame("elpd-100"=res1$comp[1, , 5]/res1$comp[1,,6], 
@@ -222,7 +225,7 @@ comp_res2[,3:6] <- comp_res2[,3:6]/log(10)
 apply(comp_res2, MARGIN=2, FUN=summary)
 ```
 First considering the Bayes factors --- The value of $C$ has very little effect on the Bayes factor:
-```{r, show="hold", out.width="0.5\\textwidth"}
+```{r}
 pairs(comp_res1[, paste0("bf.", c(100, 1000, 5000))], main="Complete independence")
 pairs(comp_res2[, paste0("bf.", c(100, 1000, 5000))], main="Co-regulation")
 ```
@@ -233,7 +236,8 @@ log_bf_cutoff <- seq(0, 4, length.out=10)
 t1e_1 <- sapply(log_bf_cutoff, FUN=function(s){mean(comp_res1$bf.100 > s)})
 t1e_2 <- sapply(log_bf_cutoff, FUN=function(s){mean(comp_res2$bf.100 > s)})
 plot(log_bf_cutoff, t1e_1, ylim=range(c(t1e_1, t1e_2)), 
-     ylab="Type 1 Error Rate", xlab="Log10 Bayes factor cutoff", type="b")
+     ylab="Type 1 Error Rate", xlab="Log10 Bayes factor cutoff", 
+     main="Compound approach - Bayes factor - type 1 Error", type="b")
 points(log_bf_cutoff, t1e_2, col="red", type="b", pch=4)
 legend("topright", legend=c("complete independence", "co-regulation"), 
        col=c("black", "red"), pch=c(1, 4))
@@ -249,7 +253,8 @@ log_bf_cutoff <- seq(-6, 0, length.out=10)
 pwr1 <- sapply(log_bf_cutoff, FUN=function(s){mean(comp_res1$bf.100 < s)})
 pwr2 <- sapply(log_bf_cutoff, FUN=function(s){mean(comp_res2$bf.100 < s)})
 plot(log_bf_cutoff, pwr1, ylim=range(c(pwr1, pwr2)), 
-     ylab="Power to accept NC model over CC", xlab="Log10 Bayes factor cutoff", type="b")
+     ylab="Power to accept NC model over CC", xlab="Log10 Bayes factor cutoff", 
+     main="Compound approach - Bayes factor \n Power to choose the NC model under null", type="b")
 points(log_bf_cutoff, pwr2, col="red", type="b", pch=4)
 legend("topleft", legend=c("complete independence", "co-regulation"), 
        col=c("black", "red"), pch=c(1, 4))
@@ -258,10 +263,11 @@ abline(v=-1*c(log10(2), 1), lty=2)
 
 Not surprisingly, in the complete independence scenario, there is stronger evidence to accept the NC model over the CC model. 
 
+##### elpd 
 
 Next we consider the elpd metric for comparing models. Like the BF, these are also fairly insensitive to the choice of $C$. 
 
-```{r, out.width="0.5\\textwidth"}
+```{r}
 pairs(comp_res1[, paste0("elpd.", c(100, 1000, 5000))], main="complete indepenedence")
 pairs(comp_res1[, paste0("elpd.", c(100, 1000, 5000))], main="co-regulation")
 ```
@@ -277,7 +283,8 @@ t1e_2 <- sapply(thresh_one_sided, FUN=function(s){mean(comp_res2$elpd.100 > s)})
 t1e_corr_1 <- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res1$lambda/corr_res1$se) > s)})
 t1e_corr_2 <- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res2$lambda/corr_res2$se) > s)})
 plot(level, t1e_1, ylim=range(c(t1e_1, t1e_2, t1e_corr_1, t1e_corr_2)), 
-     ylab="Type 1 Error Rate", xlab="Nominal level", type="b")
+     ylab="Type 1 Error Rate", xlab="Nominal level", 
+     main="Compound approach - elpd -type 1 error", type="b")
 points(level, t1e_2, type="b", pch=4)
 points(level, t1e_corr_1, type="b", col="blue")
 points(level, t1e_corr_2, type="b", col="blue", pch=4)
@@ -297,7 +304,8 @@ thresh <- -1*qnorm(1-level)
 pwr1 <- sapply(thresh, FUN=function(s){mean(comp_res1$elpd.100 < s)})
 pwr2 <- sapply(thresh, FUN=function(s){mean(comp_res2$elpd.100 < s)})
 plot(level, pwr1, ylim=range(c(pwr1, pwr2)), 
-     ylab="Power to accept NC model over CC", xlab="Nominal level", type="b")
+     ylab="Power to accept NC model over CC", xlab="Nominal level", 
+     main="Compound approach - elpd \n Power to choose the NC model under null", type="b")
 points(level, pwr2, type="b", pch=4)
 legend("topleft", legend=c("complete independence", "co-regulation"),  pch=c(1, 4))
 ```

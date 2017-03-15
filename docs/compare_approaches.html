@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Jean Morrison" />
+
+
+<title>Simulations comparing compound and correlation methods</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-1.1/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-1.1/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Sherlock2 model using Ash</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Simulations comparing compound and correlation methods</h1>
+<h4 class="author"><em>Jean Morrison</em></h4>
+<h4 class="date"><em>March 8, 2017</em></h4>
+
+</div>
+
+
+<div id="overivew" class="section level2">
+<h2>Overivew</h2>
+<p>These simulations are intended to compare the compound and correlation approaches described in the notes <a href="sherlock2_compound_and_correlation.pdf">here</a>. The notation used here should match the notes.</p>
+<p>The workhorse function used for running simulations is the <code>sim_sherlock_flex</code> function in the <code>sherlockAsh</code> package. This function generates summary statistics for the two studies according to the inputs and then analyzes them using the compound and correlation methods. We will consider the following scenarios (described in more detail later):</p>
+<ol style="list-style-type: decimal">
+<li>Non-Causal models:</li>
+</ol>
+<ul>
+<li>Complete independence: No relationship at all between summary statistics for the two studies</li>
+<li>Co-regulation: SNPs that are eQTLs are more likely to also effect the phenotype</li>
+</ul>
+<ol start="2" style="list-style-type: decimal">
+<li>Causal models:</li>
+</ol>
+<ul>
+<li>We consider four levels of correlation between the true effect sizes ranging from small (0.13) to very large (0.77)</li>
+</ul>
+<p>For each scenario, we will compare the power and type 1 error. For the compound method we consider both the elpd statistic and the Bayes factor for comparing the NC and CC model. We also consider a few choices of prior for the NC model. For the compound method, there are three possible conclusions that can be drawn from the results: 1) Accept the NC model over the CC model 2) Accept the CC model over the NC model 3) The data is indeterminate and does not strongly favor either. The correlation method uses more traditional hypothesis testing methods. In this approach we are able to either 1) Reject the null hypothesis of <span class="math inline">\(\lambda =0\)</span> or 2) Fail to reject the null hypothesis.</p>
+<div id="details-of-sim_sherlock_flex" class="section level3">
+<h3>Details of sim_sherlock_flex</h3>
+<p>The <code>sim_sherlock_flex</code> function takes the following inputs:</p>
+<ul>
+<li><code>n.rep</code>: Number of replications</li>
+<li><code>p</code>: Number of SNPs. In all simulations in this document <span class="math inline">\(p=10,000\)</span>.</li>
+<li><code>g1</code>: A function that takes one argument, <code>p</code> and returns <span class="math inline">\(\beta_1\)</span></li>
+<li><code>g2</code>: A function that takes one argument, <span class="math inline">\(\beta_1\)</span> and returns <span class="math inline">\(\beta_2\)</span></li>
+<li><code>maf.func</code>: A function that takes one argument, <code>p</code> and returns a vector of minor allele frequencies.</li>
+<li><code>n1,n2</code>: Sample sizes for eQTL and GWA studies. These are used for calculateing <span class="math inline">\(se(\hat{\beta}_1)\)</span> and <span class="math inline">\(se(\hat{\beta}_2)\)</span>. In this document <span class="math inline">\(n_1=500\)</span> and <span class="math inline">\(n_2=5,000\)</span>.</li>
+<li><code>types</code>: A specification of which types of analysis to conduct. (Described below).</li>
+<li><code>C</code>: A list of constants to consider. This specifies the prior distribution of <span class="math inline">\(\pi_{0}^{(2,1)}\)</span> for the compound method (See equation 18 of <a href="sherlock2_compound_and_correlation.pdf">the notes</a>). We consider values of <span class="math inline">\(C\)</span> of 100, 1000, and 5000.</li>
+<li><code>seed</code>: Random seed</li>
+<li><code>cores</code>: Number of cores to use</li>
+</ul>
+<p>There are three choices that can be included in the <code>types</code> argument. If <code>types=c()</code> is used, no analysis will be performed but for each repetition, the heritability of gene expression and phenotype and the correlation between <span class="math inline">\(\beta_1\)</span> and <span class="math inline">\(\beta_2\)</span> will be calculated. The three types of analysis are</p>
+<ul>
+<li><code>corr-est</code>: Correlation method with <span class="math inline">\(\beta_1\)</span> approximated by the posterior distribution of <span class="math inline">\(\beta_1\)</span> obtained from ASH i.e., as described in Section 2.1 of <a href="sherlock2_compound_and_correlation.pdf">the notes</a>. <span class="math inline">\(g_{20}\)</span> and <span class="math inline">\(g_{21}\)</span> must also be estimated. We use <span class="math inline">\(\hat{g}_{20} = \hat{g}_{21}\)</span> with both distributions estimated as the ASH fit of only <span class="math inline">\(\hat{\beta}_2\)</span>.</li>
+<li><code>corr-o</code>: “Oracle” correlation method in which <span class="math inline">\(\beta_1\)</span> are known. <span class="math inline">\(g_{20}\)</span> and <span class="math inline">\(g_{21}\)</span> are still estimated in the same was as for <code>corr-est</code>.</li>
+<li><code>compound-est</code>: The compound method in Section 3 of <a href="sherlock2_compound_and_correlation.pdf">the notes</a>. For this method <span class="math inline">\(\pi_{0}^{(1)}\)</span>, <span class="math inline">\(\pi_{0}^{(2,0)}\)</span>, <span class="math inline">\(\sigma_1\)</span> and <span class="math inline">\(\sigma_2\)</span> estimated by the maximum likelihood estimators. That is <span class="math inline">\(\hat{\pi}_{0}^{(1)}\)</span> and <span class="math inline">\(\sigma_1\)</span> maximize <span class="math display">\[
+l(\pi_{0}^{(1)}, \sigma_1 \vert \hat{\beta}_{1}, b_{1}) = \sum_{i=1}^{p}\log \left( \pi_{0}^{(1)} N(\hat{\beta}_{1,i}; 0, b_{1,i}^2) + (1-\pi_{0}^{(1)})N(\hat{\beta}_{1,i}; 0, \sigma_1^2 + b_{1,i}^2) \right)
+\]</span> and <span class="math inline">\(\pi_{0}^{(2,0)}\)</span> and <span class="math inline">\(\sigma_2\)</span> maximize <span class="math display">\[
+l(\pi_{0}^{(2,0)}, \sigma_2 \vert \hat{\beta}_{2}, b_{2}) = \sum_{i=1}^{p}\log \left( \pi_{0}^{(2,0)} N(\hat{\beta}_{2,i}; 0, b_{2,i}^2) + (1-\pi_{0}^{(2,0)})N(\hat{\beta}_{2,i}; 0, \sigma_2^2 + b_{2,i}^2) \right)
+\]</span></li>
+</ul>
+<p>Since <code>g1</code> and <code>g2</code> can be any functions, <code>sim_sherlock_flex</code> can be used to simulate from almost any model.</p>
+</div>
+</div>
+<div id="non-causal-models" class="section level2">
+<h2>Non-Causal models</h2>
+<div id="no-correlation-data-generation" class="section level3">
+<h3>No Correlation: Data Generation</h3>
+<p>Data are simulated so that <span class="math inline">\(\beta_1\)</span> and <span class="math inline">\(\beta_2\)</span> are completely independent. Both <span class="math inline">\(\beta_1\)</span> and <span class="math inline">\(\beta_1\)</span> are simulated from mixtures of normal distributions specified by the following tables:</p>
+<p><span class="math inline">\(\beta_1\)</span> (<span class="math inline">\(g_1\)</span>):</p>
+<table>
+<thead>
+<tr class="header">
+<th>Proportion</th>
+<th>0.948</th>
+<th>0.03</th>
+<th>0.02</th>
+<th>0.002</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Mean</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\sqrt{var}\)</span></td>
+<td>0</td>
+<td>0.08</td>
+<td>0.1</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<p><span class="math inline">\(\beta_{2}\)</span> (<span class="math inline">\(g_{20} = g_{21}\)</span>):</p>
+<table>
+<thead>
+<tr class="header">
+<th>Proportion</th>
+<th>0.9</th>
+<th>0.1</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Mean</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\sqrt{var}\)</span></td>
+<td>0</td>
+<td>0.05</td>
+</tr>
+</tbody>
+</table>
+<p>This gives an average of 520 eQTLs, 20 of which are strong eQTLs and about 1000 GWAS SNPs. The average heritability of gene expression is about 0.53 and the average heritability of the phenotype is abuot 0.37.</p>
+<p>Here is one data set realized from this scenario. First we specify functions generating <span class="math inline">\(\beta_1\)</span> and <span class="math inline">\(\beta_2\)</span>. Running <code>sim_sherlock_flex</code> with <code>types=c()</code> will summarize the average heritability of the two traits and the correlation between effect sizes.</p>
+<pre class="r"><code>library(ashr)
+library(sherlockAsh)</code></pre>
+<pre><code>## Warning: replacing previous import &#39;ks::compare&#39; by &#39;loo::compare&#39; when
+## loading &#39;sherlockAsh&#39;</code></pre>
+<pre class="r"><code>set.seed(1e7)
+g1n &lt;- normalmix(pi=c(0.948, 0.03, 0.02, 0.002), 
+                mean=rep(0, 4), 
+                sd=c(0, 0.08, 0.1, 0.2))
+g1 &lt;- function(p){ rnormalmix(p, g1n)}
+g20 &lt;- normalmix(pi=c(0.9, 0.1), mean=rep(0, 2),  sd=c(0, 0.05))
+g2 &lt;- function(b1){ rnormalmix(length(b1), g20)}
+maf.func &lt;- function(p){rbeta(n=p, 1, 5)}
+
+#Calculate the average heritability and correlation of effect sizes
+res &lt;- sim_sherlock_flex(n.rep=100, p=10000, g1=g1, g2=g2, 
+                   maf.func=maf.func, n1=500, n2=5000, 
+                   types=c(), seed=1e7)
+colMeans(res$stats)</code></pre>
+<pre><code>##          h1          h2         rho 
+## 0.527005386 0.372269029 0.003055139</code></pre>
+<p>Here are the statistics for one realization from this scenario. First generating <span class="math inline">\(\beta_1\)</span> and <span class="math inline">\(\beta_2\)</span></p>
+<pre class="r"><code>p &lt;- 10000
+b1 &lt;- g1(p)
+b2 &lt;- g2(b1)</code></pre>
+<p>then <span class="math inline">\(\hat{\beta}_1\)</span> and <span class="math inline">\(\hat{\beta}_2\)</span>:</p>
+<pre class="r"><code>n1 &lt;- 500
+n2 &lt;- 5000
+maf &lt;- maf.func(p)
+seb1 &lt;- sqrt(1/(2*n1*maf*(1-maf)))
+seb2 &lt;- sqrt(1/(2*n2*maf*(1-maf)))
+beta_hat_1 &lt;- rnorm(n=p, mean=b1, sd=seb1)
+beta_hat_2 &lt;- rnorm(n=p, mean=b2, sd=seb2)</code></pre>
+<p>Here are qq-plots for the two studies:</p>
+<pre class="r"><code>library(ggplot2)
+pval1 &lt;- 2*pnorm(abs(beta_hat_1/seb1), lower.tail=FALSE)
+pval2 &lt;- 2*pnorm(abs(beta_hat_2/seb2), lower.tail=FALSE)
+qqthin(pval1) + ggtitle(&quot;eQTL Results&quot;) + theme(legend.position=&quot;none&quot;)</code></pre>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<pre class="r"><code>qqthin(pval2) + ggtitle(&quot;GWAS Results&quot;) + theme(legend.position=&quot;none&quot;)</code></pre>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-4-2.png" width="672" /></p>
+<p>Both studies have fairly strong signal but only one eQTL reaches genome wide significance (pval &lt; <span class="math inline">\(5\cdot 10^{-8}\)</span>). Ten SNPs reach this threshold in the GWAS.</p>
+</div>
+<div id="some-co-regulation-data-generation" class="section level3">
+<h3>Some Co-Regulation: Data Generation</h3>
+<p>In this scheme, there is still no <em>causal</em> relationship between the two traits but they share more causal variants than might be expected by chance. This pattern might arise if the two traits share some regualtors. eQTL effects <span class="math inline">\(\beta_1\)</span> are drawn from the same distribution as in the previous section. SNPs that are eQTLs have a 50% chance of being effecting the phenotype while SNPs that are not eQTLs only have a 10% chance of effecting the phenotype. This scenario is encoded by the functions <code>g1</code> and <code>g2</code>:</p>
+<pre class="r"><code>g1n &lt;- normalmix(pi=c(0.948, 0.03, 0.02, 0.002),
+                mean=rep(0, 4),
+                sd=c(0, 0.08, 0.1, 0.2))
+g1 &lt;- function(p){ rnormalmix(p, g1n)}
+g20 &lt;- normalmix(pi=c(0.9, 0.1),mean=rep(0, 2),sd=c(0, 0.05))
+g21 &lt;- normalmix(pi=c(0.5, 0.5),mean=rep(0, 2),sd=c(0, 0.05))
+
+g2 &lt;- function(b1){
+    p &lt;- length(b1)
+    nz &lt;- sum(b1==0)
+    b2 &lt;- rep(NA, p)
+    b2[b1==0] &lt;- rnormalmix(nz, g20)
+    b2[b1!=0] &lt;- rnormalmix(p-nz, g21)
+    return(b2)
+}
+
+#Calculate the average heritability and correlation of effect sizes
+res &lt;- sim_sherlock_flex(n.rep=100, p=10000, g1=g1, g2=g2, 
+                   maf.func=maf.func, n1=500, n2=5000, 
+                   types=c(), seed=1e7)
+colMeans(res$stats)</code></pre>
+<pre><code>##           h1           h2          rho 
+## 5.257946e-01 4.174313e-01 8.203993e-05</code></pre>
+</div>
+<div id="results" class="section level3">
+<h3>Results</h3>
+<p>Results are stored for 100 simulations.</p>
+<pre class="r"><code>res1 &lt;- getobj(&quot;../data/res_complete_independence.RData&quot;)
+res2 &lt;- getobj(&quot;../data/res_null_corr.RData&quot;)</code></pre>
+<div id="correlation-approach" class="section level4">
+<h4>Correlation approach</h4>
+<p>First we look at the results for the correlation method:</p>
+<pre class="r"><code>#CI
+corr_res1 &lt;- data.frame(&quot;lambda&quot;=res1$corr[2, , 1], &quot;se&quot;=res1$corr[2, ,2])
+corr_res1$lower &lt;- corr_res1$lambda - qnorm(0.975)*corr_res1$se
+corr_res1$upper &lt;- corr_res1$lambda + qnorm(0.975)*corr_res1$se
+#Co-regulation
+corr_res2 &lt;- data.frame(&quot;lambda&quot;=res2$corr[2, , 1], &quot;se&quot;=res2$corr[2, ,2])
+corr_res2$lower &lt;- corr_res2$lambda - qnorm(0.975)*corr_res2$se
+corr_res2$upper &lt;- corr_res2$lambda + qnorm(0.975)*corr_res2$se
+
+#Plot
+ggplot(corr_res1) + geom_errorbar(aes(x=1:100, ymax = upper, ymin=lower))+
+        geom_point(aes(x=1:100, y=lambda)) + geom_hline(yintercept=0, linetype=2) + 
+        ggtitle(&quot;Null - Complete Independence\n Correlation method lambda estimates and 95% confidence intervals&quot;) + 
+        xlab(&quot;Repetition&quot;) + ylab(&quot;Lambda&quot;) + 
+        theme_bw() + theme(panel.grid=element_blank())</code></pre>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<pre class="r"><code>ggplot(corr_res2) + geom_errorbar(aes(x=1:100, ymax = upper, ymin=lower))+
+        geom_point(aes(x=1:100, y=lambda)) + geom_hline(yintercept=0, linetype=2) + 
+        ggtitle(&quot;Null - some correlation\n Correlation method lambda estimates and 95% confidence intervals&quot;) + 
+        xlab(&quot;Repetition&quot;) + ylab(&quot;Lambda&quot;) + 
+        theme_bw() + theme(panel.grid=element_blank())</code></pre>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-7-2.png" width="672" /></p>
+<pre class="r"><code>#Average lambda estimate
+mean(corr_res1$lambda)</code></pre>
+<pre><code>## [1] 0.00108037</code></pre>
+<pre class="r"><code>mean(corr_res2$lambda)</code></pre>
+<pre><code>## [1] -0.0007058606</code></pre>
+<pre class="r"><code>#Type 1 error rate
+mean(corr_res1$upper &gt; 0 | corr_res1$lower &lt; 0)</code></pre>
+<pre><code>## [1] 1</code></pre>
+<pre class="r"><code>mean(corr_res2$upper &gt; 0 | corr_res2$lower &lt; 0)</code></pre>
+<pre><code>## [1] 1</code></pre>
+<p>The correlation approach performs well in both settings. The average estimate of <span class="math inline">\(\lambda\)</span> is very close to zero in both cases and, in both cases there is only 1 type 1 error out of 100 simulations using a nominal type 1 error rate of 5%.</p>
+</div>
+<div id="compound-approach" class="section level4">
+<h4>Compound approach</h4>
+<p>Next we look at the compound method. We considered three different values of <span class="math inline">\(C\)</span> in the prior for <span class="math inline">\(P[\beta_2 =0 \vert \beta_1 \neq 0]\)</span> (recall that this parameter has a Beta<span class="math inline">\((C*\pi_{0}^{(2,0)}, C*(1-\pi_{0}^{(2,0)}))\)</span> prior). We consider <span class="math inline">\(C = 100, 1000\)</span>, and <span class="math inline">\(5000\)</span>.</p>
+<pre class="r"><code>comp_res1 &lt;- data.frame(&quot;elpd-100&quot;=res1$comp[1, , 5]/res1$comp[1,,6], 
+                       &quot;elpd-1000&quot;=res1$comp[2, , 5]/res1$comp[2,,6], 
+                       &quot;elpd-5000&quot;=res1$comp[3, , 5]/res1$comp[3,,6],
+                       &quot;bf-100&quot;=res1$comp[1,,7], &quot;bf-1000&quot;=res1$comp[2,,7], 
+                       &quot;bf-5000&quot;=res1$comp[3,,7])
+comp_res1[,3:6] &lt;- comp_res1[,3:6]/log(10)
+#Statistic summaries for complete independence case
+apply(comp_res1, MARGIN=2, FUN=summary)</code></pre>
+<pre><code>## $elpd.100
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##  -4.389  -2.380  -1.858  -1.839  -1.078   1.915 
+## 
+## $elpd.1000
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##  -4.421  -2.379  -1.860  -1.839  -1.098   1.927 
+## 
+## $elpd.5000
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+## -1.9260 -1.0420 -0.8160 -0.7979 -0.4695  0.8394 
+## 
+## $bf.100
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##  -8.844  -5.148  -3.491  -3.743  -1.776   5.204 
+## 
+## $bf.1000
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA&#39;s 
+##  -8.829  -5.162  -3.511  -3.763  -1.769   5.200       1 
+## 
+## $bf.5000
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##  -8.830  -5.136  -3.489  -3.740  -1.735   5.200</code></pre>
+<pre class="r"><code>comp_res2 &lt;- data.frame(&quot;elpd-100&quot;=res2$comp[1, , 5]/res2$comp[1,,6], 
+                       &quot;elpd-1000&quot;=res2$comp[2, , 5]/res2$comp[2,,6], 
+                       &quot;elpd-5000&quot;=res2$comp[3, , 5]/res2$comp[3,,6],
+                       &quot;bf-100&quot;=res2$comp[1,,7], &quot;bf-1000&quot;=res2$comp[2,,7], 
+                       &quot;bf-5000&quot;=res2$comp[3,,7])
+#Convert Bayes factors from ln to log10:
+comp_res2[,3:6] &lt;- comp_res2[,3:6]/log(10)
+#Statistic summaries for co-regulation case
+apply(comp_res2, MARGIN=2, FUN=summary)</code></pre>
+<pre><code>##         elpd.100 elpd.1000 elpd.5000 bf.100 bf.1000 bf.5000
+## Min.     -3.1310   -3.1780   -1.4230 -6.780 -6.7920  -6.791
+## 1st Qu.  -1.3830   -1.3700   -0.5770 -2.686 -2.6750  -2.674
+## Median   -0.4127   -0.3691   -0.1584 -1.293 -1.2790  -1.273
+## Mean     -0.4922   -0.4677   -0.1988 -1.446 -1.4070  -1.401
+## 3rd Qu.   0.3206    0.3716    0.1593 -0.325 -0.2758  -0.272
+## Max.      2.3490    2.3620    1.0230  5.856  5.9040   5.906</code></pre>
+<p>First considering the Bayes factors — The value of <span class="math inline">\(C\)</span> has very little effect on the Bayes factor:</p>
+<pre class="r"><code>pairs(comp_res1[, paste0(&quot;bf.&quot;, c(100, 1000, 5000))], main=&quot;Complete independence&quot;)</code></pre>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-10-1.png" width="0.5\textwidth" /></p>
+<pre class="r"><code>pairs(comp_res2[, paste0(&quot;bf.&quot;, c(100, 1000, 5000))], main=&quot;Co-regulation&quot;)</code></pre>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-10-2.png" width="0.5\textwidth" /> The Bayes factors are negative for 99% of simulations in the complete independece scenario and 82% of simulations in the co-regulation scenario ( Negative Bayes factors indicate that there is more evidence for the NC model than the CC model). The type 1 error rate (i.e. the rate of incorrectly accepting the CC model over the NC model) using the Bayes factor depends on the cutoff chosen.</p>
+<pre class="r"><code>log_bf_cutoff &lt;- seq(0, 4, length.out=10)
+t1e_1 &lt;- sapply(log_bf_cutoff, FUN=function(s){mean(comp_res1$bf.100 &gt; s)})
+t1e_2 &lt;- sapply(log_bf_cutoff, FUN=function(s){mean(comp_res2$bf.100 &gt; s)})
+plot(log_bf_cutoff, t1e_1, ylim=range(c(t1e_1, t1e_2)), 
+     ylab=&quot;Type 1 Error Rate&quot;, xlab=&quot;Log10 Bayes factor cutoff&quot;, type=&quot;b&quot;)
+points(log_bf_cutoff, t1e_2, col=&quot;red&quot;, type=&quot;b&quot;, pch=4)
+legend(&quot;topright&quot;, legend=c(&quot;complete independence&quot;, &quot;co-regulation&quot;), 
+       col=c(&quot;black&quot;, &quot;red&quot;), pch=c(1, 4))
+abline(v=c(log10(2), 1), lty=2)</code></pre>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-11-1.png" width="672" /> In the complete indpendence case, the compound method has almost no type 1 errors (we observed one BF of <span class="math inline">\(10^5\)</span> while all the rest are negative). In the co-regulation setting, there are more errors using lower thresholds. Using a BF cutoff of 2 (first vertical line), the type 1 error rate is 16%. Using a cutoff of 10, the type 1 error rate is 8%.</p>
+<p>We can also look at the rate of correctly accepting the NC model over the CC model.</p>
+<pre class="r"><code>log_bf_cutoff &lt;- seq(-6, 0, length.out=10)
+pwr1 &lt;- sapply(log_bf_cutoff, FUN=function(s){mean(comp_res1$bf.100 &lt; s)})
+pwr2 &lt;- sapply(log_bf_cutoff, FUN=function(s){mean(comp_res2$bf.100 &lt; s)})
+plot(log_bf_cutoff, pwr1, ylim=range(c(pwr1, pwr2)), 
+     ylab=&quot;Power to accept NC model over CC&quot;, xlab=&quot;Log10 Bayes factor cutoff&quot;, type=&quot;b&quot;)
+points(log_bf_cutoff, pwr2, col=&quot;red&quot;, type=&quot;b&quot;, pch=4)
+legend(&quot;topleft&quot;, legend=c(&quot;complete independence&quot;, &quot;co-regulation&quot;), 
+       col=c(&quot;black&quot;, &quot;red&quot;), pch=c(1, 4))
+abline(v=-1*c(log10(2), 1), lty=2)</code></pre>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p>Not surprisingly, in the complete independence scenario, there is stronger evidence to accept the NC model over the CC model.</p>
+<p>Next we consider the elpd metric for comparing models. Like the BF, these are also fairly insensitive to the choice of <span class="math inline">\(C\)</span>.</p>
+<pre class="r"><code>pairs(comp_res1[, paste0(&quot;elpd.&quot;, c(100, 1000, 5000))], main=&quot;complete indepenedence&quot;)</code></pre>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-13-1.png" width="0.5\textwidth" /></p>
+<pre class="r"><code>pairs(comp_res1[, paste0(&quot;elpd.&quot;, c(100, 1000, 5000))], main=&quot;co-regulation&quot;)</code></pre>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-13-2.png" width="0.5\textwidth" /></p>
+<p>For these statistics, negative values also indicate that the NC model is favored over the CC model. Treating the elpd statistics like <span class="math inline">\(t\)</span>-statistics, we can use a one-sided test to choose one model over the other. Here we plot the type 1 error as a function of the nominal level. The correlation method is include for comparison, though for the correlation approach we use a two sided test.</p>
+<pre class="r"><code>level &lt;- seq(0.01, 0.1, length.out=10)
+thresh_one_sided &lt;- qnorm(1-level)
+thresh_two_sided &lt;- qnorm(1-(level/2))
+t1e_1 &lt;- sapply(thresh_one_sided, FUN=function(s){mean(comp_res1$elpd.100 &gt; s)})
+t1e_2 &lt;- sapply(thresh_one_sided, FUN=function(s){mean(comp_res2$elpd.100 &gt; s)})
+t1e_corr_1 &lt;- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res1$lambda/corr_res1$se) &gt; s)})
+t1e_corr_2 &lt;- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res2$lambda/corr_res2$se) &gt; s)})
+plot(level, t1e_1, ylim=range(c(t1e_1, t1e_2, t1e_corr_1, t1e_corr_2)), 
+     ylab=&quot;Type 1 Error Rate&quot;, xlab=&quot;Nominal level&quot;, type=&quot;b&quot;)
+points(level, t1e_2, type=&quot;b&quot;, pch=4)
+points(level, t1e_corr_1, type=&quot;b&quot;, col=&quot;blue&quot;)
+points(level, t1e_corr_2, type=&quot;b&quot;, col=&quot;blue&quot;, pch=4)
+legend(&quot;topleft&quot;, legend=c(&quot;complete independence - compound&quot;, &quot;co-regulation - comopound&quot;, 
+                            &quot;complete independence - corr.&quot;, &quot;co-regulation - corr.&quot;), 
+       col=rep(c(&quot;black&quot;, &quot;blue&quot;), each=2), pch=rep(c(1, 4), 2))
+abline(0, 1, lty=2)</code></pre>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+<p>The compound approach and the correlation elpd statistic have similar type 1 error rates and both control the type 1 error below the nominal level (dotted line) for both scenarios.</p>
+<p>We can also look at the power of the elpd statistic to choose the NC model over the CC model.</p>
+<pre class="r"><code>level &lt;- seq(0.01, 0.1, length.out=10)
+thresh &lt;- -1*qnorm(1-level)
+pwr1 &lt;- sapply(thresh, FUN=function(s){mean(comp_res1$elpd.100 &lt; s)})
+pwr2 &lt;- sapply(thresh, FUN=function(s){mean(comp_res2$elpd.100 &lt; s)})
+plot(level, pwr1, ylim=range(c(pwr1, pwr2)), 
+     ylab=&quot;Power to accept NC model over CC&quot;, xlab=&quot;Nominal level&quot;, type=&quot;b&quot;)
+points(level, pwr2, type=&quot;b&quot;, pch=4)
+legend(&quot;topleft&quot;, legend=c(&quot;complete independence&quot;, &quot;co-regulation&quot;),  pch=c(1, 4))</code></pre>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<p>The elpd statistic with a nominal level of 0.05 gives a somewhat lower power to conclusively choose the NC model than using the BF with a threshold of 10, but the rate of choosing the wrong model is also lower.</p>
+</div>
+</div>
+</div>
+<div id="causal-relationship" class="section level2">
+<h2>Causal Relationship</h2>
+<div id="data-generation" class="section level3">
+<h3>Data Generation</h3>
+<p>In these simulations, there is a causal relationship between the two traits. We generate <span class="math inline">\(\beta_1\)</span> as in the previous sections. <span class="math inline">\(\beta_2\)</span> is generated as <span class="math inline">\(\lambda \beta_1 + u\)</span> where <span class="math inline">\(u\)</span> is drawn from the <span class="math inline">\(g_2\)</span> distribution used in previous sections — that is the mixture given by the table</p>
+<p><span class="math inline">\(g_2\)</span> mixture compononents:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Proportion</th>
+<th>0.9</th>
+<th>0.1</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Mean</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\sqrt{var}\)</span></td>
+<td>0</td>
+<td>0.05</td>
+</tr>
+</tbody>
+</table>
+<p>We will consider values of <span class="math inline">\(\lambda\)</span> of 0.02, 0.05, 0.08, 0.13 and 0.2. These correspond to correlations between between <span class="math inline">\(\beta_1\)</span> and <span class="math inline">\(\beta_2\)</span> for SNPs that effect both traits of 0.13, 0.3, 0.44, 0.62 and 0.77 respectively. The functions encoding this scenario are:</p>
+<pre class="r"><code>g1n &lt;- normalmix(pi=c(0.948, 0.03, 0.02, 0.002),
+                mean=rep(0, 4),
+                sd=c(0, 0.08, 0.1, 0.2))
+g1 &lt;- function(p){ rnormalmix(p, g1n)}
+g20 &lt;- g21 &lt;- normalmix(pi=c(0.9, 0.1),
+                        mean=rep(0, 2),
+                        sd=c(0, 0.05))
+maf.func &lt;- function(p){rbeta(n=p, 1, 5)}
+
+##Summaryize average heritability in two studes
+#And average correlation between beta_1 and beta_2
+zz &lt;- matrix(nrow=5, ncol=3)
+for(i in 1:5){
+  lambda &lt;- c(0.02, 0.05, 0.08, 0.13, 0.2)[i]
+  g2 &lt;- function(b1){
+    p &lt;- length(b1)
+    nz &lt;- sum(b1==0)
+    b2 &lt;- rep(NA, p)
+    b2[b1==0] &lt;- rnormalmix(nz, g20)
+    b2[b1!=0] &lt;- lambda*b1[b1!=0] + rnormalmix(p-nz, g21)
+    return(b2)
+  }
+  res &lt;- sim_sherlock_flex(n.rep=100, p=10000, g1=g1, g2=g2, 
+                   maf.func=maf.func, n1=500, n2=5000, 
+                   types=c(), seed=1e7)
+  zz[i, ] &lt;- colMeans(res$stats)
+}
+zz &lt;- data.frame(zz)
+names(zz) &lt;- c(&quot;Avg. eQTL herit.&quot;, &quot;Avg. GWAS herit.&quot;, &quot;Avg corr btw beta1 and beta2&quot;)
+rownames(zz) &lt;- paste0(&quot;lambda &quot;, c(0.02, 0.05, 0.08, 0.13, 0.2))
+print(zz)</code></pre>
+<pre><code>##             Avg. eQTL herit. Avg. GWAS herit. Avg corr btw beta1 and beta2
+## lambda 0.02        0.5260008        0.3755320                    0.1304131
+## lambda 0.05        0.5260008        0.3764969                    0.3002655
+## lambda 0.08        0.5260008        0.3782368                    0.4451529
+## lambda 0.13        0.5260008        0.3828207                    0.6242689
+## lambda 0.2         0.5260008        0.3926032                    0.7733138</code></pre>
+</div>
+<div id="results-1" class="section level3">
+<h3>Results</h3>
+<p>We will compare the power of</p>
+<ul>
+<li>The correlation result using a nominal type 1 error level of 0.05 (two-sided test)</li>
+<li>The compound method using the Bayes factor with a threshold of 10 and 100</li>
+<li>The compound method using the elpd statistic with a nominal type 1 error level of 0.05 (one-sided test)</li>
+</ul>
+<p>Note that the Bayes factor with a threshold of 10 may have larger type 1 error than the other methods</p>
+<pre class="r"><code>library(tidyr)
+res &lt;- list()
+lams &lt;- c(0.02, 0.05, 0.08, 0.13, 0.2)
+for( i in 1:5){
+  res[[i]] &lt;- getobj(paste0(&quot;../data/res_causal_&quot;, lams[i], &quot;.RData&quot;))
+}
+power &lt;- data.frame(&quot;lambda&quot;=lams)
+power$comp_bf10 &lt;- power$comp_bf100 &lt;- power$comp_elpd &lt;- power$corr &lt;-  NA
+for(i in 1:5){
+  corrstats &lt;- res[[i]]$corr[2, , 1]/res[[i]]$corr[2, , 2]
+  comp_elpd &lt;- res[[i]]$comp[1, , 5]/res[[i]]$comp[1, , 6]
+  comp_bf &lt;- res[[i]]$comp[1, , 7]/log(10)
+  power$comp_bf10[i] &lt;- mean(comp_bf &gt; 1, na.rm=TRUE) #One missing BF
+  power$comp_bf100[i] &lt;- mean(comp_bf &gt; 2, na.rm=TRUE) #One missing BF
+  power$comp_elpd[i] &lt;- mean(comp_elpd &gt; qnorm(0.95))
+  power$corr[i] &lt;- mean(abs(corrstats) &gt; qnorm(0.975))
+}
+power_long &lt;- gather(power, &quot;stat&quot;, &quot;power&quot;, -lambda)
+ggplot(power_long) + geom_point(aes(x=lambda, y=power, group=stat, color=stat, shape=stat), size=2) +
+  geom_line(aes(x=lambda, y=power, group=stat, color=stat)) + 
+  xlab(&quot;Labmda&quot;) + ylab(&quot;Power&quot;) + ggtitle(&quot;Power under causal model&quot;) + 
+  theme_bw()</code></pre>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+<p>For the highest correlation level, the compound approach using the Bayes factor is the most powerful. For lower values of <span class="math inline">\(\lambda\)</span>, the correlation appraoch is the most powerful.</p>
+</div>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

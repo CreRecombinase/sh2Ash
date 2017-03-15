@@ -5,4 +5,4 @@ output:
     toc: false
 ---
 
-Describe your project.
+Our goal is to use summary statistics from eQTL studies and GWAS to detect signatures of causal relationships between transcript levels and phenotypes. In this project we are trying out a new model that utilizes the ASH model for summary statistics from a single study. Future goals include incorporating LD strucutre.

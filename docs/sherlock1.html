@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Jean Morrison" />
+
+<meta name="date" content="2017-03-27" />
+
+<title>Simulations with Sherlock1 (original Sherlock)</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-1.1/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-1.1/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Sherlock2 model using Ash</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Simulations with Sherlock1 (original Sherlock)</h1>
+<h4 class="author"><em>Jean Morrison</em></h4>
+<h4 class="date"><em>March 27, 2017</em></h4>
+
+</div>
+
+
+<div id="summary" class="section level2">
+<h2>Summary</h2>
+<p>In this document I apply the original Sherlock method to simulations described <a href="compare_approaches.html">here</a>. To run these I added an option of “sherlock1” to the <code>type</code> argument that can be given to <code>sim_sherlock_flex</code>.</p>
+<p>I run the original sherlock using four different values of <span class="math inline">\(\alpha = P[U_i = 1]\)</span> and <span class="math inline">\(\beta = P[V_i = 1 \vert\ Z = 0] = P[V_i = 1 \vert\ U_i = 0 \text{ and } Z = 1]\)</span>. These are</p>
+<ol style="list-style-type: decimal">
+<li>Defaults from the sherlock software: <span class="math inline">\(\alpha = 5 \cdot 10^{-5}\)</span> and <span class="math inline">\(\beta = 5 \cdot 10^{-4}\)</span></li>
+<li>Suggestions from the paper: <span class="math inline">\(\alpha = 1 \cdot 10^{-5}\)</span> and <span class="math inline">\(\beta = 5 \cdot 10^{-3}\)</span></li>
+<li>“Oracle” values based on the true effect size parameters: <span class="math inline">\(\alpha\)</span> set to the proportion of SNPs that are eQTLs and <span class="math inline">\(\beta\)</span> set to the proportion of SNPs that are GWAS SNPs</li>
+<li>Constants similar to the values used to generate the data <span class="math inline">\(\alpha = 0.05\)</span> and <span class="math inline">\(\beta = 0.1\)</span>.</li>
+</ol>
+</div>
+<div id="non-causal-models" class="section level2">
+<h2>Non-Causal models</h2>
+<div id="no-correlation" class="section level3">
+<h3>No Correlation</h3>
+<p>Data are simulated so that <span class="math inline">\(\beta_1\)</span> and <span class="math inline">\(\beta_2\)</span> are completely independent. Both <span class="math inline">\(\beta_1\)</span> and <span class="math inline">\(\beta_1\)</span> are simulated from mixtures of normal distributions specified by the following tables:</p>
+<p><span class="math inline">\(\beta_1\)</span> (<span class="math inline">\(g_1\)</span>):</p>
+<table>
+<thead>
+<tr class="header">
+<th>Proportion</th>
+<th>0.948</th>
+<th>0.03</th>
+<th>0.02</th>
+<th>0.002</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Mean</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\sqrt{var}\)</span></td>
+<td>0</td>
+<td>0.08</td>
+<td>0.1</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<p><span class="math inline">\(\beta_{2}\)</span> (<span class="math inline">\(g_{20} = g_{21}\)</span>):</p>
+<table>
+<thead>
+<tr class="header">
+<th>Proportion</th>
+<th>0.9</th>
+<th>0.1</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Mean</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\sqrt{var}\)</span></td>
+<td>0</td>
+<td>0.05</td>
+</tr>
+</tbody>
+</table>
+<p>This gives an average of 520 eQTLs, 20 of which are strong eQTLs and about 1000 GWAS SNPs. The average heritability of gene expression is about 0.53 and the average heritability of the phenotype is abuot 0.37.</p>
+<pre class="r"><code>library(sherlockAsh)</code></pre>
+<pre><code>## Warning: replacing previous import &#39;ks::compare&#39; by &#39;loo::compare&#39; when
+## loading &#39;sherlockAsh&#39;</code></pre>
+<pre class="r"><code>library(ashr)
+g1n &lt;- normalmix(pi=c(0.948, 0.03, 0.02, 0.002), 
+                mean=rep(0, 4), 
+                sd=c(0, 0.08, 0.1, 0.2))
+g1 &lt;- function(p){ rnormalmix(p, g1n)}
+g20 &lt;- normalmix(pi=c(0.9, 0.1), mean=rep(0, 2),  sd=c(0, 0.05))
+g2 &lt;- function(b1){ rnormalmix(length(b1), g20)}
+maf.func &lt;- function(p){rbeta(n=p, 1, 5)}
+
+#Run sherlock1 on simulations
+res1 &lt;- sim_sherlock_flex(n.rep=100, p=10000, g1=g1, g2=g2, 
+                   maf.func=maf.func, n1=500, n2=5000, 
+                   types=c(&quot;sherlock1&quot;), seed=1234567)</code></pre>
+<p>Here are histograms of the log10 Bayes factor for each of the four values of the priors described in the first section.</p>
+<pre class="r"><code>res1$sherlock1 &lt;- res1$sherlock1/log(10) #Convert to log10
+main = c(&quot;1. alpha = 5e-5, beta = 5e-4&quot;, &quot;2. alpha = 1e-5, beta = 1e-4&quot;, &quot;3. Oracle&quot;, &quot;4. alpha = 0.05, beta = 0.1&quot;)
+for(i in 1:4){
+  hist(res1$sherlock1[, i], breaks=30, main=main[i], xlab=&quot;Log10 Bayes Factor&quot;)
+}</code></pre>
+<p><img src="sherlock1_files/figure-html/ciplot-1.png" width="672" /><img src="sherlock1_files/figure-html/ciplot-2.png" width="672" /><img src="sherlock1_files/figure-html/ciplot-3.png" width="672" /><img src="sherlock1_files/figure-html/ciplot-4.png" width="672" /></p>
+<p>All four values of the prior give good type 1 error but the third and fourth give dramatically negative Bayes factors. These priors are both larger than the the first and second priors but are closer to the values used to generate the data.</p>
+</div>
+</div>
+<div id="some-co-regulation" class="section level2">
+<h2>Some Co-Regulation</h2>
+<p>In this scheme, there is still no <em>causal</em> relationship between the two traits but they share more causal variants than might be expected by chance. This pattern might arise if the two traits share some regualtors. eQTL effects <span class="math inline">\(\beta_1\)</span> are drawn from the same distribution as in the previous section. SNPs that are eQTLs have a 50% chance of being effecting the phenotype while SNPs that are not eQTLs only have a 10% chance of effecting the phenotype. This scenario is encoded by the functions <code>g1</code> and <code>g2</code>:</p>
+<pre class="r"><code>g1n &lt;- normalmix(pi=c(0.948, 0.03, 0.02, 0.002),
+                mean=rep(0, 4),
+                sd=c(0, 0.08, 0.1, 0.2))
+g1 &lt;- function(p){ rnormalmix(p, g1n)}
+g20 &lt;- normalmix(pi=c(0.9, 0.1),mean=rep(0, 2),sd=c(0, 0.05))
+g21 &lt;- normalmix(pi=c(0.5, 0.5),mean=rep(0, 2),sd=c(0, 0.05))
+
+g2 &lt;- function(b1){
+    p &lt;- length(b1)
+    nz &lt;- sum(b1==0)
+    b2 &lt;- rep(NA, p)
+    b2[b1==0] &lt;- rnormalmix(nz, g20)
+    b2[b1!=0] &lt;- rnormalmix(p-nz, g21)
+    return(b2)
+}
+
+#Calculate the average heritability and correlation of effect sizes
+res2 &lt;- sim_sherlock_flex(n.rep=100, p=10000, g1=g1, g2=g2, 
+                   maf.func=maf.func, n1=500, n2=5000, 
+                   types=c(&quot;sherlock1&quot;), seed=1234567)</code></pre>
+<p>Plotting</p>
+<pre class="r"><code>res2$sherlock1 &lt;- res2$sherlock1/log(10) #Convert to log10
+main = c(&quot;1. alpha = 5e-5, beta = 5e-4&quot;, &quot;2. alpha = 1e-5, beta = 1e-4&quot;, &quot;3. Oracle&quot;, &quot;4. alpha = 0.05, beta = 0.1&quot;)
+for(i in 1:4){
+  hist(res2$sherlock1[, i], breaks=30, main=main[i], xlab=&quot;Log10 Bayes Factor&quot;)
+}</code></pre>
+<p><img src="sherlock1_files/figure-html/coregplot-1.png" width="672" /><img src="sherlock1_files/figure-html/coregplot-2.png" width="672" /><img src="sherlock1_files/figure-html/coregplot-3.png" width="672" /><img src="sherlock1_files/figure-html/coregplot-4.png" width="672" /></p>
+<p>The patterns are similar but there are more type 1 errors. Here I compare the type 1 error for the two null models for the first two prior values at different BF cutoffs. These are not shown for the larger priors because all BFs are extremely negative making the type 1 error rate equal to zero for all constants.</p>
+<pre class="r"><code>library(tidyr)
+library(ggplot2)
+log_bf_cutoff &lt;- seq(0, 4, length.out=10)
+t1e &lt;- data.frame(&quot;logbf&quot;=log_bf_cutoff)
+t1e$prior1_ci &lt;- sapply(log_bf_cutoff, FUN=function(s){mean(res1$sherlock1[,1] &gt; s)})
+t1e$prior2_ci &lt;- sapply(log_bf_cutoff, FUN=function(s){mean(res1$sherlock1[,2] &gt; s)})
+t1e$prior1_coreg &lt;- sapply(log_bf_cutoff, FUN=function(s){mean(res2$sherlock1[,1] &gt; s)})
+t1e$prior2_coreg &lt;- sapply(log_bf_cutoff, FUN=function(s){mean(res2$sherlock1[,2] &gt; s)})
+
+t1e_long &lt;- gather(t1e, &quot;stat&quot;, &quot;t1e&quot;, -logbf)
+ggplot(t1e_long) + geom_point(aes(x=logbf, y=t1e, group=stat, color=stat, shape=stat), size=2) +
+  geom_line(aes(x=logbf, y=t1e, group=stat, color=stat)) + 
+  geom_vline(xintercept = log10(2), linetype=2) + geom_vline(xintercept = 1, linetype=2) + 
+  geom_vline(xintercept = 2, linetype=2) + 
+  xlab(&quot;Log10 BF Cutoff&quot;) + ylab(&quot;Tye 1 Error&quot;) + ggtitle(&quot;Original Sherlock - Type 1 Error&quot;) + 
+  theme_bw()</code></pre>
+<p><img src="sherlock1_files/figure-html/t1eplot-1.png" width="672" /></p>
+<pre class="r"><code>for(i in 1:2){
+  cat(&quot;Type 1 error: &quot;, main[i], &quot;\n&quot;, &quot;2 &quot;, mean(res1$sherlock1[,i] &gt; log10(2)), 
+      &quot; 10 &quot;, mean(res1$sherlock1[,i] &gt; 1), &quot; 100 &quot;, mean(res1$sherlock1[,i] &gt; 2), &quot;\n&quot;, 
+       &quot;2 &quot;, mean(res2$sherlock1[,i] &gt; log10(2)), 
+      &quot; 10 &quot;, mean(res2$sherlock1[,i] &gt; 1), &quot; 100 &quot;, mean(res2$sherlock1[,i] &gt; 2), &quot;\n&quot;
+      )
+}</code></pre>
+<pre><code>## Type 1 error:  1. alpha = 5e-5, beta = 5e-4 
+##  2  0.13  10  0.04  100  0.01 
+##  2  0.47  10  0.33  100  0.17 
+## Type 1 error:  2. alpha = 1e-5, beta = 1e-4 
+##  2  0.04  10  0.01  100  0.01 
+##  2  0.29  10  0.14  100  0.03</code></pre>
+<p>When data is generated in the complete independence setting, a BF cutoff of 10 gives a type 1 error of 0.04 using prior value 1 or 0.01 using prior value 2. Hoewver, when data is generated under the co-regulation model type 1 error rates are much higher using both priors. A cutoff of 10 gives a type 1 error rate of 33% using prior 1 or 14% using prior 2. So the original Sherlock may generate false positives when there are shared regulatory pathways but not causality between the gene and the phenotype.</p>
+</div>
+<div id="causal-relationship" class="section level2">
+<h2>Causal Relationship</h2>
+<div id="data-generation" class="section level3">
+<h3>Data Generation</h3>
+<p>In these simulations, there is a causal relationship between the two traits. We generate <span class="math inline">\(\beta_1\)</span> as in the previous sections. <span class="math inline">\(\beta_2\)</span> is generated as <span class="math inline">\(\lambda \beta_1 + u\)</span> where <span class="math inline">\(u\)</span> is drawn from the <span class="math inline">\(g_2\)</span> distribution used in previous sections — that is the mixture given by the table</p>
+<p><span class="math inline">\(g_2\)</span> mixture compononents:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Proportion</th>
+<th>0.9</th>
+<th>0.1</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Mean</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\sqrt{var}\)</span></td>
+<td>0</td>
+<td>0.05</td>
+</tr>
+</tbody>
+</table>
+<p>We will consider values of <span class="math inline">\(\lambda\)</span> of 0.02, 0.05, 0.08, 0.13 and 0.2. These correspond to correlations between between <span class="math inline">\(\beta_1\)</span> and <span class="math inline">\(\beta_2\)</span> for SNPs that effect both traits of 0.13, 0.3, 0.44, 0.62 and 0.77 respectively. The functions encoding this scenario are:</p>
+<pre class="r"><code>g1n &lt;- normalmix(pi=c(0.948, 0.03, 0.02, 0.002),
+                mean=rep(0, 4),
+                sd=c(0, 0.08, 0.1, 0.2))
+g1 &lt;- function(p){ rnormalmix(p, g1n)}
+g20 &lt;- g21 &lt;- normalmix(pi=c(0.9, 0.1),
+                        mean=rep(0, 2),
+                        sd=c(0, 0.05))
+maf.func &lt;- function(p){rbeta(n=p, 1, 5)}
+
+res_sh &lt;- list()
+for(i in 1:5){
+  lambda &lt;- c(0.02, 0.05, 0.08, 0.13, 0.2)[i]
+  g2 &lt;- function(b1){
+    p &lt;- length(b1)
+    nz &lt;- sum(b1==0)
+    b2 &lt;- rep(NA, p)
+    b2[b1==0] &lt;- rnormalmix(nz, g20)
+    b2[b1!=0] &lt;- lambda*b1[b1!=0] + rnormalmix(p-nz, g21)
+    return(b2)
+  }
+  res_sh[[i]] &lt;- sim_sherlock_flex(n.rep=100, p=10000, g1=g1, g2=g2, 
+                   maf.func=maf.func, n1=500, n2=5000, 
+                   types=c(&quot;sherlock1&quot;), seed=1234567)
+}</code></pre>
+<p>Plotting the power of the original Sherlock usng a BF cutoff of 10 along with the power of the other approaches compared previously. Using the larger priors, the BFs are still very negative even in the presence of correlation. Here we only show power for the first two priors which are labeled <code>sh1_10</code> and <code>sh2_10</code> respectively.</p>
+<pre class="r"><code>res &lt;- list()
+lams &lt;- c(0.02, 0.05, 0.08, 0.13, 0.2)
+for( i in 1:5){
+  res[[i]] &lt;- getobj(paste0(&quot;../data/res_causal_&quot;, lams[i], &quot;.RData&quot;))
+}
+power &lt;- data.frame(&quot;lambda&quot;=lams)
+power$comp_bf10 &lt;- power$comp_bf100 &lt;- power$comp_elpd &lt;- power$corr &lt;-  NA
+power$sh1_10 &lt;- power$sh2_10 &lt;- NA
+for(i in 1:5){
+  corrstats &lt;- res[[i]]$corr[2, , 1]/res[[i]]$corr[2, , 2]
+  comp_elpd &lt;- res[[i]]$comp[1, , 5]/res[[i]]$comp[1, , 6]
+  comp_bf &lt;- res[[i]]$comp[1, , 7]/log(10)
+  power$comp_bf10[i] &lt;- mean(comp_bf &gt; 1, na.rm=TRUE) #One missing BF
+  power$comp_bf100[i] &lt;- mean(comp_bf &gt; 2, na.rm=TRUE) #One missing BF
+  power$comp_elpd[i] &lt;- mean(comp_elpd &gt; qnorm(0.95))
+  power$corr[i] &lt;- mean(abs(corrstats) &gt; qnorm(0.975))
+  power$sh1_10[i] &lt;- mean(res_sh[[i]]$sherlock1[,1] &gt; 1)
+  power$sh2_10[i] &lt;- mean(res_sh[[i]]$sherlock1[,2] &gt; 1)
+}
+power_long &lt;- gather(power, &quot;stat&quot;, &quot;power&quot;, -lambda)
+ggplot(power_long) + geom_point(aes(x=lambda, y=power, group=stat, color=stat, shape=stat), size=2) +
+  geom_line(aes(x=lambda, y=power, group=stat, color=stat)) + 
+  xlab(&quot;Labmda&quot;) + ylab(&quot;Power&quot;) + ggtitle(&quot;Power under causal model&quot;) + 
+  theme_bw()</code></pre>
+<p><img src="sherlock1_files/figure-html/powerplot-1.png" width="672" /></p>
+<p>Using the default priors from the software (which are slightly larger than the priors from the paper), the original Sherlock is more powerful than the correlation approach for the two smallest values of <span class="math inline">\(\lambda\)</span>. However, we saw in the previous section that there is potential for inflated type 1 error using this method. Using the priors from the paper, the original Sherlock method is less powerful than the correlation approach for all values of <span class="math inline">\(\lambda\)</span>. The correlation appraoch has the best power for <span class="math inline">\(\lambda\)</span> equal to 0.08 or 0.13.</p>
+</div>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

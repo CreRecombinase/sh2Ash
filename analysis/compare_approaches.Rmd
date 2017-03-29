@@ -81,13 +81,12 @@ Here is one data set realized from this scenario. First we specify functions gen
 ```{r}
 library(ashr)
 library(sherlockAsh)
-set.seed(1e7)
-g1n <- normalmix(pi=c(0.948, 0.03, 0.02, 0.002), 
+g1_n<- normalmix(pi=c(0.948, 0.03, 0.02, 0.002), 
                 mean=rep(0, 4), 
                 sd=c(0, 0.08, 0.1, 0.2))
-g1 <- function(p){ rnormalmix(p, g1n)}
-g20 <- normalmix(pi=c(0.9, 0.1), mean=rep(0, 2),  sd=c(0, 0.05))
-g2 <- function(b1){ rnormalmix(length(b1), g20)}
+g1 <- function(p){ rnormalmix(p, g1_n)}
+g2_n <- normalmix(pi=c(0.9, 0.1), mean=rep(0, 2),  sd=c(0, 0.05))
+g2 <- function(b1){ rnormalmix(length(b1), g2_n)}
 maf.func <- function(p){rbeta(n=p, 1, 5)}
 
 #Calculate the average heritability and correlation of effect sizes
@@ -194,10 +193,78 @@ ggplot(corr_res2) + geom_errorbar(aes(x=1:100, ymax = upper, ymin=lower))+
 mean(corr_res1$lambda)
 mean(corr_res2$lambda)
 #Type 1 error rate
-mean(corr_res1$upper > 0 | corr_res1$lower < 0)
-mean(corr_res2$upper > 0 | corr_res2$lower < 0)
+mean(corr_res1$upper < 0 | corr_res1$lower > 0)
+mean(corr_res2$upper < 0 | corr_res2$lower > 0)
 ```
-The correlation approach performs well in both settings. The average estimate of $\lambda$ is very close to zero in both cases and, in both cases there is only 1 type 1 error out of 100 simulations using a nominal type 1 error rate of 5\%. 
+In both settings, the average estimate of $\lambda$ is very close to zero in both cases. However, the type 1 error rate in both cases is too high.
+
+```{r}
+level <- seq(0.01, 0.1, length.out=10)
+thresh_two_sided <- qnorm(1-(level/2))
+t1e_corr_1 <- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res1$lambda/corr_res1$se) > s)})
+t1e_corr_2 <- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res2$lambda/corr_res2$se) > s)})
+plot(level, t1e_corr_1, ylim=range(c(t1e_corr_1, t1e_corr_2)), 
+     ylab="Type 1 Error Rate", xlab="Nominal level", 
+     main="Correlation approach - type 1 error", type="b", col="blue")
+points(level, t1e_corr_2, type="b", col="blue", pch=4)
+legend("topleft", legend=c("complete independence - corr.", "co-regulation - corr."), 
+       col=rep(c("black", "blue"), each=2), pch=rep(c(1, 4), 2))
+abline(0, 1, lty=2)
+```
+
+#### oracle correlation approach
+
+
+In the oracle correlation method, $\beta_1$ is known. Unfortunately, this also gives slightly too large type 1 error. 
+
+```{r}
+#CI
+corr_res1_o <- data.frame("lambda"=res1$corr[1, , 1], "se"=res1$corr[1, ,2])
+corr_res1_o$lower <- corr_res1_o$lambda - qnorm(0.975)*corr_res1_o$se
+corr_res1_o$upper <- corr_res1_o$lambda + qnorm(0.975)*corr_res1_o$se
+#Co-regulation
+corr_res2_o <- data.frame("lambda"=res2$corr[1, , 1], "se"=res2$corr[1, ,2])
+corr_res2_o$lower <- corr_res2_o$lambda - qnorm(0.975)*corr_res2_o$se
+corr_res2_o$upper <- corr_res2_o$lambda + qnorm(0.975)*corr_res2_o$se
+
+#Plot
+ggplot(corr_res1_o) + geom_errorbar(aes(x=1:100, ymax = upper, ymin=lower))+
+        geom_point(aes(x=1:100, y=lambda)) + geom_hline(yintercept=0, linetype=2) + 
+        ggtitle("Null - Complete Independence\n Correlation method lambda estimates and 95% confidence intervals") + 
+        xlab("Repetition") + ylab("Lambda") + 
+        theme_bw() + theme(panel.grid=element_blank())
+ggplot(corr_res2_o) + geom_errorbar(aes(x=1:100, ymax = upper, ymin=lower))+
+        geom_point(aes(x=1:100, y=lambda)) + geom_hline(yintercept=0, linetype=2) + 
+        ggtitle("Null - some correlation\n Correlation method lambda estimates and 95% confidence intervals") + 
+        xlab("Repetition") + ylab("Lambda") + 
+        theme_bw() + theme(panel.grid=element_blank())
+```
+
+```{r}
+#Average lambda estimate
+mean(corr_res1_o$lambda)
+mean(corr_res2_o$lambda)
+#Type 1 error rate
+mean(corr_res1_o$upper < 0 | corr_res1_o$lower > 0)
+mean(corr_res2_o$upper < 0 | corr_res2_o$lower > 0)
+```
+
+
+```{r}
+level <- seq(0.01, 0.1, length.out=10)
+thresh_two_sided <- qnorm(1-(level/2))
+t1e_corr_1 <- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res1_o$lambda/corr_res1_o$se) > s)})
+t1e_corr_2 <- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res2_o$lambda/corr_res2_o$se) > s)})
+plot(level, t1e_corr_1, ylim=range(c(t1e_corr_1, t1e_corr_2)), 
+     ylab="Type 1 Error Rate", xlab="Nominal level", 
+     main="Correlation Oracle approach - type 1 error", type="b", col="blue")
+points(level, t1e_corr_2, type="b", col="blue", pch=4)
+legend("topleft", legend=c("complete independence - corr.", "co-regulation - corr."), 
+       col=rep(c("black", "blue"), each=2), pch=rep(c(1, 4), 2))
+abline(0, 1, lty=2)
+```
+
+
 
 #### Compound approach 
 
@@ -294,8 +361,7 @@ legend("topleft", legend=c("complete independence - compound", "co-regulation - 
 abline(0, 1, lty=2)
 ```
 
-The compound approach and the correlation elpd statistic have similar type 1 error rates and both control the type 1 error below the nominal level (dotted line) for both scenarios. 
-
+The compound approach using elpd controls the type 1 error. The correlation apporach has consistently largerger type 1 error than the nominal level.
 
 We can also look at the power of the elpd statistic to choose the NC model over the CC model. 
 ```{r}
@@ -393,9 +459,32 @@ for(i in 1:5){
 power_long <- gather(power, "stat", "power", -lambda)
 ggplot(power_long) + geom_point(aes(x=lambda, y=power, group=stat, color=stat, shape=stat), size=2) +
   geom_line(aes(x=lambda, y=power, group=stat, color=stat)) + 
-  xlab("Labmda") + ylab("Power") + ggtitle("Power under causal model") + 
+  xlab("Lambda") + ylab("Power") + ggtitle("Power under causal model") + 
   theme_bw()
 ```
 
 
-For the highest correlation level, the compound approach using the Bayes factor is the most powerful. For lower values of $\lambda$, the correlation appraoch is the most powerful.
+The correlation approach is the most powerful, however, as we saw previously, it may not correctly control the type 1 error. We do find that in these settings, the correlation approach does a good job of covering the true value of $\lambda$ -- the coverage rate is above the nominal level in all cases except for the highers correlation case.
+
+```{r}
+levels <- c(0.02, 0.05, 0.08, 0.1, 0.15)
+coverage <- matrix(nrow=length(levels), ncol=length(lams))
+for(i in 1:length(lams)){
+  lam <- lams[i]
+  for(j in 1:length(levels)){
+    upper <- res[[i]]$corr[2, , 1] + qnorm(1-(levels[j]/2))*res[[i]]$corr[2, , 2]
+    lower <- res[[i]]$corr[2, , 1] - qnorm(1-(levels[j]/2))*res[[i]]$corr[2, , 2]
+    coverage[j, i] <- 1-mean(upper < lam | lower > lam)
+  }
+}
+coverage <- data.frame(coverage)
+names(coverage) <- paste0("lambda=", lams)
+#coverage$nominal <- 1-lams
+coverage$level <- 1-levels
+coverage_long <- gather(coverage, "lambda", "coverage", -level)
+ggplot(coverage_long) + geom_point(aes(x=level, y=coverage, group=lambda, color=lambda, shape=lambda), size=2) +
+  geom_line(aes(x=level, y=coverage, group=lambda, color=lambda)) + 
+  geom_abline(slope=1, intercept=0, linetype=2) + 
+  xlab("Level") + ylab("Coverage") + ggtitle("Correlation Approach\nCoverage of true lambda under causal model") + 
+  theme_bw()
+```

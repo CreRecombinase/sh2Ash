@@ -4,7 +4,7 @@
 
 <head>
 
-<meta charset="utf-8">
+<meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 
@@ -458,11 +458,11 @@ ggplot(t1e_long) + geom_point(aes(x=logbf, y=t1e, group=stat, color=stat, shape=
       )
 }</code></pre>
 <pre><code>## Type 1 error:  1. alpha = 5e-5, beta = 5e-4 
-##  2  0.13  10  0.04  100  0.01 
-##  2  0.47  10  0.33  100  0.17 
+##  2  0.26  10  0.08  100  0.03 
+##  2  0.55  10  0.34  100  0.15 
 ## Type 1 error:  2. alpha = 1e-5, beta = 1e-4 
-##  2  0.04  10  0.01  100  0.01 
-##  2  0.29  10  0.14  100  0.03</code></pre>
+##  2  0.1  10  0.04  100  0.01 
+##  2  0.25  10  0.13  100  0.07</code></pre>
 <p>When data is generated in the complete independence setting, a BF cutoff of 10 gives a type 1 error of 0.04 using prior value 1 or 0.01 using prior value 2. Hoewver, when data is generated under the co-regulation model type 1 error rates are much higher using both priors. A cutoff of 10 gives a type 1 error rate of 33% using prior 1 or 14% using prior 2. So the original Sherlock may generate false positives when there are shared regulatory pathways but not causality between the gene and the phenotype.</p>
 </div>
 <div id="causal-relationship" class="section level2">
@@ -543,7 +543,6 @@ ggplot(power_long) + geom_point(aes(x=lambda, y=power, group=stat, color=stat, s
   xlab(&quot;Labmda&quot;) + ylab(&quot;Power&quot;) + ggtitle(&quot;Power under causal model&quot;) + 
   theme_bw()</code></pre>
 <p><img src="sherlock1_files/figure-html/powerplot-1.png" width="672" /></p>
-<p>Using the default priors from the software (which are slightly larger than the priors from the paper), the original Sherlock is more powerful than the correlation approach for the two smallest values of <span class="math inline">\(\lambda\)</span>. However, we saw in the previous section that there is potential for inflated type 1 error using this method. Using the priors from the paper, the original Sherlock method is less powerful than the correlation approach for all values of <span class="math inline">\(\lambda\)</span>. The correlation appraoch has the best power for <span class="math inline">\(\lambda\)</span> equal to 0.08 or 0.13.</p>
 </div>
 </div>
 

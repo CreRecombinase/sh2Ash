@@ -4,7 +4,7 @@
 
 <head>
 
-<meta charset="utf-8">
+<meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 
@@ -412,14 +412,15 @@ l(\pi_{0}^{(2,0)}, \sigma_2 \vert \hat{\beta}_{2}, b_{2}) = \sum_{i=1}^{p}\log \
 <p>This gives an average of 520 eQTLs, 20 of which are strong eQTLs and about 1000 GWAS SNPs. The average heritability of gene expression is about 0.53 and the average heritability of the phenotype is abuot 0.37.</p>
 <p>Here is one data set realized from this scenario. First we specify functions generating <span class="math inline">\(\beta_1\)</span> and <span class="math inline">\(\beta_2\)</span>. Running <code>sim_sherlock_flex</code> with <code>types=c()</code> will summarize the average heritability of the two traits and the correlation between effect sizes.</p>
 <pre class="r"><code>library(ashr)
-library(sherlockAsh)
-set.seed(1e7)
-g1n &lt;- normalmix(pi=c(0.948, 0.03, 0.02, 0.002), 
+library(sherlockAsh)</code></pre>
+<pre><code>## Warning: replacing previous import &#39;ks::compare&#39; by &#39;loo::compare&#39; when
+## loading &#39;sherlockAsh&#39;</code></pre>
+<pre class="r"><code>g1_n&lt;- normalmix(pi=c(0.948, 0.03, 0.02, 0.002), 
                 mean=rep(0, 4), 
                 sd=c(0, 0.08, 0.1, 0.2))
-g1 &lt;- function(p){ rnormalmix(p, g1n)}
-g20 &lt;- normalmix(pi=c(0.9, 0.1), mean=rep(0, 2),  sd=c(0, 0.05))
-g2 &lt;- function(b1){ rnormalmix(length(b1), g20)}
+g1 &lt;- function(p){ rnormalmix(p, g1_n)}
+g2_n &lt;- normalmix(pi=c(0.9, 0.1), mean=rep(0, 2),  sd=c(0, 0.05))
+g2 &lt;- function(b1){ rnormalmix(length(b1), g2_n)}
 maf.func &lt;- function(p){rbeta(n=p, 1, 5)}
 
 #Calculate the average heritability and correlation of effect sizes
@@ -427,8 +428,8 @@ res &lt;- sim_sherlock_flex(n.rep=100, p=10000, g1=g1, g2=g2,
                    maf.func=maf.func, n1=500, n2=5000, 
                    types=c(), seed=1e7)
 colMeans(res$stats)</code></pre>
-<pre><code>##          h1          h2         rho 
-## 0.527005386 0.372269029 0.003055139</code></pre>
+<pre><code>##           h1           h2          rho 
+##  0.524110656  0.372600208 -0.002758502</code></pre>
 <p>Here are the statistics for one realization from this scenario. First generating <span class="math inline">\(\beta_1\)</span> and <span class="math inline">\(\beta_2\)</span></p>
 <pre class="r"><code>p &lt;- 10000
 b1 &lt;- g1(p)
@@ -476,7 +477,7 @@ res &lt;- sim_sherlock_flex(n.rep=100, p=10000, g1=g1, g2=g2,
                    types=c(), seed=1e7)
 colMeans(res$stats)</code></pre>
 <pre><code>##           h1           h2          rho 
-## 5.257946e-01 4.174313e-01 8.203993e-05</code></pre>
+##  0.524110656  0.417272086 -0.001869686</code></pre>
 </div>
 <div id="results" class="section level3">
 <h3>Results</h3>
@@ -510,15 +511,75 @@ ggplot(corr_res1) + geom_errorbar(aes(x=1:100, ymax = upper, ymin=lower))+
 <p><img src="compare_approaches_files/figure-html/unnamed-chunk-7-2.png" width="672" /></p>
 <pre class="r"><code>#Average lambda estimate
 mean(corr_res1$lambda)</code></pre>
-<pre><code>## [1] 0.00108037</code></pre>
+<pre><code>## [1] 0.003121644</code></pre>
 <pre class="r"><code>mean(corr_res2$lambda)</code></pre>
-<pre><code>## [1] -0.0007058606</code></pre>
+<pre><code>## [1] -0.004903933</code></pre>
 <pre class="r"><code>#Type 1 error rate
-mean(corr_res1$upper &gt; 0 | corr_res1$lower &lt; 0)</code></pre>
-<pre><code>## [1] 1</code></pre>
-<pre class="r"><code>mean(corr_res2$upper &gt; 0 | corr_res2$lower &lt; 0)</code></pre>
-<pre><code>## [1] 1</code></pre>
-<p>The correlation approach performs well in both settings. The average estimate of <span class="math inline">\(\lambda\)</span> is very close to zero in both cases and, in both cases there is only 1 type 1 error out of 100 simulations using a nominal type 1 error rate of 5%.</p>
+mean(corr_res1$upper &lt; 0 | corr_res1$lower &gt; 0)</code></pre>
+<pre><code>## [1] 0.09</code></pre>
+<pre class="r"><code>mean(corr_res2$upper &lt; 0 | corr_res2$lower &gt; 0)</code></pre>
+<pre><code>## [1] 0.16</code></pre>
+<p>In both settings, the average estimate of <span class="math inline">\(\lambda\)</span> is very close to zero in both cases. However, the type 1 error rate in both cases is too high.</p>
+<pre class="r"><code>level &lt;- seq(0.01, 0.1, length.out=10)
+thresh_two_sided &lt;- qnorm(1-(level/2))
+t1e_corr_1 &lt;- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res1$lambda/corr_res1$se) &gt; s)})
+t1e_corr_2 &lt;- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res2$lambda/corr_res2$se) &gt; s)})
+plot(level, t1e_corr_1, ylim=range(c(t1e_corr_1, t1e_corr_2)), 
+     ylab=&quot;Type 1 Error Rate&quot;, xlab=&quot;Nominal level&quot;, 
+     main=&quot;Correlation approach - type 1 error&quot;, type=&quot;b&quot;, col=&quot;blue&quot;)
+points(level, t1e_corr_2, type=&quot;b&quot;, col=&quot;blue&quot;, pch=4)
+legend(&quot;topleft&quot;, legend=c(&quot;complete independence - corr.&quot;, &quot;co-regulation - corr.&quot;), 
+       col=rep(c(&quot;black&quot;, &quot;blue&quot;), each=2), pch=rep(c(1, 4), 2))
+abline(0, 1, lty=2)</code></pre>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+</div>
+<div id="oracle-correlation-approach" class="section level4">
+<h4>oracle correlation approach</h4>
+<p>In the oracle correlation method, <span class="math inline">\(\beta_1\)</span> is known. Unfortunately, this also gives slightly too large type 1 error.</p>
+<pre class="r"><code>#CI
+corr_res1_o &lt;- data.frame(&quot;lambda&quot;=res1$corr[1, , 1], &quot;se&quot;=res1$corr[1, ,2])
+corr_res1_o$lower &lt;- corr_res1_o$lambda - qnorm(0.975)*corr_res1_o$se
+corr_res1_o$upper &lt;- corr_res1_o$lambda + qnorm(0.975)*corr_res1_o$se
+#Co-regulation
+corr_res2_o &lt;- data.frame(&quot;lambda&quot;=res2$corr[1, , 1], &quot;se&quot;=res2$corr[1, ,2])
+corr_res2_o$lower &lt;- corr_res2_o$lambda - qnorm(0.975)*corr_res2_o$se
+corr_res2_o$upper &lt;- corr_res2_o$lambda + qnorm(0.975)*corr_res2_o$se
+
+#Plot
+ggplot(corr_res1_o) + geom_errorbar(aes(x=1:100, ymax = upper, ymin=lower))+
+        geom_point(aes(x=1:100, y=lambda)) + geom_hline(yintercept=0, linetype=2) + 
+        ggtitle(&quot;Null - Complete Independence\n Correlation method lambda estimates and 95% confidence intervals&quot;) + 
+        xlab(&quot;Repetition&quot;) + ylab(&quot;Lambda&quot;) + 
+        theme_bw() + theme(panel.grid=element_blank())</code></pre>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<pre class="r"><code>ggplot(corr_res2_o) + geom_errorbar(aes(x=1:100, ymax = upper, ymin=lower))+
+        geom_point(aes(x=1:100, y=lambda)) + geom_hline(yintercept=0, linetype=2) + 
+        ggtitle(&quot;Null - some correlation\n Correlation method lambda estimates and 95% confidence intervals&quot;) + 
+        xlab(&quot;Repetition&quot;) + ylab(&quot;Lambda&quot;) + 
+        theme_bw() + theme(panel.grid=element_blank())</code></pre>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-10-2.png" width="672" /></p>
+<pre class="r"><code>#Average lambda estimate
+mean(corr_res1_o$lambda)</code></pre>
+<pre><code>## [1] 0.002044316</code></pre>
+<pre class="r"><code>mean(corr_res2_o$lambda)</code></pre>
+<pre><code>## [1] -0.0007972327</code></pre>
+<pre class="r"><code>#Type 1 error rate
+mean(corr_res1_o$upper &lt; 0 | corr_res1_o$lower &gt; 0)</code></pre>
+<pre><code>## [1] 0.04</code></pre>
+<pre class="r"><code>mean(corr_res2_o$upper &lt; 0 | corr_res2_o$lower &gt; 0)</code></pre>
+<pre><code>## [1] 0.09</code></pre>
+<pre class="r"><code>level &lt;- seq(0.01, 0.1, length.out=10)
+thresh_two_sided &lt;- qnorm(1-(level/2))
+t1e_corr_1 &lt;- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res1_o$lambda/corr_res1_o$se) &gt; s)})
+t1e_corr_2 &lt;- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res2_o$lambda/corr_res2_o$se) &gt; s)})
+plot(level, t1e_corr_1, ylim=range(c(t1e_corr_1, t1e_corr_2)), 
+     ylab=&quot;Type 1 Error Rate&quot;, xlab=&quot;Nominal level&quot;, 
+     main=&quot;Correlation Oracle approach - type 1 error&quot;, type=&quot;b&quot;, col=&quot;blue&quot;)
+points(level, t1e_corr_2, type=&quot;b&quot;, col=&quot;blue&quot;, pch=4)
+legend(&quot;topleft&quot;, legend=c(&quot;complete independence - corr.&quot;, &quot;co-regulation - corr.&quot;), 
+       col=rep(c(&quot;black&quot;, &quot;blue&quot;), each=2), pch=rep(c(1, 4), 2))
+abline(0, 1, lty=2)</code></pre>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
 </div>
 <div id="compound-approach" class="section level4">
 <h4>Compound approach</h4>
@@ -574,9 +635,9 @@ apply(comp_res2, MARGIN=2, FUN=summary)</code></pre>
 ## Max.      2.3490    2.3620    1.0230  5.856  5.9040   5.906</code></pre>
 <p>First considering the Bayes factors — The value of <span class="math inline">\(C\)</span> has very little effect on the Bayes factor:</p>
 <pre class="r"><code>pairs(comp_res1[, paste0(&quot;bf.&quot;, c(100, 1000, 5000))], main=&quot;Complete independence&quot;)</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
 <pre class="r"><code>pairs(comp_res2[, paste0(&quot;bf.&quot;, c(100, 1000, 5000))], main=&quot;Co-regulation&quot;)</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-10-2.png" width="672" /> The Bayes factors are negative for 99% of simulations in the complete independece scenario and 82% of simulations in the co-regulation scenario ( Negative Bayes factors indicate that there is more evidence for the NC model than the CC model). The type 1 error rate (i.e. the rate of incorrectly accepting the CC model over the NC model) using the Bayes factor depends on the cutoff chosen.</p>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-14-2.png" width="672" /> The Bayes factors are negative for 99% of simulations in the complete independece scenario and 82% of simulations in the co-regulation scenario ( Negative Bayes factors indicate that there is more evidence for the NC model than the CC model). The type 1 error rate (i.e. the rate of incorrectly accepting the CC model over the NC model) using the Bayes factor depends on the cutoff chosen.</p>
 <pre class="r"><code>log_bf_cutoff &lt;- seq(0, 4, length.out=10)
 t1e_1 &lt;- sapply(log_bf_cutoff, FUN=function(s){mean(comp_res1$bf.100 &gt; s)})
 t1e_2 &lt;- sapply(log_bf_cutoff, FUN=function(s){mean(comp_res2$bf.100 &gt; s)})
@@ -587,7 +648,7 @@ points(log_bf_cutoff, t1e_2, col=&quot;red&quot;, type=&quot;b&quot;, pch=4)
 legend(&quot;topright&quot;, legend=c(&quot;complete independence&quot;, &quot;co-regulation&quot;), 
        col=c(&quot;black&quot;, &quot;red&quot;), pch=c(1, 4))
 abline(v=c(log10(2), 1), lty=2)</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-11-1.png" width="672" /> In the complete indpendence case, the compound method has almost no type 1 errors (we observed one BF of <span class="math inline">\(10^5\)</span> while all the rest are negative). In the co-regulation setting, there are more errors using lower thresholds. Using a BF cutoff of 2 (first vertical line), the type 1 error rate is 16%. Using a cutoff of 10, the type 1 error rate is 8%.</p>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-15-1.png" width="672" /> In the complete indpendence case, the compound method has almost no type 1 errors (we observed one BF of <span class="math inline">\(10^5\)</span> while all the rest are negative). In the co-regulation setting, there are more errors using lower thresholds. Using a BF cutoff of 2 (first vertical line), the type 1 error rate is 16%. Using a cutoff of 10, the type 1 error rate is 8%.</p>
 <p>We can also look at the rate of correctly accepting the NC model over the CC model.</p>
 <pre class="r"><code>log_bf_cutoff &lt;- seq(-6, 0, length.out=10)
 pwr1 &lt;- sapply(log_bf_cutoff, FUN=function(s){mean(comp_res1$bf.100 &lt; s)})
@@ -599,16 +660,16 @@ points(log_bf_cutoff, pwr2, col=&quot;red&quot;, type=&quot;b&quot;, pch=4)
 legend(&quot;topleft&quot;, legend=c(&quot;complete independence&quot;, &quot;co-regulation&quot;), 
        col=c(&quot;black&quot;, &quot;red&quot;), pch=c(1, 4))
 abline(v=-1*c(log10(2), 1), lty=2)</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
 <p>Not surprisingly, in the complete independence scenario, there is stronger evidence to accept the NC model over the CC model.</p>
 </div>
 <div id="elpd" class="section level5">
 <h5>elpd</h5>
 <p>Next we consider the elpd metric for comparing models. Like the BF, these are also fairly insensitive to the choice of <span class="math inline">\(C\)</span>.</p>
 <pre class="r"><code>pairs(comp_res1[, paste0(&quot;elpd.&quot;, c(100, 1000, 5000))], main=&quot;complete indepenedence&quot;)</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
 <pre class="r"><code>pairs(comp_res1[, paste0(&quot;elpd.&quot;, c(100, 1000, 5000))], main=&quot;co-regulation&quot;)</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-13-2.png" width="672" /></p>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-17-2.png" width="672" /></p>
 <p>For these statistics, negative values also indicate that the NC model is favored over the CC model. Treating the elpd statistics like <span class="math inline">\(t\)</span>-statistics, we can use a one-sided test to choose one model over the other. Here we plot the type 1 error as a function of the nominal level. The correlation method is include for comparison, though for the correlation approach we use a two sided test.</p>
 <pre class="r"><code>level &lt;- seq(0.01, 0.1, length.out=10)
 thresh_one_sided &lt;- qnorm(1-level)
@@ -627,8 +688,8 @@ legend(&quot;topleft&quot;, legend=c(&quot;complete independence - compound&quot
                             &quot;complete independence - corr.&quot;, &quot;co-regulation - corr.&quot;), 
        col=rep(c(&quot;black&quot;, &quot;blue&quot;), each=2), pch=rep(c(1, 4), 2))
 abline(0, 1, lty=2)</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
-<p>The compound approach and the correlation elpd statistic have similar type 1 error rates and both control the type 1 error below the nominal level (dotted line) for both scenarios.</p>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
+<p>The compound approach using elpd controls the type 1 error. The correlation apporach has consistently largerger type 1 error than the nominal level.</p>
 <p>We can also look at the power of the elpd statistic to choose the NC model over the CC model.</p>
 <pre class="r"><code>level &lt;- seq(0.01, 0.1, length.out=10)
 thresh &lt;- -1*qnorm(1-level)
@@ -639,7 +700,7 @@ plot(level, pwr1, ylim=range(c(pwr1, pwr2)),
      main=&quot;Compound approach - elpd \n Power to choose the NC model under null&quot;, type=&quot;b&quot;)
 points(level, pwr2, type=&quot;b&quot;, pch=4)
 legend(&quot;topleft&quot;, legend=c(&quot;complete independence&quot;, &quot;co-regulation&quot;),  pch=c(1, 4))</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
 <p>The elpd statistic with a nominal level of 0.05 gives a somewhat lower power to conclusively choose the NC model than using the BF with a threshold of 10, but the rate of choosing the wrong model is also lower.</p>
 </div>
 </div>
@@ -705,11 +766,11 @@ names(zz) &lt;- c(&quot;Avg. eQTL herit.&quot;, &quot;Avg. GWAS herit.&quot;, &q
 rownames(zz) &lt;- paste0(&quot;lambda &quot;, c(0.02, 0.05, 0.08, 0.13, 0.2))
 print(zz)</code></pre>
 <pre><code>##             Avg. eQTL herit. Avg. GWAS herit. Avg corr btw beta1 and beta2
-## lambda 0.02        0.5260008        0.3755320                    0.1304131
-## lambda 0.05        0.5260008        0.3764969                    0.3002655
-## lambda 0.08        0.5260008        0.3782368                    0.4451529
-## lambda 0.13        0.5260008        0.3828207                    0.6242689
-## lambda 0.2         0.5260008        0.3926032                    0.7733138</code></pre>
+## lambda 0.02        0.5241107        0.3718309                    0.1095832
+## lambda 0.05        0.5241107        0.3726939                    0.2810305
+## lambda 0.08        0.5241107        0.3743370                    0.4287158
+## lambda 0.13        0.5241107        0.3787731                    0.6127182
+## lambda 0.2         0.5241107        0.3883813                    0.7665313</code></pre>
 </div>
 <div id="results-1" class="section level3">
 <h3>Results</h3>
@@ -740,10 +801,31 @@ for(i in 1:5){
 power_long &lt;- gather(power, &quot;stat&quot;, &quot;power&quot;, -lambda)
 ggplot(power_long) + geom_point(aes(x=lambda, y=power, group=stat, color=stat, shape=stat), size=2) +
   geom_line(aes(x=lambda, y=power, group=stat, color=stat)) + 
-  xlab(&quot;Labmda&quot;) + ylab(&quot;Power&quot;) + ggtitle(&quot;Power under causal model&quot;) + 
+  xlab(&quot;Lambda&quot;) + ylab(&quot;Power&quot;) + ggtitle(&quot;Power under causal model&quot;) + 
   theme_bw()</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
-<p>For the highest correlation level, the compound approach using the Bayes factor is the most powerful. For lower values of <span class="math inline">\(\lambda\)</span>, the correlation appraoch is the most powerful.</p>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+<p>The correlation approach is the most powerful, however, as we saw previously, it may not correctly control the type 1 error. We do find that in these settings, the correlation approach does a good job of covering the true value of <span class="math inline">\(\lambda\)</span> – the coverage rate is above the nominal level in all cases except for the highers correlation case.</p>
+<pre class="r"><code>levels &lt;- c(0.02, 0.05, 0.08, 0.1, 0.15)
+coverage &lt;- matrix(nrow=length(levels), ncol=length(lams))
+for(i in 1:length(lams)){
+  lam &lt;- lams[i]
+  for(j in 1:length(levels)){
+    upper &lt;- res[[i]]$corr[2, , 1] + qnorm(1-(levels[j]/2))*res[[i]]$corr[2, , 2]
+    lower &lt;- res[[i]]$corr[2, , 1] - qnorm(1-(levels[j]/2))*res[[i]]$corr[2, , 2]
+    coverage[j, i] &lt;- 1-mean(upper &lt; lam | lower &gt; lam)
+  }
+}
+coverage &lt;- data.frame(coverage)
+names(coverage) &lt;- paste0(&quot;lambda=&quot;, lams)
+#coverage$nominal &lt;- 1-lams
+coverage$level &lt;- 1-levels
+coverage_long &lt;- gather(coverage, &quot;lambda&quot;, &quot;coverage&quot;, -level)
+ggplot(coverage_long) + geom_point(aes(x=level, y=coverage, group=lambda, color=lambda, shape=lambda), size=2) +
+  geom_line(aes(x=level, y=coverage, group=lambda, color=lambda)) + 
+  geom_abline(slope=1, intercept=0, linetype=2) + 
+  xlab(&quot;Level&quot;) + ylab(&quot;Coverage&quot;) + ggtitle(&quot;Correlation Approach\nCoverage of true lambda under causal model&quot;) + 
+  theme_bw()</code></pre>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
 </div>
 </div>
 

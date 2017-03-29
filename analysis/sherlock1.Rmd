@@ -210,4 +210,3 @@ ggplot(power_long) + geom_point(aes(x=lambda, y=power, group=stat, color=stat, s
   theme_bw()
 ```
 
-Using the default priors from the software (which are slightly larger than the priors from the paper), the original Sherlock is more powerful than the correlation approach for the two smallest values of $\lambda$. However, we saw in the previous section that there is potential for inflated type 1 error using this method. Using the priors from the paper, the original Sherlock method is less powerful than the correlation approach for all values of $\lambda$. The correlation appraoch has the best power for $\lambda$ equal to 0.08 or 0.13. 

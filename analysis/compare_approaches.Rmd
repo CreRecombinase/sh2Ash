@@ -319,7 +319,45 @@ ggplot(t1e_long) +  geom_point(aes(x=level, y=Type1Error, group=Setting, color=S
   theme_bw()
 ```
  
-Weirdly in this case, the type 1 error for the complete independence setting is higher than when $g_{20}$ and $g_{21}$ are estimated.
+In the complete independence setting, knowing the value of $\beta_1$ is the critical piece that gives the correct type 1 error. The estimates of $\lambda$ between the oracle1 and estimated methods are similar but the standard errors are much larger for the oracle method.
+```{r}
+plot(res1$corr[1, , 1], res1$corr[3, , 1], xlab="Oracle 1 (beta_1, g_20, g_21 Known)", ylab="All Estimated", main="Estimate of lambda\nComplete Independence")
+abline(0, 1)
+plot(res1$corr[1, , 2], res1$corr[3, , 2], xlab="Oracle 1 (beta_1, g_20, g_21 Known)", ylab="All Estimated", main="Estimated Standard Error of Estimate of lambda\nComplete Independence")
+abline(0, 1)
+```
+
+
+In the complete independence setting, 
+there is less of a difference between the oracle2 ($g_{20}$ and $g_{21}$ are estimated) method and the method where everything is estimated. This probably indicates that, in this setting we do a pretty good job of estimating $g_{20}$ and $g_{21}$ (which in this case are the same).
+
+```{r}
+plot(res1$corr[2, , 1], res1$corr[3, , 1], xlab="Oracle 2 (g_20, g_21 Known)", ylab="All Estimated", main="Estimate of lambda\nComplete Independence")
+abline(0, 1)
+plot(res1$corr[2, , 2], res1$corr[3, , 2], xlab="Oracle 2 (g_20, g_21 Known)", ylab="All Estimated", main="Estimated Standard Error of Estimate of lambda\nComplete Independence")
+abline(0, 1)
+```
+
+
+In the co-regulation case, interestingly, the standard error estimates are smaller in the Oracle 1 method than in the method where everything is estimated. 
+```{r}
+plot(res2$corr[1, , 1], res2$corr[3, , 1], xlab="Oracle 1 (beta_1, g_20, g_21 Known)", ylab="All Estimated", main="Estimate of lambda\nCo-regulation")
+abline(0, 1)
+plot(res2$corr[1, , 2], res2$corr[3, , 2], xlab="Oracle 1 (beta_1, g_20, g_21 Known)", ylab="All Estimated", main="Estimated Standard Error of Estimate of lambda\nCo-regulation")
+abline(0, 1)
+```
+
+
+In the co-regulation case,
+$g_{20}$ and $g_{21}$ are different so we don't do as good a job of estimating them. Therefore, there is more advantage to knowing these than in the complete independence case. The standard error estimates when $g_{20}$ and $g_{21}$ are known are larger than when they are estimated.
+```{r}
+plot(res2$corr[2, , 1], res2$corr[3, , 1], xlab="Oracle 2 (g_20, g_21 Known)", ylab="All Estimated", main="Estimate of lambda\nCo-regulation")
+abline(0, 1)
+plot(res2$corr[2, , 2], res2$corr[3, , 2], xlab="Oracle 2 (g_20, g_21 Known)", ylab="All Estimated", main="Estimated Standard Error of Estimate of lambda\nCo-regulation")
+abline(0, 1)
+```
+
+
 
 ### Compound approach 
 

@@ -9,7 +9,7 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Overivew
+# Overivew
 
 These simulations are intended to compare the compound and correlation approaches described in the notes [here](sherlock2_compound_and_correlation.pdf). The notation used here should match the notes. 
 
@@ -23,7 +23,7 @@ The workhorse function used for running simulations is the `sim_sherlock_flex` f
 
 For each scenario, we will compare the power and type 1 error. For the compound method we consider both the elpd statistic and the Bayes factor for comparing the NC and CC model. We also consider a few choices of prior for the NC model. For the compound method, there are three possible conclusions that can be drawn from the results: 1) Accept the NC model over the CC model 2) Accept the CC model over the NC model 3) The data is indeterminate and does not strongly favor either. The correlation method uses more traditional hypothesis testing methods. In this approach we are able to either 1) Reject the null hypothesis of $\lambda =0$ or 2) Fail to reject the null hypothesis.
 
-### Details of sim_sherlock_flex
+## Details of sim_sherlock_flex
 The `sim_sherlock_flex` function takes the following inputs:
 
 + `n.rep`: Number of replications
@@ -40,7 +40,8 @@ The `sim_sherlock_flex` function takes the following inputs:
 There are three choices that can be included in the `types` argument. If `types=c()` is used, no analysis will be performed but for each repetition, the heritability of gene expression and phenotype and the correlation between $\beta_1$ and $\beta_2$ will be calculated. The three types of analysis are
 
 + `corr-est`: Correlation method with $\beta_1$ approximated by the posterior distribution of $\beta_1$ obtained from ASH i.e., as described in Section 2.1 of [the notes](sherlock2_compound_and_correlation.pdf). $g_{20}$ and $g_{21}$ must also be estimated. We use $\hat{g}_{20} = \hat{g}_{21}$ with both distributions estimated as the ASH fit of only $\hat{\beta}_2$. 
-+ `corr-o`: "Oracle" correlation method in which $\beta_1$ are known. $g_{20}$ and $g_{21}$ are still estimated in the same was as for `corr-est`. 
++ `corr-o1`: "Oracle" correlation method in which $\beta_1$ are known, as are $g_{20}$ and $g_{21}$.
++ `corr-o2`: "Oracle" correlation method with $\beta_1$ known and $g_{20}$ and $g_{21}$ estimated in the same was as for `corr-est`. 
 + `compound-est`: The compound method in Section 3 of  [the notes](sherlock2_compound_and_correlation.pdf). For this method $\pi_{0}^{(1)}$, $\pi_{0}^{(2,0)}$, $\sigma_1$ and $\sigma_2$ estimated by the maximum likelihood estimators. That is $\hat{\pi}_{0}^{(1)}$ and $\sigma_1$ maximize
 $$
 l(\pi_{0}^{(1)}, \sigma_1 \vert \hat{\beta}_{1}, b_{1}) = \sum_{i=1}^{p}\log \left( \pi_{0}^{(1)} N(\hat{\beta}_{1,i}; 0, b_{1,i}^2) + (1-\pi_{0}^{(1)})N(\hat{\beta}_{1,i}; 0, \sigma_1^2 + b_{1,i}^2) \right)
@@ -53,9 +54,9 @@ $$
 Since `g1` and `g2` can be any functions, `sim_sherlock_flex` can be used to simulate from almost any model.
 
 
-## Non-Causal models
+# Non-Causal models
 
-### No Correlation: Data Generation
+## No Correlation: Data Generation
 
 Data are simulated so that $\beta_1$ and $\beta_2$ are completely independent. Both $\beta_1$ and $\beta_1$ are simulated from mixtures of normal distributions specified by the following tables:
 
@@ -125,7 +126,7 @@ qqthin(pval2) + ggtitle("GWAS Results") + theme(legend.position="none")
 
 Both studies have fairly strong signal but only one eQTL reaches genome wide significance (pval < $5\cdot 10^{-8}$). Ten SNPs reach this threshold in the GWAS. 
 
-### Some Co-Regulation: Data Generation
+## Some Co-Regulation: Data Generation
 
 In this scheme, there is still no *causal* relationship between the two traits but they share more causal variants than might be expected by chance. This pattern might arise if the two traits share some regualtors. eQTL effects $\beta_1$ are drawn from the same distribution as in the previous section. SNPs that are eQTLs have a 50\% chance of being effecting the phenotype while SNPs that are not eQTLs only have a 10\% chance of effecting the phenotype. This scenario is encoded by the functions `g1` and `g2`:
 
@@ -153,7 +154,7 @@ res <- sim_sherlock_flex(n.rep=100, p=10000, g1=g1, g2=g2,
 colMeans(res$stats)
 ```
 
-### Results
+## Results
 
 Results are stored for 100 simulations.
 ```{r}
@@ -162,28 +163,28 @@ res2 <- getobj("../data/res_null_corr.RData")
 ```
 
 
-#### Correlation approach
+### Correlation approach
 
 First we look at the results for the correlation method:
 ```{r}
 #CI
-corr_res1 <- data.frame("lambda"=res1$corr[2, , 1], "se"=res1$corr[2, ,2])
+corr_res1 <- data.frame("lambda"=res1$corr[3, , 1], "se"=res1$corr[3, ,2])
 corr_res1$lower <- corr_res1$lambda - qnorm(0.975)*corr_res1$se
 corr_res1$upper <- corr_res1$lambda + qnorm(0.975)*corr_res1$se
 #Co-regulation
-corr_res2 <- data.frame("lambda"=res2$corr[2, , 1], "se"=res2$corr[2, ,2])
+corr_res2 <- data.frame("lambda"=res2$corr[3, , 1], "se"=res2$corr[3, ,2])
 corr_res2$lower <- corr_res2$lambda - qnorm(0.975)*corr_res2$se
 corr_res2$upper <- corr_res2$lambda + qnorm(0.975)*corr_res2$se
 
 #Plot
 ggplot(corr_res1) + geom_errorbar(aes(x=1:100, ymax = upper, ymin=lower))+
         geom_point(aes(x=1:100, y=lambda)) + geom_hline(yintercept=0, linetype=2) + 
-        ggtitle("Null - Complete Independence\n Correlation method lambda estimates and 95% confidence intervals") + 
+        ggtitle("Null - Complete Independence\n Correlation Approach\nLambda estimates and 95% confidence intervals") + 
         xlab("Repetition") + ylab("Lambda") + 
         theme_bw() + theme(panel.grid=element_blank())
 ggplot(corr_res2) + geom_errorbar(aes(x=1:100, ymax = upper, ymin=lower))+
         geom_point(aes(x=1:100, y=lambda)) + geom_hline(yintercept=0, linetype=2) + 
-        ggtitle("Null - some correlation\n Correlation method lambda estimates and 95% confidence intervals") + 
+        ggtitle("Null - Some Correlation\n Correlation Approach\nLambda estimates and 95% confidence intervals") + 
         xlab("Repetition") + ylab("Lambda") + 
         theme_bw() + theme(panel.grid=element_blank())
 ```
@@ -199,76 +200,130 @@ mean(corr_res2$upper < 0 | corr_res2$lower > 0)
 In both settings, the average estimate of $\lambda$ is very close to zero in both cases. However, the type 1 error rate in both cases is too high.
 
 ```{r}
-level <- seq(0.01, 0.1, length.out=10)
-thresh_two_sided <- qnorm(1-(level/2))
-t1e_corr_1 <- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res1$lambda/corr_res1$se) > s)})
-t1e_corr_2 <- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res2$lambda/corr_res2$se) > s)})
-plot(level, t1e_corr_1, ylim=range(c(t1e_corr_1, t1e_corr_2)), 
-     ylab="Type 1 Error Rate", xlab="Nominal level", 
-     main="Correlation approach - type 1 error", type="b", col="blue")
-points(level, t1e_corr_2, type="b", col="blue", pch=4)
-legend("topleft", legend=c("complete independence - corr.", "co-regulation - corr."), 
-       col=rep(c("black", "blue"), each=2), pch=rep(c(1, 4), 2))
-abline(0, 1, lty=2)
+library(tidyr)
+t1e <- data.frame("level"= seq(0.01, 0.1, length.out=10))
+thresh_two_sided <- qnorm(1-(t1e$level/2))
+t1e$comp_indep <- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res1$lambda/corr_res1$se) > s)})
+t1e$coreg <- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res2$lambda/corr_res2$se) > s)})
+t1e_long <- gather(t1e, "Setting", "Type1Error", -level)
+
+ggplot(t1e_long) +  geom_point(aes(x=level, y=Type1Error, group=Setting, color=Setting, shape=Setting), size=2) +
+  geom_line(aes(x=level, y=Type1Error, group=Setting, color=Setting)) + 
+  geom_abline(slope=1, intercept=0, linetype=2) + 
+  xlab("Level") + ylab("Type 1 Error") + ggtitle("Correlation Approach\nType 1 Error") + 
+  theme_bw()
 ```
 
-#### oracle correlation approach
+### Oracle Correlation Approach
 
 
-In the oracle correlation method, $\beta_1$ is known. Unfortunately, this also gives slightly too large type 1 error. 
+Here I consider two variations of "oracle" versions of the correlation approach. In the first $\beta_1$ are known as are $g_{20}$ and $g_{21}$ (which determine the distribution of $u$). 
 
 ```{r}
 #CI
-corr_res1_o <- data.frame("lambda"=res1$corr[1, , 1], "se"=res1$corr[1, ,2])
-corr_res1_o$lower <- corr_res1_o$lambda - qnorm(0.975)*corr_res1_o$se
-corr_res1_o$upper <- corr_res1_o$lambda + qnorm(0.975)*corr_res1_o$se
+corr_res1_o1 <- data.frame("lambda"=res1$corr[1, , 1], "se"=res1$corr[1, ,2])
+corr_res1_o1$lower <- corr_res1_o1$lambda - qnorm(0.975)*corr_res1_o1$se
+corr_res1_o1$upper <- corr_res1_o1$lambda + qnorm(0.975)*corr_res1_o1$se
 #Co-regulation
-corr_res2_o <- data.frame("lambda"=res2$corr[1, , 1], "se"=res2$corr[1, ,2])
-corr_res2_o$lower <- corr_res2_o$lambda - qnorm(0.975)*corr_res2_o$se
-corr_res2_o$upper <- corr_res2_o$lambda + qnorm(0.975)*corr_res2_o$se
+corr_res2_o1 <- data.frame("lambda"=res2$corr[1, , 1], "se"=res2$corr[1, ,2])
+corr_res2_o1$lower <- corr_res2_o1$lambda - qnorm(0.975)*corr_res2_o1$se
+corr_res2_o1$upper <- corr_res2_o1$lambda + qnorm(0.975)*corr_res2_o1$se
 
 #Plot
-ggplot(corr_res1_o) + geom_errorbar(aes(x=1:100, ymax = upper, ymin=lower))+
+ggplot(corr_res1_o1) + geom_errorbar(aes(x=1:100, ymax = upper, ymin=lower))+
         geom_point(aes(x=1:100, y=lambda)) + geom_hline(yintercept=0, linetype=2) + 
-        ggtitle("Null - Complete Independence\n Correlation method lambda estimates and 95% confidence intervals") + 
+        ggtitle("Null - Complete Independence\nCorrelation Approach - Oracle 1\nlambda estimates and 95% confidence intervals") + 
         xlab("Repetition") + ylab("Lambda") + 
         theme_bw() + theme(panel.grid=element_blank())
-ggplot(corr_res2_o) + geom_errorbar(aes(x=1:100, ymax = upper, ymin=lower))+
+ggplot(corr_res2_o1) + geom_errorbar(aes(x=1:100, ymax = upper, ymin=lower))+
         geom_point(aes(x=1:100, y=lambda)) + geom_hline(yintercept=0, linetype=2) + 
-        ggtitle("Null - some correlation\n Correlation method lambda estimates and 95% confidence intervals") + 
+        ggtitle("Null - some correlation\nCorrelation Approach - Oracle 1\nLambda estimates and 95% confidence intervals") + 
         xlab("Repetition") + ylab("Lambda") + 
         theme_bw() + theme(panel.grid=element_blank())
 ```
 
 ```{r}
 #Average lambda estimate
-mean(corr_res1_o$lambda)
-mean(corr_res2_o$lambda)
+mean(corr_res1_o1$lambda)
+mean(corr_res2_o1$lambda)
 #Type 1 error rate
-mean(corr_res1_o$upper < 0 | corr_res1_o$lower > 0)
-mean(corr_res2_o$upper < 0 | corr_res2_o$lower > 0)
+mean(corr_res1_o1$upper < 0 | corr_res1_o1$lower > 0)
+mean(corr_res2_o1$upper < 0 | corr_res2_o1$lower > 0)
 ```
+
+```{r}
+library(tidyr)
+t1e <- data.frame("level"= seq(0.01, 0.1, length.out=10))
+thresh_two_sided <- qnorm(1-(t1e$level/2))
+t1e$comp_indep <- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res1_o1$lambda/corr_res1_o1$se) > s)})
+t1e$coreg <- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res2_o1$lambda/corr_res2_o1$se) > s)})
+t1e_long <- gather(t1e, "Setting", "Type1Error", -level)
+
+ggplot(t1e_long) +  geom_point(aes(x=level, y=Type1Error, group=Setting, color=Setting, shape=Setting), size=2) +
+  geom_line(aes(x=level, y=Type1Error, group=Setting, color=Setting)) + 
+  geom_abline(slope=1, intercept=0, linetype=2) + 
+  xlab("Level") + ylab("Type 1 Error") + ggtitle("Correlation Approach - Oracle1\nType 1 Error") + 
+  theme_bw()
+```
+
+Even with all the distributions known, the type 1 error is a little high in the coregulation case!
+
+
+In the second oracle variation, we estimate $\beta_1$ using the posterior distribution from ASH but $g_{20}$ and $g_{21}$ are known.
 
 
 ```{r}
-level <- seq(0.01, 0.1, length.out=10)
-thresh_two_sided <- qnorm(1-(level/2))
-t1e_corr_1 <- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res1_o$lambda/corr_res1_o$se) > s)})
-t1e_corr_2 <- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res2_o$lambda/corr_res2_o$se) > s)})
-plot(level, t1e_corr_1, ylim=range(c(t1e_corr_1, t1e_corr_2)), 
-     ylab="Type 1 Error Rate", xlab="Nominal level", 
-     main="Correlation Oracle approach - type 1 error", type="b", col="blue")
-points(level, t1e_corr_2, type="b", col="blue", pch=4)
-legend("topleft", legend=c("complete independence - corr.", "co-regulation - corr."), 
-       col=rep(c("black", "blue"), each=2), pch=rep(c(1, 4), 2))
-abline(0, 1, lty=2)
+#CI
+corr_res1_o2 <- data.frame("lambda"=res1$corr[2, , 1], "se"=res1$corr[2, ,2])
+corr_res1_o2$lower <- corr_res1_o2$lambda - qnorm(0.975)*corr_res1_o2$se
+corr_res1_o2$upper <- corr_res1_o2$lambda + qnorm(0.975)*corr_res1_o2$se
+#Co-regulation
+corr_res2_o2 <- data.frame("lambda"=res2$corr[2, , 1], "se"=res2$corr[2, ,2])
+corr_res2_o2$lower <- corr_res2_o2$lambda - qnorm(0.975)*corr_res2_o2$se
+corr_res2_o2$upper <- corr_res2_o2$lambda + qnorm(0.975)*corr_res2_o2$se
+
+#Plot
+ggplot(corr_res1_o2) + geom_errorbar(aes(x=1:100, ymax = upper, ymin=lower))+
+        geom_point(aes(x=1:100, y=lambda)) + geom_hline(yintercept=0, linetype=2) + 
+        ggtitle("Null - Complete Independence\n Correlation Approach - Oracle2\nlambda estimates and 95% confidence intervals") + 
+        xlab("Repetition") + ylab("Lambda") + 
+        theme_bw() + theme(panel.grid=element_blank())
+ggplot(corr_res2_o2) + geom_errorbar(aes(x=1:100, ymax = upper, ymin=lower))+
+        geom_point(aes(x=1:100, y=lambda)) + geom_hline(yintercept=0, linetype=2) + 
+        ggtitle("Null - some correlation\n Correlation Approach - Oracle 2\nlambda estimates and 95% confidence intervals") + 
+        xlab("Repetition") + ylab("Lambda") + 
+        theme_bw() + theme(panel.grid=element_blank())
 ```
 
+```{r}
+#Average lambda estimate
+mean(corr_res1_o2$lambda)
+mean(corr_res2_o2$lambda)
+#Type 1 error rate
+mean(corr_res1_o2$upper < 0 | corr_res1_o2$lower > 0)
+mean(corr_res2_o2$upper < 0 | corr_res2_o2$lower > 0)
+```
 
+```{r}
+library(tidyr)
+t1e <- data.frame("level"= seq(0.01, 0.1, length.out=10))
+thresh_two_sided <- qnorm(1-(t1e$level/2))
+t1e$comp_indep <- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res1_o2$lambda/corr_res1_o2$se) > s)})
+t1e$coreg <- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res2_o2$lambda/corr_res2_o2$se) > s)})
+t1e_long <- gather(t1e, "Setting", "Type1Error", -level)
 
-#### Compound approach 
+ggplot(t1e_long) +  geom_point(aes(x=level, y=Type1Error, group=Setting, color=Setting, shape=Setting), size=2) +
+  geom_line(aes(x=level, y=Type1Error, group=Setting, color=Setting)) + 
+  geom_abline(slope=1, intercept=0, linetype=2) + 
+  xlab("Level") + ylab("Type 1 Error") + ggtitle("Correlation Approach - Oracle2\nType 1 Error") + 
+  theme_bw()
+```
+ 
+Weirdly in this case, the type 1 error for the complete independence setting is higher than when $g_{20}$ and $g_{21}$ are estimated.
 
-##### Bayes factor 
+### Compound approach 
+
+#### Bayes factor 
 
 Next we look at the compound method. We considered three different values of $C$ in the prior for $P[\beta_2 =0 \vert \beta_1 \neq 0]$ (recall that this parameter has a Beta$(C*\pi_{0}^{(2,0)}, C*(1-\pi_{0}^{(2,0)}))$ prior). We consider $C = 100, 1000$, and $5000$. 
 ```{r}
@@ -296,6 +351,7 @@ First considering the Bayes factors --- The value of $C$ has very little effect 
 pairs(comp_res1[, paste0("bf.", c(100, 1000, 5000))], main="Complete independence")
 pairs(comp_res2[, paste0("bf.", c(100, 1000, 5000))], main="Co-regulation")
 ```
+
 The Bayes factors are negative for 99\% of simulations in the complete independece scenario and 82\% of simulations in the co-regulation scenario ( Negative Bayes factors indicate that there is more evidence for the NC model than the CC model). The type 1 error rate (i.e. the rate of incorrectly accepting the CC model over the NC model) using the Bayes factor depends on the cutoff chosen.
 
 ```{r}
@@ -310,6 +366,7 @@ legend("topright", legend=c("complete independence", "co-regulation"),
        col=c("black", "red"), pch=c(1, 4))
 abline(v=c(log10(2), 1), lty=2)
 ```
+
 In the complete indpendence case, the compound method has almost no type 1 errors (we observed one BF of $10^5$ while all the rest are negative). In the co-regulation setting, there are more errors using lower thresholds. Using a BF cutoff of 2 (first vertical line), the type 1 error rate is 16\%. Using a cutoff of 10, the type 1 error rate is 8\%. 
 
 
@@ -330,7 +387,7 @@ abline(v=-1*c(log10(2), 1), lty=2)
 
 Not surprisingly, in the complete independence scenario, there is stronger evidence to accept the NC model over the CC model. 
 
-##### elpd 
+#### elpd 
 
 Next we consider the elpd metric for comparing models. Like the BF, these are also fairly insensitive to the choice of $C$. 
 
@@ -378,9 +435,9 @@ legend("topleft", legend=c("complete independence", "co-regulation"),  pch=c(1, 
 
 The elpd statistic with a nominal level of 0.05 gives a somewhat lower power to conclusively choose the NC model than using the BF with a threshold of 10, but the rate of choosing the wrong model is also lower.
 
-## Causal Relationship
+# Causal Relationship
 
-### Data Generation
+## Data Generation
 In these simulations, there is a causal relationship between the two traits. We generate $\beta_1$ as in the previous sections. $\beta_2$ is generated as $\lambda \beta_1 + u$ where $u$ is drawn from the $g_2$ distribution used in previous sections --- that is the mixture given by the table 
 
 $g_2$ mixture compononents:
@@ -428,7 +485,7 @@ print(zz)
 ```
 
 
-### Results
+## Results
 
 We will compare the power of 
 

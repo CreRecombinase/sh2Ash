@@ -1,0 +1,227 @@
+---
+title: "Analysis of CAD and LDL"
+author: "Jean Morrison"
+date: "April 10, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+In this analysis I look for a signature of a causal relationship between LDL cholesterol and coronary artery disease. This analysis was inspired by the positive results reported by Pickrell et al. in "Detection and interpretation of shared genetic influences on 40 human traits" and we use the same data. 
+
+Data sources:
++ CAD summary statistics were downloaded from [here](http://www.cardiogramplusc4d.org/data-downloads/) following the "CARDIoGRAM GWA meta-analysis" link.
++ LDL summary statistics were downloaded from [here](http://csg.sph.umich.edu/abecasis/public/lipids2010/)
+
+
+## Read in data
+
+Coronary artery disease:
+
+```{r, eval=FALSE}
+library(readr)
+cad <- read_delim("../data/CARDIoGRAM_GWAS_RESULTS.txt", delim="\t")
+head(cad)
+# A tibble: 6 × 12
+#         SNP `chr_pos_(b36)` reference_allele other_allele ref_allele_frequency    pvalue het_pvalue   log_odds log_odds_se N_case
+#       <chr>           <chr>            <chr>        <chr>                <dbl>     <dbl>      <dbl>      <dbl>       <dbl>  <int>
+#1 rs12565286     chr1:711153                C            G           0.05380729 0.0651210  0.9996689  0.1282012   0.0695073   6659
+#2 rs11804171     chr1:713682                T            A           0.94596855 0.0632817  0.9992190 -0.1297868   0.0698828   6017
+#3  rs3094315     chr1:742429                G            A           0.17509983 0.9545154  0.9934594  0.0016609   0.0291187   9714
+#4  rs3131968     chr1:744055                G            A           0.76986967 0.3571689  0.5146446 -0.0289617   0.0314537  10213#
+#5  rs2905035     chr1:765522                G            A           0.81987365 0.8823145  0.5314654 -0.0040285   0.0272131  13523
+#6  rs2980319     chr1:766985                T            A           0.82053910 0.9730835  0.6074723 -0.0009125   0.0270433  14201
+# ... with 2 more variables: N_control <int>, model <chr>
+dim(cad)
+#[1] 2420360      12
+```
+
+
+LDL cholesterol: 
+
+```{r, eval=FALSE}
+ldl <- read_delim("../data/LDL_with_Effect.tbl", delim="\t")
+dim(ldl)
+#[1] 2692564      10
+head(ldl)
+# A tibble: 6 × 10
+#  MarkerName Allele1 Allele2 Weight GC.Zscore GC.Pvalue Overall                 Direction  Effect StdErr
+#       <chr>   <chr>   <chr>  <int>     <dbl>     <dbl>   <chr>                     <chr>   <dbl>  <dbl>
+#1       rs10       a       c  81680     2.051   0.04027       + ++-+++++-+?++-??-++-??++-  0.0294 0.0152
+#2  rs1000000       a       g  95454     0.662   0.50770       + -----++-+--+-+++-+++-+-++  0.0044 0.0063
+#3 rs10000010       t       c  95454     1.583   0.11350       + ++--++---+-+-++--+++---++  0.0073 0.0052
+#4 rs10000012       c       g  95397     0.155   0.87700       + +-+-----++-++---+++---+-+ -0.0002 0.0076
+#5 rs10000013       a       c  95454    -1.392   0.16400       - --+---+--++--+--++---+-++ -0.0075 0.0062
+#6 rs10000017       t       c  95454    -0.015   0.98820       - --+---+++--+---+-++-++--+  0.0021 0.0066
+```
+
+
+Merge data into a single data frame
+
+```{r, eval=FALSE}
+sum(cad$SNP %in% ldl$MarkerName)
+#[1] 2420288
+ix <- which(cad$SNP %in% ldl$MarkerName)
+dat <- data.frame(cad[ix, c("SNP", "chr_pos_(b36)", "reference_allele", "other_allele", "log_odds", "log_odds_se", "pvalue")])
+names(dat)[5:7] <- c("cad_log_odds", "cad_log_odds_se", "cad_pvalue")
+dat$ldl_effect <- ldl$Effect[match(dat$SNP, ldl$MarkerName)]
+dat$ldl_se <- ldl$StdErr[match(dat$SNP, ldl$MarkerName)]
+dat$ldl_pvalue <- ldl$GC.Pvalue[match(dat$SNP, ldl$MarkerName)]
+
+#Check Strands
+letters <- c("a"="A", "c"="C", "g"="G", "t"="T")
+ix_match <- which(letters[ldl$Allele1[match(dat$SNP, ldl$MarkerName)]] == dat$reference_allele & letters[ldl$Allele2[match(dat$SNP, ldl$MarkerName)]] == dat$other_allele   )
+length(ix_match)
+#[1] 212913
+ix_mismatch <- which(letters[ldl$Allele2[match(dat$SNP, ldl$MarkerName)]] == dat$reference_allele & letters[ldl$Allele1[match(dat$SNP, ldl$MarkerName)]] == dat$other_allele)
+length(ix_mismatch)
+#[1] 2207284
+ix_other <- which(!1:nrow(dat) %in% c(ix_match, ix_mismatch))
+length(ix_other)
+#[1] 91
+dat$ldl_effect[ix_mismatch] <- -1*dat$ldl_effect[ix_mismatch]
+dat <- dat[-ix_other,]
+nrow(dat)
+#[1] 2420197
+
+save(dat, file="../data/LDL_CAD.RData")
+```
+
+Some basic plots
+```{r}
+library(readr)
+library(sherlockAsh)
+dat <- getobj("../data/LDL_CAD.RData")
+dat$cad_qvalue <- p.adjust(dat$cad_pvalue, method="BH")
+with(dat[dat$cad_qvalue < 0.1,], plot(ldl_effect, cad_log_odds, cex=0.5, main="Only top CAD SNPs", xlab="LDL effect", ylab="CAD Log Odds"))
+
+dat$ldl_qvalue <- p.adjust(dat$ldl_pvalue, method="BH")
+with(dat[dat$ldl_qvalue < 0.1,], plot(ldl_effect, cad_log_odds, cex=0.5, main="Only top LDL SNPs", xlab="LDL effect", ylab="CAD Log Odds"))
+```
+
+Visually, these traits appear to have patterns consistent with a causal effect of LDL on CAD and not constent with a causal effect of CAD on LDL. We see that among the top LDL SNPs, there is a strong correlation between LDL effect size and CAD effect size. However, reversing the procedure and selecting the top CAD SNPs, the trend is les spronounced. Some of the top CAD SNPs also have large LDL effect sizes, however there are many strong CAD SNPs that have LDL effect close to zero. 
+
+Within the set of top LDL SNPs, there is correlation between LDL effect and CAD effect even for SNPs that do not reach the significance threshold for CAD: 
+
+```{r}
+cat("Correlation for significant LDL SNPs that have weak CAD effect: ", with(dat[dat$ldl_qvalue < 0.1 & dat$cad_qvalue > 0.1,], cor(ldl_effect, cad_log_odds)), "\n")
+cat("Correlation for significant LDL SNPs that have strong CAD effect: ", with(dat[dat$ldl_qvalue < 0.1 & dat$cad_qvalue < 0.1,], cor(ldl_effect, cad_log_odds)), "\n")
+```
+
+However, among top CAD SNPs, there is only (positive) correlation in effect sizes for SNPs that are also strong LDL SNPs
+
+```{r}
+cat("Correlation for significant CAD SNPs that have weak LDL effect: ", with(dat[dat$cad_qvalue < 0.1 & dat$ldl_qvalue > 0.1,], cor(ldl_effect, cad_log_odds)), "\n")
+cat("Correlation for significant CAD SNPs that have strong LDL effect: ", with(dat[dat$cad_qvalue < 0.1 & dat$ldl_qvalue < 0.1,], cor(ldl_effect, cad_log_odds)), "\n")
+```
+This suggests that the data are more consistant with a causal effect of LDL on CAD than vice versa.
+
+## Run Sherlock
+
+I ran the correlation approach to Sherlock on RCC considering the data from both directions. I used $g_{20} = g_{21}$ in both cases. For the direction LDL-> CAD our estimate of $\lambda$ is 0.52 (se 0.007; t-stat 76.9). For the direction CAD -> LDL we still get a strongly significant but much smaller in magnitude estimate of $\lambda$: 0.09 (se 0.002; t-stat 45.0). 
+
+One way to make sense of this result is to think that a more accurate model for the relationship between $\beta_{2}$ and $\beta_{1}$ is that 
+$$ \beta_{2,i} = \lambda_i\beta_{1,i} + u_i$$, where there is a different $\lambda$ for every SNP. The estimate of $\lambda$ we obtain from the correlation approach is somewhat like an average of the $\lambda_i$ over all SNPs. Because there are so many SNPs that are both CAD and LDL SNPs, this average is still significantly positive even though there are many CAD SNPs that have very small LDL effects. 
+
+I think this experiment highlights a problem with the current model and something to work on.
+
+## Look at Height and LDL
+
+As far as I know, there are no reports of a strong link between adult height and lipid levels. I am hoping that this can provide a negative example for us. Height data were downloaded from [here](http://portals.broadinstitute.org/collaboration/giant/index.php/GIANT_consortium_data_files#GWAS_Anthropometric_2014_Height).
+
+LDL cholesterol: 
+
+```{r,eval=FALSE}
+ldl <- read_delim("../data/LDL_with_Effect.tbl", delim="\t")
+dim(ldl)
+#[1] 2692564      10
+head(ldl)
+# A tibble: 6 × 10
+#  MarkerName Allele1 Allele2 Weight GC.Zscore GC.Pvalue Overall                 Direction  Effect StdErr
+#       <chr>   <chr>   <chr>  <int>     <dbl>     <dbl>   <chr>                     <chr>   <dbl>  <dbl>
+#1       rs10       a       c  81680     2.051   0.04027       + ++-+++++-+?++-??-++-??++-  0.0294 0.0152
+#2  rs1000000       a       g  95454     0.662   0.50770       + -----++-+--+-+++-+++-+-++  0.0044 0.0063
+#3 rs10000010       t       c  95454     1.583   0.11350       + ++--++---+-+-++--+++---++  0.0073 0.0052
+#4 rs10000012       c       g  95397     0.155   0.87700       + +-+-----++-++---+++---+-+ -0.0002 0.0076
+#5 rs10000013       a       c  95454    -1.392   0.16400       - --+---+--++--+--++---+-++ -0.0075 0.0062
+#6 rs10000017       t       c  95454    -0.015   0.98820       - --+---+++--+---+-++-++--+  0.0021 0.0066
+```
+
+Height
+
+```{r, eval=FALSE}
+ht <- read_delim("../data/GIANT_HEIGHT_Wood_et_al_2014_publicrelease_HapMapCeuFreq.txt", delim="\t")
+dim(ht)
+[1] 2550858       8
+head(ldl)
+# A tibble: 6 × 8
+#  MarkerName Allele1 Allele2 Freq.Allele1.HapMapCEU       b     SE       p      N
+#       <chr>   <chr>   <chr>                  <dbl>   <dbl>  <dbl>   <dbl>  <int>
+#1  rs4747841       A       G                  0.551 -0.0011 0.0029 7.0e-01 253213
+#2  rs4749917       T       C                  0.436  0.0011 0.0029 7.0e-01 253213
+#3   rs737656       A       G                  0.367 -0.0062 0.0030 4.2e-02 253116
+#4   rs737657       A       G                  0.358 -0.0062 0.0030 4.1e-02 252156
+#5  rs7086391       T       C                  0.120 -0.0087 0.0038 2.4e-02 248425
+#6   rs878177       T       C                  0.300  0.0140 0.0031 8.2e-06 251271
+```
+
+
+Merge data into a single data frame
+
+```{r, eval=FALSE}
+sum(ht$MarkerName %in% ldl$MarkerName)
+#[1] 2535734
+ix <- which(ht$MarkerName %in% ldl$MarkerName)
+dat <- data.frame(ht[ix, c("MarkerName", "Allele1", "Allele2", "b", "SE", "p")])
+names(dat)[4:6] <- c("height_effect", "height_se", "height_pvalue")
+dat$ldl_effect <- ldl$Effect[match(dat$MarkerName, ldl$MarkerName)]
+dat$ldl_se <- ldl$StdErr[match(dat$MarkerName, ldl$MarkerName)]
+dat$ldl_pvalue <- ldl$GC.Pvalue[match(dat$MarkerName, ldl$MarkerName)]
+
+#Check Strands
+letters <- c("a"="A", "c"="C", "g"="G", "t"="T")
+ix_match <- which(letters[ldl$Allele1[match(dat$MarkerName, ldl$MarkerName)]] == dat$Allele1 & 
+                  letters[ldl$Allele2[match(dat$MarkerName, ldl$MarkerName)]] == dat$Allele2)
+length(ix_match)
+#[1] 2534065
+ix_mismatch <- which(letters[ldl$Allele2[match(dat$MarkerName, ldl$MarkerName)]] == dat$Allele1 & 
+                  letters[ldl$Allele1[match(dat$MarkerName, ldl$MarkerName)]] == dat$Allele2)
+length(ix_mismatch)
+#[1] 0
+
+ix_other <- which(!1:nrow(dat) %in% c(ix_match, ix_mismatch))
+length(ix_other) #These seem to be mostly flipped strands
+#[1] 1669
+
+#dat$ldl_effect[ix_mismatch] <- -1*dat$ldl_effect[ix_mismatch]
+dat <- dat[-ix_other,]
+nrow(dat)
+save(dat, file="../data/LDL_HEIGHT.RData")
+```
+
+Some basic plots
+```{r}
+library(readr)
+library(sherlockAsh)
+dat <- getobj("../data/LDL_HEIGHT.RData")
+dat$height_qvalue <- p.adjust(dat$height_pvalue, method="BH")
+with(dat[dat$height_qvalue < 0.1,], plot(ldl_effect, height_effect, cex=0.5, main="Only top Height SNPs", xlab="LDL effect", ylab="Height effect"))
+with(dat[dat$height_qvalue < 0.1,], plot(ldl_effect, height_effect, cex=0.5, 
+      main="Only top Height SNPs", xlab="LDL effect", ylab="Height effect", xlim=c(-0.1, 0.1)))
+dat$ldl_qvalue <- p.adjust(dat$ldl_pvalue, method="BH")
+with(dat[dat$ldl_qvalue < 0.1,], plot(ldl_effect, height_effect, cex=0.5, main="Only top LDL SNPs", xlab="LDL effect", ylab="Height effect"))
+```
+
+It seems possible that, among top LDL SNPs, there is some negative correlation in the LDL and height effect sizes.
+
+### Sherlock Results
+
+The correlation approach gave significant non-zero estimates of $\lambda$ in both directions. For the LDL -> height direction the estimate is -0.08 (se 0.002; t-stats -27.2). For the height -> LDL direction the estime is -0.10 (se 0.001; t-stat -95.9).
+
+It seems to me that the variance estimates we are obtaining are too small. This might be a result of LD or could be another issue with the model.
+
+## LD Pruning
+

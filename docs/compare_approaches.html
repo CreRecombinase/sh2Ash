@@ -311,7 +311,7 @@ div.tocify {
 <div id="overivew" class="section level1">
 <h1>Overivew</h1>
 <p>These simulations are intended to compare the compound and correlation approaches described in the notes <a href="sherlock2_compound_and_correlation.pdf">here</a>. The notation used here should match the notes.</p>
-<p>The workhorse function used for running simulations is the <code>sim_sherlock_flex</code> function in the <code>sherlockAsh</code> package. This function generates summary statistics for the two studies according to the inputs and then analyzes them using the compound and correlation methods. We will consider the following scenarios (described in more detail later):</p>
+<p>The workhorse function used for running simulations is the <code>sim_sherlock_flex</code> function in the <code>sherlockAsh</code> package. This function generates summary statistics for the two studies according to the inputs and then analyzes them using the compound and correlation methods. Details of using this function are included at the end of this page. We will consider the following scenarios (described in more detail later):</p>
 <ol style="list-style-type: decimal">
 <li>Non-Causal models:</li>
 </ol>
@@ -326,34 +326,6 @@ div.tocify {
 <li>We consider four levels of correlation between the true effect sizes ranging from small (0.13) to very large (0.77)</li>
 </ul>
 <p>For each scenario, we will compare the power and type 1 error. For the compound method we consider both the elpd statistic and the Bayes factor for comparing the NC and CC model. We also consider a few choices of prior for the NC model. For the compound method, there are three possible conclusions that can be drawn from the results: 1) Accept the NC model over the CC model 2) Accept the CC model over the NC model 3) The data is indeterminate and does not strongly favor either. The correlation method uses more traditional hypothesis testing methods. In this approach we are able to either 1) Reject the null hypothesis of <span class="math inline">\(\lambda =0\)</span> or 2) Fail to reject the null hypothesis.</p>
-<div id="details-of-sim_sherlock_flex" class="section level2">
-<h2>Details of sim_sherlock_flex</h2>
-<p>The <code>sim_sherlock_flex</code> function takes the following inputs:</p>
-<ul>
-<li><code>n.rep</code>: Number of replications</li>
-<li><code>p</code>: Number of SNPs. In all simulations in this document <span class="math inline">\(p=10,000\)</span>.</li>
-<li><code>g1</code>: A function that takes one argument, <code>p</code> and returns <span class="math inline">\(\beta_1\)</span></li>
-<li><code>g2</code>: A function that takes one argument, <span class="math inline">\(\beta_1\)</span> and returns <span class="math inline">\(\beta_2\)</span></li>
-<li><code>maf.func</code>: A function that takes one argument, <code>p</code> and returns a vector of minor allele frequencies.</li>
-<li><code>n1,n2</code>: Sample sizes for eQTL and GWA studies. These are used for calculateing <span class="math inline">\(se(\hat{\beta}_1)\)</span> and <span class="math inline">\(se(\hat{\beta}_2)\)</span>. In this document <span class="math inline">\(n_1=500\)</span> and <span class="math inline">\(n_2=5,000\)</span>.</li>
-<li><code>types</code>: A specification of which types of analysis to conduct. (Described below).</li>
-<li><code>C</code>: A list of constants to consider. This specifies the prior distribution of <span class="math inline">\(\pi_{0}^{(2,1)}\)</span> for the compound method (See equation 18 of <a href="sherlock2_compound_and_correlation.pdf">the notes</a>). We consider values of <span class="math inline">\(C\)</span> of 100, 1000, and 5000.</li>
-<li><code>seed</code>: Random seed</li>
-<li><code>cores</code>: Number of cores to use</li>
-</ul>
-<p>There are three choices that can be included in the <code>types</code> argument. If <code>types=c()</code> is used, no analysis will be performed but for each repetition, the heritability of gene expression and phenotype and the correlation between <span class="math inline">\(\beta_1\)</span> and <span class="math inline">\(\beta_2\)</span> will be calculated. The three types of analysis are</p>
-<ul>
-<li><code>corr-est</code>: Correlation method with <span class="math inline">\(\beta_1\)</span> approximated by the posterior distribution of <span class="math inline">\(\beta_1\)</span> obtained from ASH i.e., as described in Section 2.1 of <a href="sherlock2_compound_and_correlation.pdf">the notes</a>. <span class="math inline">\(g_{20}\)</span> and <span class="math inline">\(g_{21}\)</span> must also be estimated. We use <span class="math inline">\(\hat{g}_{20} = \hat{g}_{21}\)</span> with both distributions estimated as the ASH fit of only <span class="math inline">\(\hat{\beta}_2\)</span>.</li>
-<li><code>corr-o1</code>: “Oracle” correlation method in which <span class="math inline">\(\beta_1\)</span> are known, as are <span class="math inline">\(g_{20}\)</span> and <span class="math inline">\(g_{21}\)</span>.</li>
-<li><code>corr-o2</code>: “Oracle” correlation method with <span class="math inline">\(\beta_1\)</span> known and <span class="math inline">\(g_{20}\)</span> and <span class="math inline">\(g_{21}\)</span> estimated in the same was as for <code>corr-est</code>.</li>
-<li><code>compound-est</code>: The compound method in Section 3 of <a href="sherlock2_compound_and_correlation.pdf">the notes</a>. For this method <span class="math inline">\(\pi_{0}^{(1)}\)</span>, <span class="math inline">\(\pi_{0}^{(2,0)}\)</span>, <span class="math inline">\(\sigma_1\)</span> and <span class="math inline">\(\sigma_2\)</span> estimated by the maximum likelihood estimators. That is <span class="math inline">\(\hat{\pi}_{0}^{(1)}\)</span> and <span class="math inline">\(\sigma_1\)</span> maximize <span class="math display">\[
-l(\pi_{0}^{(1)}, \sigma_1 \vert \hat{\beta}_{1}, b_{1}) = \sum_{i=1}^{p}\log \left( \pi_{0}^{(1)} N(\hat{\beta}_{1,i}; 0, b_{1,i}^2) + (1-\pi_{0}^{(1)})N(\hat{\beta}_{1,i}; 0, \sigma_1^2 + b_{1,i}^2) \right)
-\]</span> and <span class="math inline">\(\pi_{0}^{(2,0)}\)</span> and <span class="math inline">\(\sigma_2\)</span> maximize <span class="math display">\[
-l(\pi_{0}^{(2,0)}, \sigma_2 \vert \hat{\beta}_{2}, b_{2}) = \sum_{i=1}^{p}\log \left( \pi_{0}^{(2,0)} N(\hat{\beta}_{2,i}; 0, b_{2,i}^2) + (1-\pi_{0}^{(2,0)})N(\hat{\beta}_{2,i}; 0, \sigma_2^2 + b_{2,i}^2) \right)
-\]</span></li>
-</ul>
-<p>Since <code>g1</code> and <code>g2</code> can be any functions, <code>sim_sherlock_flex</code> can be used to simulate from almost any model.</p>
-</div>
 </div>
 <div id="non-causal-models" class="section level1">
 <h1>Non-Causal models</h1>
@@ -448,9 +420,9 @@ beta_hat_2 &lt;- rnorm(n=p, mean=b2, sd=seb2)</code></pre>
 pval1 &lt;- 2*pnorm(abs(beta_hat_1/seb1), lower.tail=FALSE)
 pval2 &lt;- 2*pnorm(abs(beta_hat_2/seb2), lower.tail=FALSE)
 qqthin(pval1) + ggtitle(&quot;eQTL Results&quot;) + theme(legend.position=&quot;none&quot;)</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
 <pre class="r"><code>qqthin(pval2) + ggtitle(&quot;GWAS Results&quot;) + theme(legend.position=&quot;none&quot;)</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-4-2.png" width="672" /></p>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-3-2.png" width="672" /></p>
 <p>Both studies have fairly strong signal but only one eQTL reaches genome wide significance (pval &lt; <span class="math inline">\(5\cdot 10^{-8}\)</span>). Ten SNPs reach this threshold in the GWAS.</p>
 </div>
 <div id="some-co-regulation-data-generation" class="section level2">
@@ -489,11 +461,11 @@ res2 &lt;- getobj(&quot;../data/res_null_corr.RData&quot;)</code></pre>
 <h3>Correlation approach</h3>
 <p>First we look at the results for the correlation method:</p>
 <pre class="r"><code>#CI
-corr_res1 &lt;- data.frame(&quot;lambda&quot;=res1$corr[3, , 1], &quot;se&quot;=res1$corr[3, ,2])
+corr_res1 &lt;- data.frame(&quot;lambda&quot;=res1$corr[4, , 1], &quot;se&quot;=res1$corr[4, ,2])
 corr_res1$lower &lt;- corr_res1$lambda - qnorm(0.975)*corr_res1$se
 corr_res1$upper &lt;- corr_res1$lambda + qnorm(0.975)*corr_res1$se
 #Co-regulation
-corr_res2 &lt;- data.frame(&quot;lambda&quot;=res2$corr[3, , 1], &quot;se&quot;=res2$corr[3, ,2])
+corr_res2 &lt;- data.frame(&quot;lambda&quot;=res2$corr[4, , 1], &quot;se&quot;=res2$corr[4, ,2])
 corr_res2$lower &lt;- corr_res2$lambda - qnorm(0.975)*corr_res2$se
 corr_res2$upper &lt;- corr_res2$lambda + qnorm(0.975)*corr_res2$se
 
@@ -503,186 +475,36 @@ ggplot(corr_res1) + geom_errorbar(aes(x=1:100, ymax = upper, ymin=lower))+
         ggtitle(&quot;Null - Complete Independence\n Correlation Approach\nLambda estimates and 95% confidence intervals&quot;) + 
         xlab(&quot;Repetition&quot;) + ylab(&quot;Lambda&quot;) + 
         theme_bw() + theme(panel.grid=element_blank())</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p><img src="compare_approaches_files/figure-html/three-1.png" width="672" /></p>
 <pre class="r"><code>ggplot(corr_res2) + geom_errorbar(aes(x=1:100, ymax = upper, ymin=lower))+
         geom_point(aes(x=1:100, y=lambda)) + geom_hline(yintercept=0, linetype=2) + 
         ggtitle(&quot;Null - Some Correlation\n Correlation Approach\nLambda estimates and 95% confidence intervals&quot;) + 
         xlab(&quot;Repetition&quot;) + ylab(&quot;Lambda&quot;) + 
         theme_bw() + theme(panel.grid=element_blank())</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-7-2.png" width="672" /></p>
+<p><img src="compare_approaches_files/figure-html/three-2.png" width="672" /></p>
 <pre class="r"><code>#Average lambda estimate
 mean(corr_res1$lambda)</code></pre>
-<pre><code>## [1] 0.003121644</code></pre>
+<pre><code>## [1] -0.001115698</code></pre>
 <pre class="r"><code>mean(corr_res2$lambda)</code></pre>
 <pre><code>## [1] -0.004903933</code></pre>
 <pre class="r"><code>#Type 1 error rate
 mean(corr_res1$upper &lt; 0 | corr_res1$lower &gt; 0)</code></pre>
-<pre><code>## [1] 0.09</code></pre>
+<pre><code>## [1] 0.05</code></pre>
 <pre class="r"><code>mean(corr_res2$upper &lt; 0 | corr_res2$lower &gt; 0)</code></pre>
 <pre><code>## [1] 0.16</code></pre>
-<p>In both settings, the average estimate of <span class="math inline">\(\lambda\)</span> is very close to zero in both cases. However, the type 1 error rate in both cases is too high.</p>
-<pre class="r"><code>library(tidyr)
-t1e &lt;- data.frame(&quot;level&quot;= seq(0.01, 0.1, length.out=10))
-thresh_two_sided &lt;- qnorm(1-(t1e$level/2))
-t1e$comp_indep &lt;- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res1$lambda/corr_res1$se) &gt; s)})
-t1e$coreg &lt;- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res2$lambda/corr_res2$se) &gt; s)})
-t1e_long &lt;- gather(t1e, &quot;Setting&quot;, &quot;Type1Error&quot;, -level)
-
-ggplot(t1e_long) +  geom_point(aes(x=level, y=Type1Error, group=Setting, color=Setting, shape=Setting), size=2) +
-  geom_line(aes(x=level, y=Type1Error, group=Setting, color=Setting)) + 
-  geom_abline(slope=1, intercept=0, linetype=2) + 
-  xlab(&quot;Level&quot;) + ylab(&quot;Type 1 Error&quot;) + ggtitle(&quot;Correlation Approach\nType 1 Error&quot;) + 
-  theme_bw()</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>In both settings, the average estimate of <span class="math inline">\(\lambda\)</span> is very close to zero in both cases. However, the type 1 error rate for the co-regulation case is much too high. Looking at type 1 error in more detail:</p>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-6-1.png" width="672" /> Shading shows the 95% confidence region around the expected type 1 error given the number of simulations.</p>
 </div>
 <div id="oracle-correlation-approach" class="section level3">
 <h3>Oracle Correlation Approach</h3>
-<p>Here I consider two variations of “oracle” versions of the correlation approach. In the first <span class="math inline">\(\beta_1\)</span> are known as are <span class="math inline">\(g_{20}\)</span> and <span class="math inline">\(g_{21}\)</span> (which determine the distribution of <span class="math inline">\(u\)</span>).</p>
-<pre class="r"><code>#CI
-corr_res1_o1 &lt;- data.frame(&quot;lambda&quot;=res1$corr[1, , 1], &quot;se&quot;=res1$corr[1, ,2])
-corr_res1_o1$lower &lt;- corr_res1_o1$lambda - qnorm(0.975)*corr_res1_o1$se
-corr_res1_o1$upper &lt;- corr_res1_o1$lambda + qnorm(0.975)*corr_res1_o1$se
-#Co-regulation
-corr_res2_o1 &lt;- data.frame(&quot;lambda&quot;=res2$corr[1, , 1], &quot;se&quot;=res2$corr[1, ,2])
-corr_res2_o1$lower &lt;- corr_res2_o1$lambda - qnorm(0.975)*corr_res2_o1$se
-corr_res2_o1$upper &lt;- corr_res2_o1$lambda + qnorm(0.975)*corr_res2_o1$se
-
-#Plot
-ggplot(corr_res1_o1) + geom_errorbar(aes(x=1:100, ymax = upper, ymin=lower))+
-        geom_point(aes(x=1:100, y=lambda)) + geom_hline(yintercept=0, linetype=2) + 
-        ggtitle(&quot;Null - Complete Independence\nCorrelation Approach - Oracle 1\nlambda estimates and 95% confidence intervals&quot;) + 
-        xlab(&quot;Repetition&quot;) + ylab(&quot;Lambda&quot;) + 
-        theme_bw() + theme(panel.grid=element_blank())</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
-<pre class="r"><code>ggplot(corr_res2_o1) + geom_errorbar(aes(x=1:100, ymax = upper, ymin=lower))+
-        geom_point(aes(x=1:100, y=lambda)) + geom_hline(yintercept=0, linetype=2) + 
-        ggtitle(&quot;Null - some correlation\nCorrelation Approach - Oracle 1\nLambda estimates and 95% confidence intervals&quot;) + 
-        xlab(&quot;Repetition&quot;) + ylab(&quot;Lambda&quot;) + 
-        theme_bw() + theme(panel.grid=element_blank())</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-10-2.png" width="672" /></p>
-<pre class="r"><code>#Average lambda estimate
-mean(corr_res1_o1$lambda)</code></pre>
-<pre><code>## [1] 0.001999421</code></pre>
-<pre class="r"><code>mean(corr_res2_o1$lambda)</code></pre>
-<pre><code>## [1] -0.0009264151</code></pre>
-<pre class="r"><code>#Type 1 error rate
-mean(corr_res1_o1$upper &lt; 0 | corr_res1_o1$lower &gt; 0)</code></pre>
-<pre><code>## [1] 0.04</code></pre>
-<pre class="r"><code>mean(corr_res2_o1$upper &lt; 0 | corr_res2_o1$lower &gt; 0)</code></pre>
-<pre><code>## [1] 0.06</code></pre>
-<pre class="r"><code>library(tidyr)
-t1e &lt;- data.frame(&quot;level&quot;= seq(0.01, 0.1, length.out=10))
-thresh_two_sided &lt;- qnorm(1-(t1e$level/2))
-t1e$comp_indep &lt;- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res1_o1$lambda/corr_res1_o1$se) &gt; s)})
-t1e$coreg &lt;- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res2_o1$lambda/corr_res2_o1$se) &gt; s)})
-t1e_long &lt;- gather(t1e, &quot;Setting&quot;, &quot;Type1Error&quot;, -level)
-
-ggplot(t1e_long) +  geom_point(aes(x=level, y=Type1Error, group=Setting, color=Setting, shape=Setting), size=2) +
-  geom_line(aes(x=level, y=Type1Error, group=Setting, color=Setting)) + 
-  geom_abline(slope=1, intercept=0, linetype=2) + 
-  xlab(&quot;Level&quot;) + ylab(&quot;Type 1 Error&quot;) + ggtitle(&quot;Correlation Approach - Oracle1\nType 1 Error&quot;) + 
-  theme_bw()</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
-<p>Even with all the distributions known, the type 1 error is a little high in the coregulation case!</p>
-<p>In the second oracle variation, we estimate <span class="math inline">\(\beta_1\)</span> using the posterior distribution from ASH but <span class="math inline">\(g_{20}\)</span> and <span class="math inline">\(g_{21}\)</span> are known.</p>
-<pre class="r"><code>#CI
-corr_res1_o2 &lt;- data.frame(&quot;lambda&quot;=res1$corr[2, , 1], &quot;se&quot;=res1$corr[2, ,2])
-corr_res1_o2$lower &lt;- corr_res1_o2$lambda - qnorm(0.975)*corr_res1_o2$se
-corr_res1_o2$upper &lt;- corr_res1_o2$lambda + qnorm(0.975)*corr_res1_o2$se
-#Co-regulation
-corr_res2_o2 &lt;- data.frame(&quot;lambda&quot;=res2$corr[2, , 1], &quot;se&quot;=res2$corr[2, ,2])
-corr_res2_o2$lower &lt;- corr_res2_o2$lambda - qnorm(0.975)*corr_res2_o2$se
-corr_res2_o2$upper &lt;- corr_res2_o2$lambda + qnorm(0.975)*corr_res2_o2$se
-
-#Plot
-ggplot(corr_res1_o2) + geom_errorbar(aes(x=1:100, ymax = upper, ymin=lower))+
-        geom_point(aes(x=1:100, y=lambda)) + geom_hline(yintercept=0, linetype=2) + 
-        ggtitle(&quot;Null - Complete Independence\n Correlation Approach - Oracle2\nlambda estimates and 95% confidence intervals&quot;) + 
-        xlab(&quot;Repetition&quot;) + ylab(&quot;Lambda&quot;) + 
-        theme_bw() + theme(panel.grid=element_blank())</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
-<pre class="r"><code>ggplot(corr_res2_o2) + geom_errorbar(aes(x=1:100, ymax = upper, ymin=lower))+
-        geom_point(aes(x=1:100, y=lambda)) + geom_hline(yintercept=0, linetype=2) + 
-        ggtitle(&quot;Null - some correlation\n Correlation Approach - Oracle 2\nlambda estimates and 95% confidence intervals&quot;) + 
-        xlab(&quot;Repetition&quot;) + ylab(&quot;Lambda&quot;) + 
-        theme_bw() + theme(panel.grid=element_blank())</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-13-2.png" width="672" /></p>
-<pre class="r"><code>#Average lambda estimate
-mean(corr_res1_o2$lambda)</code></pre>
-<pre><code>## [1] 0.003046392</code></pre>
-<pre class="r"><code>mean(corr_res2_o2$lambda)</code></pre>
-<pre><code>## [1] -0.002397439</code></pre>
-<pre class="r"><code>#Type 1 error rate
-mean(corr_res1_o2$upper &lt; 0 | corr_res1_o2$lower &gt; 0)</code></pre>
-<pre><code>## [1] 0.09</code></pre>
-<pre class="r"><code>mean(corr_res2_o2$upper &lt; 0 | corr_res2_o2$lower &gt; 0)</code></pre>
-<pre><code>## [1] 0.07</code></pre>
-<pre class="r"><code>library(tidyr)
-t1e &lt;- data.frame(&quot;level&quot;= seq(0.01, 0.1, length.out=10))
-thresh_two_sided &lt;- qnorm(1-(t1e$level/2))
-t1e$comp_indep &lt;- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res1_o2$lambda/corr_res1_o2$se) &gt; s)})
-t1e$coreg &lt;- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res2_o2$lambda/corr_res2_o2$se) &gt; s)})
-t1e_long &lt;- gather(t1e, &quot;Setting&quot;, &quot;Type1Error&quot;, -level)
-
-ggplot(t1e_long) +  geom_point(aes(x=level, y=Type1Error, group=Setting, color=Setting, shape=Setting), size=2) +
-  geom_line(aes(x=level, y=Type1Error, group=Setting, color=Setting)) + 
-  geom_abline(slope=1, intercept=0, linetype=2) + 
-  xlab(&quot;Level&quot;) + ylab(&quot;Type 1 Error&quot;) + ggtitle(&quot;Correlation Approach - Oracle2\nType 1 Error&quot;) + 
-  theme_bw()</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
-<p>In the complete independence setting, knowing the value of <span class="math inline">\(\beta_1\)</span> is the critical piece that gives the correct type 1 error. The estimates of <span class="math inline">\(\lambda\)</span> between the oracle1 and estimated methods are similar but the standard errors are much larger for the oracle method.</p>
-<pre class="r"><code>plot(res1$corr[1, , 1], res1$corr[3, , 1], xlab=&quot;Oracle 1 (beta_1, g_20, g_21 Known)&quot;, ylab=&quot;All Estimated&quot;, main=&quot;Estimate of lambda\nComplete Independence&quot;)
-abline(0, 1)</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
-<pre class="r"><code>plot(res1$corr[1, , 2], res1$corr[3, , 2], xlab=&quot;Oracle 1 (beta_1, g_20, g_21 Known)&quot;, ylab=&quot;All Estimated&quot;, main=&quot;Estimated Standard Error of Estimate of lambda\nComplete Independence&quot;)
-abline(0, 1)</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-16-2.png" width="672" /></p>
-<p>In the complete independence setting, there is less of a difference between the oracle2 (<span class="math inline">\(g_{20}\)</span> and <span class="math inline">\(g_{21}\)</span> are estimated) method and the method where everything is estimated. This probably indicates that, in this setting we do a pretty good job of estimating <span class="math inline">\(g_{20}\)</span> and <span class="math inline">\(g_{21}\)</span> (which in this case are the same).</p>
-<pre class="r"><code>plot(res1$corr[2, , 1], res1$corr[3, , 1], xlab=&quot;Oracle 2 (g_20, g_21 Known)&quot;, ylab=&quot;All Estimated&quot;, main=&quot;Estimate of lambda\nComplete Independence&quot;)
-abline(0, 1)</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
-<pre class="r"><code>plot(res1$corr[2, , 2], res1$corr[3, , 2], xlab=&quot;Oracle 2 (g_20, g_21 Known)&quot;, ylab=&quot;All Estimated&quot;, main=&quot;Estimated Standard Error of Estimate of lambda\nComplete Independence&quot;)
-abline(0, 1)</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-17-2.png" width="672" /></p>
-<p>In the co-regulation case, interestingly, the standard error estimates are smaller in the Oracle 1 method than in the method where everything is estimated.</p>
-<pre class="r"><code>plot(res2$corr[1, , 1], res2$corr[3, , 1], xlab=&quot;Oracle 1 (beta_1, g_20, g_21 Known)&quot;, ylab=&quot;All Estimated&quot;, main=&quot;Estimate of lambda\nCo-regulation&quot;)
-abline(0, 1)</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
-<pre class="r"><code>plot(res2$corr[1, , 2], res2$corr[3, , 2], xlab=&quot;Oracle 1 (beta_1, g_20, g_21 Known)&quot;, ylab=&quot;All Estimated&quot;, main=&quot;Estimated Standard Error of Estimate of lambda\nCo-regulation&quot;)
-abline(0, 1)</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-18-2.png" width="672" /></p>
-<p>In the co-regulation case, <span class="math inline">\(g_{20}\)</span> and <span class="math inline">\(g_{21}\)</span> are different so we don’t do as good a job of estimating them. Therefore, there is more advantage to knowing these than in the complete independence case. The standard error estimates when <span class="math inline">\(g_{20}\)</span> and <span class="math inline">\(g_{21}\)</span> are known are larger than when they are estimated.</p>
-<pre class="r"><code>plot(res2$corr[2, , 1], res2$corr[3, , 1], xlab=&quot;Oracle 2 (g_20, g_21 Known)&quot;, ylab=&quot;All Estimated&quot;, main=&quot;Estimate of lambda\nCo-regulation&quot;)
-abline(0, 1)</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
-<pre class="r"><code>plot(res2$corr[2, , 2], res2$corr[3, , 2], xlab=&quot;Oracle 2 (g_20, g_21 Known)&quot;, ylab=&quot;All Estimated&quot;, main=&quot;Estimated Standard Error of Estimate of lambda\nCo-regulation&quot;)
-abline(0, 1)</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-19-2.png" width="672" /></p>
-<pre class="r"><code>library(tidyr)
-t1e &lt;- data.frame(&quot;level&quot;= seq(0.01, 0.1, length.out=10))
-thresh_two_sided &lt;- qnorm(1-(t1e$level/2))
-t1e$oracle1 &lt;- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res1_o1$lambda/corr_res1_o1$se) &gt; s)})
-t1e$oracle2 &lt;- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res1_o2$lambda/corr_res1_o2$se) &gt; s)})
-t1e$est &lt;- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res1$lambda/corr_res1$se) &gt; s)})
-t1e_long1 &lt;- gather(t1e, &quot;Method&quot;, &quot;Type1Error&quot;, -level)
-t1e_long1$Setting &lt;- &quot;Comp_Ind&quot;
-
-t1e &lt;- data.frame(&quot;level&quot;= seq(0.01, 0.1, length.out=10))
-thresh_two_sided &lt;- qnorm(1-(t1e$level/2))
-t1e$oracle1 &lt;- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res2_o1$lambda/corr_res2_o1$se) &gt; s)})
-t1e$oracle2 &lt;- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res2_o2$lambda/corr_res2_o2$se) &gt; s)})
-t1e$est &lt;- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res2$lambda/corr_res2$se) &gt; s)})
-t1e_long2 &lt;- gather(t1e, &quot;Method&quot;, &quot;Type1Error&quot;, -level)
-t1e_long2$Setting &lt;- &quot;Co-Reg&quot;
-t1e_long &lt;- rbind(t1e_long1, t1e_long2)
-t1e_long$methset &lt;- paste0(t1e_long$Method, t1e_long$Setting)
-
-ggplot(t1e_long) +  geom_point(aes(x=level, y=Type1Error, group=methset, color=Method, shape=Method), size=2) +
-  geom_line(aes(x=level, y=Type1Error, group=methset, color=Method, linetype = Setting)) + 
-  geom_abline(slope=1, intercept=0, linetype=2) + 
-  xlab(&quot;Level&quot;) + ylab(&quot;Type 1 Error&quot;) + ggtitle(&quot;Correlation Approach \nType 1 Error&quot;) + 
-  theme_bw()</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
+<p>Here I consider three variations of “oracle” versions of the correlation approach:</p>
+<ol style="list-style-type: decimal">
+<li><span class="math inline">\(\beta_1\)</span> are known, <span class="math inline">\(g_{20}\)</span> and <span class="math inline">\(g_{21}\)</span> are known</li>
+<li>The correct prior of <span class="math inline">\(\beta_1\)</span> is known, <span class="math inline">\(g_{20}\)</span> and <span class="math inline">\(g_{21}\)</span> are known</li>
+<li><span class="math inline">\(\beta_1\)</span> is estimated using the posterior distribution from ASH but <span class="math inline">\(g_{20}\)</span> and <span class="math inline">\(g_{21}\)</span> are known</li>
+</ol>
+<p>Looking at the type 1 error for all three oracle methods: <img src="compare_approaches_files/figure-html/four-1.png" width="672" /><img src="compare_approaches_files/figure-html/four-2.png" width="672" /></p>
+<p>In the co-regulation setting, we see that most of the excess type-1 error results from estimating <span class="math inline">\(g_{20}\)</span> and <span class="math inline">\(g_{21}\)</span>.</p>
 </div>
 <div id="compound-approach" class="section level3">
 <h3>Compound approach</h3>
@@ -738,9 +560,9 @@ apply(comp_res2, MARGIN=2, FUN=summary)</code></pre>
 ## Max.      2.3490    2.3620    1.0230  5.856  5.9040   5.906</code></pre>
 <p>First considering the Bayes factors — The value of <span class="math inline">\(C\)</span> has very little effect on the Bayes factor:</p>
 <pre class="r"><code>pairs(comp_res1[, paste0(&quot;bf.&quot;, c(100, 1000, 5000))], main=&quot;Complete independence&quot;)</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
 <pre class="r"><code>pairs(comp_res2[, paste0(&quot;bf.&quot;, c(100, 1000, 5000))], main=&quot;Co-regulation&quot;)</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-22-2.png" width="672" /></p>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-8-2.png" width="672" /></p>
 <p>The Bayes factors are negative for 99% of simulations in the complete independece scenario and 82% of simulations in the co-regulation scenario ( Negative Bayes factors indicate that there is more evidence for the NC model than the CC model). The type 1 error rate (i.e. the rate of incorrectly accepting the CC model over the NC model) using the Bayes factor depends on the cutoff chosen.</p>
 <pre class="r"><code>log_bf_cutoff &lt;- seq(0, 4, length.out=10)
 t1e_1 &lt;- sapply(log_bf_cutoff, FUN=function(s){mean(comp_res1$bf.100 &gt; s)})
@@ -752,7 +574,7 @@ points(log_bf_cutoff, t1e_2, col=&quot;red&quot;, type=&quot;b&quot;, pch=4)
 legend(&quot;topright&quot;, legend=c(&quot;complete independence&quot;, &quot;co-regulation&quot;), 
        col=c(&quot;black&quot;, &quot;red&quot;), pch=c(1, 4))
 abline(v=c(log10(2), 1), lty=2)</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
 <p>In the complete indpendence case, the compound method has almost no type 1 errors (we observed one BF of <span class="math inline">\(10^5\)</span> while all the rest are negative). In the co-regulation setting, there are more errors using lower thresholds. Using a BF cutoff of 2 (first vertical line), the type 1 error rate is 16%. Using a cutoff of 10, the type 1 error rate is 8%.</p>
 <p>We can also look at the rate of correctly accepting the NC model over the CC model.</p>
 <pre class="r"><code>log_bf_cutoff &lt;- seq(-6, 0, length.out=10)
@@ -765,16 +587,16 @@ points(log_bf_cutoff, pwr2, col=&quot;red&quot;, type=&quot;b&quot;, pch=4)
 legend(&quot;topleft&quot;, legend=c(&quot;complete independence&quot;, &quot;co-regulation&quot;), 
        col=c(&quot;black&quot;, &quot;red&quot;), pch=c(1, 4))
 abline(v=-1*c(log10(2), 1), lty=2)</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
 <p>Not surprisingly, in the complete independence scenario, there is stronger evidence to accept the NC model over the CC model.</p>
 </div>
 <div id="elpd" class="section level4">
 <h4>elpd</h4>
 <p>Next we consider the elpd metric for comparing models. Like the BF, these are also fairly insensitive to the choice of <span class="math inline">\(C\)</span>.</p>
 <pre class="r"><code>pairs(comp_res1[, paste0(&quot;elpd.&quot;, c(100, 1000, 5000))], main=&quot;complete indepenedence&quot;)</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-25-1.png" width="672" /></p>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
 <pre class="r"><code>pairs(comp_res1[, paste0(&quot;elpd.&quot;, c(100, 1000, 5000))], main=&quot;co-regulation&quot;)</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-25-2.png" width="672" /></p>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-11-2.png" width="672" /></p>
 <p>For these statistics, negative values also indicate that the NC model is favored over the CC model. Treating the elpd statistics like <span class="math inline">\(t\)</span>-statistics, we can use a one-sided test to choose one model over the other. Here we plot the type 1 error as a function of the nominal level. The correlation method is include for comparison, though for the correlation approach we use a two sided test.</p>
 <pre class="r"><code>level &lt;- seq(0.01, 0.1, length.out=10)
 thresh_one_sided &lt;- qnorm(1-level)
@@ -789,11 +611,11 @@ plot(level, t1e_1, ylim=range(c(t1e_1, t1e_2, t1e_corr_1, t1e_corr_2)),
 points(level, t1e_2, type=&quot;b&quot;, pch=4)
 points(level, t1e_corr_1, type=&quot;b&quot;, col=&quot;blue&quot;)
 points(level, t1e_corr_2, type=&quot;b&quot;, col=&quot;blue&quot;, pch=4)
-legend(&quot;topleft&quot;, legend=c(&quot;complete independence - compound&quot;, &quot;co-regulation - comopound&quot;, 
+legend(&quot;topleft&quot;, legend=c(&quot;complete independence - compound&quot;, &quot;co-regulation - compound&quot;, 
                             &quot;complete independence - corr.&quot;, &quot;co-regulation - corr.&quot;), 
        col=rep(c(&quot;black&quot;, &quot;blue&quot;), each=2), pch=rep(c(1, 4), 2))
 abline(0, 1, lty=2)</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-26-1.png" width="672" /></p>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
 <p>The compound approach using elpd controls the type 1 error. The correlation apporach has consistently largerger type 1 error than the nominal level.</p>
 <p>We can also look at the power of the elpd statistic to choose the NC model over the CC model.</p>
 <pre class="r"><code>level &lt;- seq(0.01, 0.1, length.out=10)
@@ -805,7 +627,7 @@ plot(level, pwr1, ylim=range(c(pwr1, pwr2)),
      main=&quot;Compound approach - elpd \n Power to choose the NC model under null&quot;, type=&quot;b&quot;)
 points(level, pwr2, type=&quot;b&quot;, pch=4)
 legend(&quot;topleft&quot;, legend=c(&quot;complete independence&quot;, &quot;co-regulation&quot;),  pch=c(1, 4))</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-27-1.png" width="672" /></p>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
 <p>The elpd statistic with a nominal level of 0.05 gives a somewhat lower power to conclusively choose the NC model than using the BF with a threshold of 10, but the rate of choosing the wrong model is also lower.</p>
 </div>
 </div>
@@ -908,7 +730,7 @@ ggplot(power_long) + geom_point(aes(x=lambda, y=power, group=stat, color=stat, s
   geom_line(aes(x=lambda, y=power, group=stat, color=stat)) + 
   xlab(&quot;Lambda&quot;) + ylab(&quot;Power&quot;) + ggtitle(&quot;Power under causal model&quot;) + 
   theme_bw()</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-29-1.png" width="672" /></p>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
 <p>The correlation approach is the most powerful, however, as we saw previously, it may not correctly control the type 1 error. We do find that in these settings, the correlation approach does a good job of covering the true value of <span class="math inline">\(\lambda\)</span> – the coverage rate is above the nominal level in all cases except for the highers correlation case.</p>
 <pre class="r"><code>levels &lt;- c(0.02, 0.05, 0.08, 0.1, 0.15)
 coverage &lt;- matrix(nrow=length(levels), ncol=length(lams))
@@ -930,8 +752,36 @@ ggplot(coverage_long) + geom_point(aes(x=level, y=coverage, group=lambda, color=
   geom_abline(slope=1, intercept=0, linetype=2) + 
   xlab(&quot;Level&quot;) + ylab(&quot;Coverage&quot;) + ggtitle(&quot;Correlation Approach\nCoverage of true lambda under causal model&quot;) + 
   theme_bw()</code></pre>
-<p><img src="compare_approaches_files/figure-html/unnamed-chunk-30-1.png" width="672" /></p>
+<p><img src="compare_approaches_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
 </div>
+</div>
+<div id="details-of-sim_sherlock_flex-function" class="section level1">
+<h1>Details of <code>sim_sherlock_flex</code> function</h1>
+<p>The <code>sim_sherlock_flex</code> function takes the following inputs:</p>
+<ul>
+<li><code>n.rep</code>: Number of replications</li>
+<li><code>p</code>: Number of SNPs. In all simulations in this document <span class="math inline">\(p=10,000\)</span>.</li>
+<li><code>g1</code>: A function that takes one argument, <code>p</code> and returns <span class="math inline">\(\beta_1\)</span></li>
+<li><code>g2</code>: A function that takes one argument, <span class="math inline">\(\beta_1\)</span> and returns <span class="math inline">\(\beta_2\)</span></li>
+<li><code>maf.func</code>: A function that takes one argument, <code>p</code> and returns a vector of minor allele frequencies.</li>
+<li><code>n1,n2</code>: Sample sizes for eQTL and GWA studies. These are used for calculateing <span class="math inline">\(se(\hat{\beta}_1)\)</span> and <span class="math inline">\(se(\hat{\beta}_2)\)</span>. In this document <span class="math inline">\(n_1=500\)</span> and <span class="math inline">\(n_2=5,000\)</span>.</li>
+<li><code>types</code>: A specification of which types of analysis to conduct. (Described below).</li>
+<li><code>C</code>: A list of constants to consider. This specifies the prior distribution of <span class="math inline">\(\pi_{0}^{(2,1)}\)</span> for the compound method (See equation 18 of <a href="sherlock2_compound_and_correlation.pdf">the notes</a>). We consider values of <span class="math inline">\(C\)</span> of 100, 1000, and 5000.</li>
+<li><code>seed</code>: Random seed</li>
+<li><code>cores</code>: Number of cores to use</li>
+</ul>
+<p>There are three choices that can be included in the <code>types</code> argument. If <code>types=c()</code> is used, no analysis will be performed but for each repetition, the heritability of gene expression and phenotype and the correlation between <span class="math inline">\(\beta_1\)</span> and <span class="math inline">\(\beta_2\)</span> will be calculated. The three types of analysis are</p>
+<ul>
+<li><code>corr-est</code>: Correlation method with <span class="math inline">\(\beta_1\)</span> approximated by the posterior distribution of <span class="math inline">\(\beta_1\)</span> obtained from ASH i.e., as described in Section 2.1 of <a href="sherlock2_compound_and_correlation.pdf">the notes</a>. <span class="math inline">\(g_{20}\)</span> and <span class="math inline">\(g_{21}\)</span> must also be estimated. We use <span class="math inline">\(\hat{g}_{20} = \hat{g}_{21}\)</span> with both distributions estimated as the ASH fit of only <span class="math inline">\(\hat{\beta}_2\)</span>.</li>
+<li><code>corr-o1</code>: “Oracle” correlation method in which <span class="math inline">\(\beta_1\)</span> are known, as are <span class="math inline">\(g_{20}\)</span> and <span class="math inline">\(g_{21}\)</span>.</li>
+<li><code>corr-o2</code>: “Oracle” correlation method with <span class="math inline">\(\beta_1\)</span> known and <span class="math inline">\(g_{20}\)</span> and <span class="math inline">\(g_{21}\)</span> estimated in the same was as for <code>corr-est</code>.</li>
+<li><code>compound-est</code>: The compound method in Section 3 of <a href="sherlock2_compound_and_correlation.pdf">the notes</a>. For this method <span class="math inline">\(\pi_{0}^{(1)}\)</span>, <span class="math inline">\(\pi_{0}^{(2,0)}\)</span>, <span class="math inline">\(\sigma_1\)</span> and <span class="math inline">\(\sigma_2\)</span> estimated by the maximum likelihood estimators. That is <span class="math inline">\(\hat{\pi}_{0}^{(1)}\)</span> and <span class="math inline">\(\sigma_1\)</span> maximize <span class="math display">\[
+l(\pi_{0}^{(1)}, \sigma_1 \vert \hat{\beta}_{1}, b_{1}) = \sum_{i=1}^{p}\log \left( \pi_{0}^{(1)} N(\hat{\beta}_{1,i}; 0, b_{1,i}^2) + (1-\pi_{0}^{(1)})N(\hat{\beta}_{1,i}; 0, \sigma_1^2 + b_{1,i}^2) \right)
+\]</span> and <span class="math inline">\(\pi_{0}^{(2,0)}\)</span> and <span class="math inline">\(\sigma_2\)</span> maximize <span class="math display">\[
+l(\pi_{0}^{(2,0)}, \sigma_2 \vert \hat{\beta}_{2}, b_{2}) = \sum_{i=1}^{p}\log \left( \pi_{0}^{(2,0)} N(\hat{\beta}_{2,i}; 0, b_{2,i}^2) + (1-\pi_{0}^{(2,0)})N(\hat{\beta}_{2,i}; 0, \sigma_2^2 + b_{2,i}^2) \right)
+\]</span></li>
+</ul>
+<p>Since <code>g1</code> and <code>g2</code> can be any functions, <code>sim_sherlock_flex</code> can be used to simulate from almost any model.</p>
 </div>
 
 <hr>

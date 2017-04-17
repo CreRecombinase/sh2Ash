@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 These simulations are intended to compare the compound and correlation approaches described in the notes [here](sherlock2_compound_and_correlation.pdf). The notation used here should match the notes. 
 
-The workhorse function used for running simulations is the `sim_sherlock_flex` function in the `sherlockAsh` package. This function generates summary statistics for the two studies according to the inputs and then analyzes them using the compound and correlation methods. We will consider the following scenarios (described in more detail later):
+The workhorse function used for running simulations is the `sim_sherlock_flex` function in the `sherlockAsh` package. This function generates summary statistics for the two studies according to the inputs and then analyzes them using the compound and correlation methods. Details of using this function are included at the end of this page. We will consider the following scenarios (described in more detail later):
 
 1. Non-Causal models:
   + Complete independence: No relationship at all between summary statistics for the two studies
@@ -22,36 +22,6 @@ The workhorse function used for running simulations is the `sim_sherlock_flex` f
   + We consider four levels of correlation between the true effect sizes ranging from small (0.13) to very large (0.77)
 
 For each scenario, we will compare the power and type 1 error. For the compound method we consider both the elpd statistic and the Bayes factor for comparing the NC and CC model. We also consider a few choices of prior for the NC model. For the compound method, there are three possible conclusions that can be drawn from the results: 1) Accept the NC model over the CC model 2) Accept the CC model over the NC model 3) The data is indeterminate and does not strongly favor either. The correlation method uses more traditional hypothesis testing methods. In this approach we are able to either 1) Reject the null hypothesis of $\lambda =0$ or 2) Fail to reject the null hypothesis.
-
-## Details of sim_sherlock_flex
-The `sim_sherlock_flex` function takes the following inputs:
-
-+ `n.rep`: Number of replications
-+ `p`: Number of SNPs. In all simulations in this document $p=10,000$. 
-+ `g1`: A function that takes one argument, `p` and returns $\beta_1$
-+ `g2`: A function that takes one argument, $\beta_1$ and returns $\beta_2$
-+ `maf.func`: A function that takes one argument, `p` and returns a vector of minor allele frequencies.
-+ `n1,n2`: Sample sizes for eQTL and GWA studies. These are used for calculateing $se(\hat{\beta}_1)$ and $se(\hat{\beta}_2)$. In this document $n_1=500$ and $n_2=5,000$.
-+ `types`: A specification of which types of analysis to conduct. (Described below).
-+ `C`: A list of constants to consider. This specifies the prior distribution of $\pi_{0}^{(2,1)}$ for the compound method (See equation 18 of [the notes](sherlock2_compound_and_correlation.pdf)). We consider values of $C$ of 100, 1000, and 5000. 
-+ `seed`: Random seed
-+ `cores`: Number of cores to use
-
-There are three choices that can be included in the `types` argument. If `types=c()` is used, no analysis will be performed but for each repetition, the heritability of gene expression and phenotype and the correlation between $\beta_1$ and $\beta_2$ will be calculated. The three types of analysis are
-
-+ `corr-est`: Correlation method with $\beta_1$ approximated by the posterior distribution of $\beta_1$ obtained from ASH i.e., as described in Section 2.1 of [the notes](sherlock2_compound_and_correlation.pdf). $g_{20}$ and $g_{21}$ must also be estimated. We use $\hat{g}_{20} = \hat{g}_{21}$ with both distributions estimated as the ASH fit of only $\hat{\beta}_2$. 
-+ `corr-o1`: "Oracle" correlation method in which $\beta_1$ are known, as are $g_{20}$ and $g_{21}$.
-+ `corr-o2`: "Oracle" correlation method with $\beta_1$ known and $g_{20}$ and $g_{21}$ estimated in the same was as for `corr-est`. 
-+ `compound-est`: The compound method in Section 3 of  [the notes](sherlock2_compound_and_correlation.pdf). For this method $\pi_{0}^{(1)}$, $\pi_{0}^{(2,0)}$, $\sigma_1$ and $\sigma_2$ estimated by the maximum likelihood estimators. That is $\hat{\pi}_{0}^{(1)}$ and $\sigma_1$ maximize
-$$
-l(\pi_{0}^{(1)}, \sigma_1 \vert \hat{\beta}_{1}, b_{1}) = \sum_{i=1}^{p}\log \left( \pi_{0}^{(1)} N(\hat{\beta}_{1,i}; 0, b_{1,i}^2) + (1-\pi_{0}^{(1)})N(\hat{\beta}_{1,i}; 0, \sigma_1^2 + b_{1,i}^2) \right)
-$$
-and $\pi_{0}^{(2,0)}$ and $\sigma_2$ maximize
-$$
-l(\pi_{0}^{(2,0)}, \sigma_2 \vert \hat{\beta}_{2}, b_{2}) = \sum_{i=1}^{p}\log \left( \pi_{0}^{(2,0)} N(\hat{\beta}_{2,i}; 0, b_{2,i}^2) + (1-\pi_{0}^{(2,0)})N(\hat{\beta}_{2,i}; 0, \sigma_2^2 + b_{2,i}^2) \right)
-$$
-
-Since `g1` and `g2` can be any functions, `sim_sherlock_flex` can be used to simulate from almost any model.
 
 
 # Non-Causal models
@@ -79,7 +49,8 @@ This gives an average of 520 eQTLs, 20 of which are strong eQTLs and about 1000 
 
 
 Here is one data set realized from this scenario. First we specify functions generating $\beta_1$ and $\beta_2$. Running `sim_sherlock_flex` with `types=c()` will summarize the average heritability of the two traits and the correlation between effect sizes.
-```{r}
+
+```{r, one}
 library(ashr)
 library(sherlockAsh)
 g1_n<- normalmix(pi=c(0.948, 0.03, 0.02, 0.002), 
@@ -130,7 +101,7 @@ Both studies have fairly strong signal but only one eQTL reaches genome wide sig
 
 In this scheme, there is still no *causal* relationship between the two traits but they share more causal variants than might be expected by chance. This pattern might arise if the two traits share some regualtors. eQTL effects $\beta_1$ are drawn from the same distribution as in the previous section. SNPs that are eQTLs have a 50\% chance of being effecting the phenotype while SNPs that are not eQTLs only have a 10\% chance of effecting the phenotype. This scenario is encoded by the functions `g1` and `g2`:
 
-```{r}
+```{r, two}
 g1n <- normalmix(pi=c(0.948, 0.03, 0.02, 0.002),
                 mean=rep(0, 4),
                 sd=c(0, 0.08, 0.1, 0.2))
@@ -166,13 +137,13 @@ res2 <- getobj("../data/res_null_corr.RData")
 ### Correlation approach
 
 First we look at the results for the correlation method:
-```{r}
+```{r, three}
 #CI
-corr_res1 <- data.frame("lambda"=res1$corr[3, , 1], "se"=res1$corr[3, ,2])
+corr_res1 <- data.frame("lambda"=res1$corr[4, , 1], "se"=res1$corr[4, ,2])
 corr_res1$lower <- corr_res1$lambda - qnorm(0.975)*corr_res1$se
 corr_res1$upper <- corr_res1$lambda + qnorm(0.975)*corr_res1$se
 #Co-regulation
-corr_res2 <- data.frame("lambda"=res2$corr[3, , 1], "se"=res2$corr[3, ,2])
+corr_res2 <- data.frame("lambda"=res2$corr[4, , 1], "se"=res2$corr[4, ,2])
 corr_res2$lower <- corr_res2$lambda - qnorm(0.975)*corr_res2$se
 corr_res2$upper <- corr_res2$lambda + qnorm(0.975)*corr_res2$se
 
@@ -197,165 +168,104 @@ mean(corr_res2$lambda)
 mean(corr_res1$upper < 0 | corr_res1$lower > 0)
 mean(corr_res2$upper < 0 | corr_res2$lower > 0)
 ```
-In both settings, the average estimate of $\lambda$ is very close to zero in both cases. However, the type 1 error rate in both cases is too high.
+In both settings, the average estimate of $\lambda$ is very close to zero in both cases. However, the type 1 error rate for the co-regulation case is much too high. Looking at type 1 error in more detail:
 
-```{r}
+```{r, echo=FALSE}
 library(tidyr)
 t1e <- data.frame("level"= seq(0.01, 0.1, length.out=10))
 thresh_two_sided <- qnorm(1-(t1e$level/2))
-t1e$comp_indep <- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res1$lambda/corr_res1$se) > s)})
-t1e$coreg <- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res2$lambda/corr_res2$se) > s)})
+t1e$comp_indep <- sapply(thresh_two_sided, FUN=function(s){mean(abs(res1$corr[4, 1:100, 1]/res1$corr[4, 1:100,2]) > s)})
+#t1e$comp_indep2 <- sapply(thresh_two_sided, FUN=function(s){mean(abs(res11$corr[4, 1:100, 1]/res11$corr[4, 1:100,2]) > s)})
+t1e$coreg <- sapply(thresh_two_sided, FUN=function(s){mean(abs(res2$corr[4, , 1]/res2$corr[4, ,2]) > s)})
 t1e_long <- gather(t1e, "Setting", "Type1Error", -level)
 
-ggplot(t1e_long) +  geom_point(aes(x=level, y=Type1Error, group=Setting, color=Setting, shape=Setting), size=2) +
+#Shading
+n <- 100
+v <- seq(0.01, 0.1, length.out=1000)
+c975 <- sapply(rev(v), FUN=function(prob){
+      qbinom(p=0.975, size=n, prob=prob)/n
+})
+c025 <- sapply(v, FUN=function(prob){
+      qbinom(p=0.025, size=n, prob=prob)/n
+})
+df.shade = data.frame("x"=c(v, rev(v)), "y"=c(c025, c975))
+
+
+ggplot(t1e_long) +  
+  geom_polygon(data=df.shade, aes(x=x, y=y), alpha=0.1, fill="black") + 
+  geom_point(aes(x=level, y=Type1Error, group=Setting, color=Setting, shape=Setting), size=2) +
   geom_line(aes(x=level, y=Type1Error, group=Setting, color=Setting)) + 
   geom_abline(slope=1, intercept=0, linetype=2) + 
   xlab("Level") + ylab("Type 1 Error") + ggtitle("Correlation Approach\nType 1 Error") + 
   theme_bw()
 ```
+Shading shows the 95\% confidence region around the expected type 1 error given the number of simulations.
+
+
 
 ### Oracle Correlation Approach
 
 
-Here I consider two variations of "oracle" versions of the correlation approach. In the first $\beta_1$ are known as are $g_{20}$ and $g_{21}$ (which determine the distribution of $u$). 
+Here I consider three variations of "oracle" versions of the correlation approach:
 
-```{r}
-#CI
-corr_res1_o1 <- data.frame("lambda"=res1$corr[1, , 1], "se"=res1$corr[1, ,2])
-corr_res1_o1$lower <- corr_res1_o1$lambda - qnorm(0.975)*corr_res1_o1$se
-corr_res1_o1$upper <- corr_res1_o1$lambda + qnorm(0.975)*corr_res1_o1$se
-#Co-regulation
-corr_res2_o1 <- data.frame("lambda"=res2$corr[1, , 1], "se"=res2$corr[1, ,2])
-corr_res2_o1$lower <- corr_res2_o1$lambda - qnorm(0.975)*corr_res2_o1$se
-corr_res2_o1$upper <- corr_res2_o1$lambda + qnorm(0.975)*corr_res2_o1$se
+  1. $\beta_1$ are known, $g_{20}$ and $g_{21}$ are known
+  2. The correct prior of $\beta_1$  is known, $g_{20}$ and $g_{21}$ are known
+  3. $\beta_1$ is estimated using the posterior distribution from ASH but $g_{20}$ and $g_{21}$ are known
 
-#Plot
-ggplot(corr_res1_o1) + geom_errorbar(aes(x=1:100, ymax = upper, ymin=lower))+
-        geom_point(aes(x=1:100, y=lambda)) + geom_hline(yintercept=0, linetype=2) + 
-        ggtitle("Null - Complete Independence\nCorrelation Approach - Oracle 1\nlambda estimates and 95% confidence intervals") + 
-        xlab("Repetition") + ylab("Lambda") + 
-        theme_bw() + theme(panel.grid=element_blank())
-ggplot(corr_res2_o1) + geom_errorbar(aes(x=1:100, ymax = upper, ymin=lower))+
-        geom_point(aes(x=1:100, y=lambda)) + geom_hline(yintercept=0, linetype=2) + 
-        ggtitle("Null - some correlation\nCorrelation Approach - Oracle 1\nLambda estimates and 95% confidence intervals") + 
-        xlab("Repetition") + ylab("Lambda") + 
-        theme_bw() + theme(panel.grid=element_blank())
-```
-
-```{r}
-#Average lambda estimate
-mean(corr_res1_o1$lambda)
-mean(corr_res2_o1$lambda)
-#Type 1 error rate
-mean(corr_res1_o1$upper < 0 | corr_res1_o1$lower > 0)
-mean(corr_res2_o1$upper < 0 | corr_res2_o1$lower > 0)
-```
-
-```{r}
+Looking at the type 1 error for all three oracle methods:
+```{r, echo=FALSE, four}
 library(tidyr)
 t1e <- data.frame("level"= seq(0.01, 0.1, length.out=10))
 thresh_two_sided <- qnorm(1-(t1e$level/2))
-t1e$comp_indep <- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res1_o1$lambda/corr_res1_o1$se) > s)})
-t1e$coreg <- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res2_o1$lambda/corr_res2_o1$se) > s)})
-t1e_long <- gather(t1e, "Setting", "Type1Error", -level)
+t1e$oracle1 <- sapply(thresh_two_sided, FUN=function(s){mean(abs(res1$corr[1, , 1]/res1$corr[1, ,2]) > s)})
+t1e$oracle2 <- sapply(thresh_two_sided, FUN=function(s){mean(abs(res1$corr[2, , 1]/res1$corr[2, ,2]) > s)})
+t1e$oracle3 <- sapply(thresh_two_sided, FUN=function(s){mean(abs(res1$corr[3, , 1]/res1$corr[3, ,2]) > s)})
+t1e$est <- sapply(thresh_two_sided, FUN=function(s){mean(abs(res1$corr[4, , 1]/res1$corr[4, ,2]) > s)})
+t1e_long1 <- gather(t1e, "Method", "Type1Error", -level)
+t1e_long1$Setting <- "Comp_Ind"
 
-ggplot(t1e_long) +  geom_point(aes(x=level, y=Type1Error, group=Setting, color=Setting, shape=Setting), size=2) +
-  geom_line(aes(x=level, y=Type1Error, group=Setting, color=Setting)) + 
-  geom_abline(slope=1, intercept=0, linetype=2) + 
-  xlab("Level") + ylab("Type 1 Error") + ggtitle("Correlation Approach - Oracle1\nType 1 Error") + 
-  theme_bw()
-```
-
-Even with all the distributions known, the type 1 error is a little high in the coregulation case!
-
-
-In the second oracle variation, we estimate $\beta_1$ using the posterior distribution from ASH but $g_{20}$ and $g_{21}$ are known.
-
-
-```{r}
-#CI
-corr_res1_o2 <- data.frame("lambda"=res1$corr[2, , 1], "se"=res1$corr[2, ,2])
-corr_res1_o2$lower <- corr_res1_o2$lambda - qnorm(0.975)*corr_res1_o2$se
-corr_res1_o2$upper <- corr_res1_o2$lambda + qnorm(0.975)*corr_res1_o2$se
-#Co-regulation
-corr_res2_o2 <- data.frame("lambda"=res2$corr[2, , 1], "se"=res2$corr[2, ,2])
-corr_res2_o2$lower <- corr_res2_o2$lambda - qnorm(0.975)*corr_res2_o2$se
-corr_res2_o2$upper <- corr_res2_o2$lambda + qnorm(0.975)*corr_res2_o2$se
-
-#Plot
-ggplot(corr_res1_o2) + geom_errorbar(aes(x=1:100, ymax = upper, ymin=lower))+
-        geom_point(aes(x=1:100, y=lambda)) + geom_hline(yintercept=0, linetype=2) + 
-        ggtitle("Null - Complete Independence\n Correlation Approach - Oracle2\nlambda estimates and 95% confidence intervals") + 
-        xlab("Repetition") + ylab("Lambda") + 
-        theme_bw() + theme(panel.grid=element_blank())
-ggplot(corr_res2_o2) + geom_errorbar(aes(x=1:100, ymax = upper, ymin=lower))+
-        geom_point(aes(x=1:100, y=lambda)) + geom_hline(yintercept=0, linetype=2) + 
-        ggtitle("Null - some correlation\n Correlation Approach - Oracle 2\nlambda estimates and 95% confidence intervals") + 
-        xlab("Repetition") + ylab("Lambda") + 
-        theme_bw() + theme(panel.grid=element_blank())
-```
-
-```{r}
-#Average lambda estimate
-mean(corr_res1_o2$lambda)
-mean(corr_res2_o2$lambda)
-#Type 1 error rate
-mean(corr_res1_o2$upper < 0 | corr_res1_o2$lower > 0)
-mean(corr_res2_o2$upper < 0 | corr_res2_o2$lower > 0)
-```
-
-```{r}
-library(tidyr)
 t1e <- data.frame("level"= seq(0.01, 0.1, length.out=10))
 thresh_two_sided <- qnorm(1-(t1e$level/2))
-t1e$comp_indep <- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res1_o2$lambda/corr_res1_o2$se) > s)})
-t1e$coreg <- sapply(thresh_two_sided, FUN=function(s){mean(abs(corr_res2_o2$lambda/corr_res2_o2$se) > s)})
-t1e_long <- gather(t1e, "Setting", "Type1Error", -level)
+t1e$oracle1 <- sapply(thresh_two_sided, FUN=function(s){mean(abs(res2$corr[1, , 1]/res2$corr[1, ,2]) > s)})
+t1e$oracle2 <- sapply(thresh_two_sided, FUN=function(s){mean(abs(res2$corr[2, , 1]/res2$corr[2, ,2]) > s)})
+t1e$oracle3 <- sapply(thresh_two_sided, FUN=function(s){mean(abs(res2$corr[3, , 1]/res2$corr[3, ,2]) > s)})
+t1e$est <- sapply(thresh_two_sided, FUN=function(s){mean(abs(res2$corr[4, , 1]/res2$corr[4, ,2]) > s)})
+t1e_long2 <- gather(t1e, "Method", "Type1Error", -level)
+t1e_long2$Setting <- "Co-Reg"
+t1e_long <- rbind(t1e_long1, t1e_long2)
+t1e_long$methset <- paste0(t1e_long$Method, t1e_long$Setting)
 
-ggplot(t1e_long) +  geom_point(aes(x=level, y=Type1Error, group=Setting, color=Setting, shape=Setting), size=2) +
-  geom_line(aes(x=level, y=Type1Error, group=Setting, color=Setting)) + 
+#Shading
+n <- 100
+v <- seq(0.01, 0.1, length.out=1000)
+c975 <- sapply(rev(v), FUN=function(prob){
+      qbinom(p=0.975, size=n, prob=prob)/n
+})
+c025 <- sapply(v, FUN=function(prob){
+      qbinom(p=0.025, size=n, prob=prob)/n
+})
+df.shade = data.frame("x"=c(v, rev(v)), "y"=c(c025, c975))
+
+
+
+ggplot(t1e_long[t1e_long$Setting=="Comp_Ind",]) + 
+  geom_polygon(data=df.shade, aes(x=x, y=y), alpha=0.1, fill="black") +
+  geom_point(aes(x=level, y=Type1Error, group=methset, color=Method, shape=Method), size=2) +
+  geom_line(aes(x=level, y=Type1Error, group=methset, color=Method)) + 
   geom_abline(slope=1, intercept=0, linetype=2) + 
-  xlab("Level") + ylab("Type 1 Error") + ggtitle("Correlation Approach - Oracle2\nType 1 Error") + 
+  xlab("Level") + ylab("Type 1 Error") + ggtitle("Correlation Approach \nType 1 Error\nComplete Independence Setting") + 
+  theme_bw()
+
+ggplot(t1e_long[t1e_long$Setting=="Co-Reg",]) + 
+  geom_polygon(data=df.shade, aes(x=x, y=y), alpha=0.1, fill="black") +
+  geom_point(aes(x=level, y=Type1Error, group=methset, color=Method, shape=Method), size=2) +
+  geom_line(aes(x=level, y=Type1Error, group=methset, color=Method)) + 
+  geom_abline(slope=1, intercept=0, linetype=2) + 
+  xlab("Level") + ylab("Type 1 Error") + ggtitle("Correlation Approach \nType 1 Error\nCo-Regulation Setting") + 
   theme_bw()
 ```
- 
-In the complete independence setting, knowing the value of $\beta_1$ is the critical piece that gives the correct type 1 error. The estimates of $\lambda$ between the oracle1 and estimated methods are similar but the standard errors are much larger for the oracle method.
-```{r}
-plot(res1$corr[1, , 1], res1$corr[3, , 1], xlab="Oracle 1 (beta_1, g_20, g_21 Known)", ylab="All Estimated", main="Estimate of lambda\nComplete Independence")
-abline(0, 1)
-plot(res1$corr[1, , 2], res1$corr[3, , 2], xlab="Oracle 1 (beta_1, g_20, g_21 Known)", ylab="All Estimated", main="Estimated Standard Error of Estimate of lambda\nComplete Independence")
-abline(0, 1)
-```
 
-
-In the complete independence setting, 
-there is less of a difference between the oracle2 ($g_{20}$ and $g_{21}$ are estimated) method and the method where everything is estimated. This probably indicates that, in this setting we do a pretty good job of estimating $g_{20}$ and $g_{21}$ (which in this case are the same).
-
-```{r}
-plot(res1$corr[2, , 1], res1$corr[3, , 1], xlab="Oracle 2 (g_20, g_21 Known)", ylab="All Estimated", main="Estimate of lambda\nComplete Independence")
-abline(0, 1)
-plot(res1$corr[2, , 2], res1$corr[3, , 2], xlab="Oracle 2 (g_20, g_21 Known)", ylab="All Estimated", main="Estimated Standard Error of Estimate of lambda\nComplete Independence")
-abline(0, 1)
-```
-
-
-In the co-regulation case, interestingly, the standard error estimates are smaller in the Oracle 1 method than in the method where everything is estimated. 
-```{r}
-plot(res2$corr[1, , 1], res2$corr[3, , 1], xlab="Oracle 1 (beta_1, g_20, g_21 Known)", ylab="All Estimated", main="Estimate of lambda\nCo-regulation")
-abline(0, 1)
-plot(res2$corr[1, , 2], res2$corr[3, , 2], xlab="Oracle 1 (beta_1, g_20, g_21 Known)", ylab="All Estimated", main="Estimated Standard Error of Estimate of lambda\nCo-regulation")
-abline(0, 1)
-```
-
-
-In the co-regulation case,
-$g_{20}$ and $g_{21}$ are different so we don't do as good a job of estimating them. Therefore, there is more advantage to knowing these than in the complete independence case. The standard error estimates when $g_{20}$ and $g_{21}$ are known are larger than when they are estimated.
-```{r}
-plot(res2$corr[2, , 1], res2$corr[3, , 1], xlab="Oracle 2 (g_20, g_21 Known)", ylab="All Estimated", main="Estimate of lambda\nCo-regulation")
-abline(0, 1)
-plot(res2$corr[2, , 2], res2$corr[3, , 2], xlab="Oracle 2 (g_20, g_21 Known)", ylab="All Estimated", main="Estimated Standard Error of Estimate of lambda\nCo-regulation")
-abline(0, 1)
-```
+In the co-regulation setting, we see that most of the excess type-1 error results from estimating $g_{20}$ and $g_{21}$. 
 
 
 
@@ -450,7 +360,7 @@ plot(level, t1e_1, ylim=range(c(t1e_1, t1e_2, t1e_corr_1, t1e_corr_2)),
 points(level, t1e_2, type="b", pch=4)
 points(level, t1e_corr_1, type="b", col="blue")
 points(level, t1e_corr_2, type="b", col="blue", pch=4)
-legend("topleft", legend=c("complete independence - compound", "co-regulation - comopound", 
+legend("topleft", legend=c("complete independence - compound", "co-regulation - compound", 
                             "complete independence - corr.", "co-regulation - corr."), 
        col=rep(c("black", "blue"), each=2), pch=rep(c(1, 4), 2))
 abline(0, 1, lty=2)
@@ -583,3 +493,36 @@ ggplot(coverage_long) + geom_point(aes(x=level, y=coverage, group=lambda, color=
   xlab("Level") + ylab("Coverage") + ggtitle("Correlation Approach\nCoverage of true lambda under causal model") + 
   theme_bw()
 ```
+
+
+
+# Details of `sim_sherlock_flex` function
+The `sim_sherlock_flex` function takes the following inputs:
+
++ `n.rep`: Number of replications
++ `p`: Number of SNPs. In all simulations in this document $p=10,000$. 
++ `g1`: A function that takes one argument, `p` and returns $\beta_1$
++ `g2`: A function that takes one argument, $\beta_1$ and returns $\beta_2$
++ `maf.func`: A function that takes one argument, `p` and returns a vector of minor allele frequencies.
++ `n1,n2`: Sample sizes for eQTL and GWA studies. These are used for calculateing $se(\hat{\beta}_1)$ and $se(\hat{\beta}_2)$. In this document $n_1=500$ and $n_2=5,000$.
++ `types`: A specification of which types of analysis to conduct. (Described below).
++ `C`: A list of constants to consider. This specifies the prior distribution of $\pi_{0}^{(2,1)}$ for the compound method (See equation 18 of [the notes](sherlock2_compound_and_correlation.pdf)). We consider values of $C$ of 100, 1000, and 5000. 
++ `seed`: Random seed
++ `cores`: Number of cores to use
+
+There are three choices that can be included in the `types` argument. If `types=c()` is used, no analysis will be performed but for each repetition, the heritability of gene expression and phenotype and the correlation between $\beta_1$ and $\beta_2$ will be calculated. The three types of analysis are
+
++ `corr-est`: Correlation method with $\beta_1$ approximated by the posterior distribution of $\beta_1$ obtained from ASH i.e., as described in Section 2.1 of [the notes](sherlock2_compound_and_correlation.pdf). $g_{20}$ and $g_{21}$ must also be estimated. We use $\hat{g}_{20} = \hat{g}_{21}$ with both distributions estimated as the ASH fit of only $\hat{\beta}_2$. 
++ `corr-o1`: "Oracle" correlation method in which $\beta_1$ are known, as are $g_{20}$ and $g_{21}$.
++ `corr-o2`: "Oracle" correlation method with $\beta_1$ known and $g_{20}$ and $g_{21}$ estimated in the same was as for `corr-est`. 
++ `compound-est`: The compound method in Section 3 of  [the notes](sherlock2_compound_and_correlation.pdf). For this method $\pi_{0}^{(1)}$, $\pi_{0}^{(2,0)}$, $\sigma_1$ and $\sigma_2$ estimated by the maximum likelihood estimators. That is $\hat{\pi}_{0}^{(1)}$ and $\sigma_1$ maximize
+$$
+l(\pi_{0}^{(1)}, \sigma_1 \vert \hat{\beta}_{1}, b_{1}) = \sum_{i=1}^{p}\log \left( \pi_{0}^{(1)} N(\hat{\beta}_{1,i}; 0, b_{1,i}^2) + (1-\pi_{0}^{(1)})N(\hat{\beta}_{1,i}; 0, \sigma_1^2 + b_{1,i}^2) \right)
+$$
+and $\pi_{0}^{(2,0)}$ and $\sigma_2$ maximize
+$$
+l(\pi_{0}^{(2,0)}, \sigma_2 \vert \hat{\beta}_{2}, b_{2}) = \sum_{i=1}^{p}\log \left( \pi_{0}^{(2,0)} N(\hat{\beta}_{2,i}; 0, b_{2,i}^2) + (1-\pi_{0}^{(2,0)})N(\hat{\beta}_{2,i}; 0, \sigma_2^2 + b_{2,i}^2) \right)
+$$
+
+Since `g1` and `g2` can be any functions, `sim_sherlock_flex` can be used to simulate from almost any model.
+

@@ -10,4 +10,7 @@ Research website for Sherlock2 project with Jean Morrison, Xin He, and Matthew S
 A document briefly descirbing our two approaches can be found [here](sherlock2_compound_and_correlation.pdf).
 
 + Simulations comparing the compound and correlation approaches are [here](compare_approaches.html)
-  + [here](sherlock1.html) we compare the orignal Sherlock method on the same simulations.
++ We compare the orignal Sherlock method on the same simulations [here](sherlock1.html).
+  
+  
+Next we applied the correlation approach to some real data: [here](cad_ldl.html) we analyze the relationship between LDL cholesterol and coronary artery disease.

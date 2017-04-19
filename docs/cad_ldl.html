@@ -373,7 +373,10 @@ nrow(dat)
 #[1] 2420197
 
 save(dat, file=&quot;../data/LDL_CAD.RData&quot;)</code></pre>
-<p>Some basic plots</p>
+</div>
+<div id="basic-plots-approximately-replicating-pickerell-et-al-observations" class="section level2">
+<h2>Basic plots (approximately) replicating Pickerell et al observations</h2>
+<p>First look at effect sizes ascertaining based on LDL and ascertaining based on CAD. Note that, in these plots, we haven’t pruned for LD. Results after pruning are shown further on.</p>
 <pre class="r"><code>library(readr)
 library(sherlockAsh)</code></pre>
 <pre><code>## Warning: replacing previous import &#39;ks::compare&#39; by &#39;loo::compare&#39; when
@@ -387,11 +390,15 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, cad_log_odds, cex=0.5, main
 <p><img src="cad_ldl_files/figure-html/unnamed-chunk-4-2.png" width="672" /></p>
 <p>Visually, these traits appear to have patterns consistent with a causal effect of LDL on CAD and not constent with a causal effect of CAD on LDL. We see that among the top LDL SNPs, there is a strong correlation between LDL effect size and CAD effect size. However, reversing the procedure and selecting the top CAD SNPs, the trend is les spronounced. Some of the top CAD SNPs also have large LDL effect sizes, however there are many strong CAD SNPs that have LDL effect close to zero.</p>
 <p>Within the set of top LDL SNPs, there is correlation between LDL effect and CAD effect even for SNPs that do not reach the significance threshold for CAD:</p>
+<pre class="r"><code>cat(&quot;Correlation of effect sizes among all top LDL SNPs: &quot;, with(dat[dat$ldl_qvalue &lt; 0.1,], cor(ldl_effect, cad_log_odds)), &quot;\n&quot;)</code></pre>
+<pre><code>## Correlation of effect sizes among all top LDL SNPs:  0.5311864</code></pre>
 <pre class="r"><code>cat(&quot;Correlation for significant LDL SNPs that have weak CAD effect: &quot;, with(dat[dat$ldl_qvalue &lt; 0.1 &amp; dat$cad_qvalue &gt; 0.1,], cor(ldl_effect, cad_log_odds)), &quot;\n&quot;)</code></pre>
 <pre><code>## Correlation for significant LDL SNPs that have weak CAD effect:  0.5276117</code></pre>
 <pre class="r"><code>cat(&quot;Correlation for significant LDL SNPs that have strong CAD effect: &quot;, with(dat[dat$ldl_qvalue &lt; 0.1 &amp; dat$cad_qvalue &lt; 0.1,], cor(ldl_effect, cad_log_odds)), &quot;\n&quot;)</code></pre>
 <pre><code>## Correlation for significant LDL SNPs that have strong CAD effect:  0.6966864</code></pre>
 <p>However, among top CAD SNPs, there is only (positive) correlation in effect sizes for SNPs that are also strong LDL SNPs</p>
+<pre class="r"><code>cat(&quot;Correlation of effect sizes among all top CAD SNPs: &quot;, with(dat[dat$cad_qvalue &lt; 0.1,], cor(ldl_effect, cad_log_odds)), &quot;\n&quot;)</code></pre>
+<pre><code>## Correlation of effect sizes among all top CAD SNPs:  0.0788183</code></pre>
 <pre class="r"><code>cat(&quot;Correlation for significant CAD SNPs that have weak LDL effect: &quot;, with(dat[dat$cad_qvalue &lt; 0.1 &amp; dat$ldl_qvalue &gt; 0.1,], cor(ldl_effect, cad_log_odds)), &quot;\n&quot;)</code></pre>
 <pre><code>## Correlation for significant CAD SNPs that have weak LDL effect:  -0.216885</code></pre>
 <pre class="r"><code>cat(&quot;Correlation for significant CAD SNPs that have strong LDL effect: &quot;, with(dat[dat$cad_qvalue &lt; 0.1 &amp; dat$ldl_qvalue &lt; 0.1,], cor(ldl_effect, cad_log_odds)), &quot;\n&quot;)</code></pre>
@@ -486,6 +493,165 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 </div>
 <div id="ld-pruning" class="section level2">
 <h2>LD Pruning</h2>
+<p>We pruned SNPs for LD within windows defined by Pickerell et al and downloaded from (here)[jklkj].</p>
+<table style="width:100%;">
+<colgroup>
+<col width="9%" />
+<col width="11%" />
+<col width="16%" />
+<col width="33%" />
+<col width="18%" />
+<col width="11%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Test</th>
+<th>LD Thresh</th>
+<th><span class="math inline">\(\hat{\lambda}\)</span></th>
+<th><span class="math inline">\(\hat{\lambda}/se(\hat{\lambda})\)</span></th>
+<th>Corr (q-val &lt;0.1)</th>
+<th>Corr test</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>LDL-&gt;CAD</td>
+<td>None (2.4m)</td>
+<td>0.52</td>
+<td>76.9</td>
+<td>0.53</td>
+<td>50.2</td>
+</tr>
+<tr class="even">
+<td>LDL-&gt;CAD</td>
+<td>0.5 (401k)</td>
+<td>0.54</td>
+<td>28.6</td>
+<td>0.59</td>
+<td>20.0</td>
+</tr>
+<tr class="odd">
+<td>LDL-&gt;CAD*</td>
+<td>0.5</td>
+<td>0.50</td>
+<td>15.8</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>LDL-&gt;CAD</td>
+<td>0.1 (145k)</td>
+<td>0.54</td>
+<td>16.2</td>
+<td>0.58</td>
+<td>9.8</td>
+</tr>
+<tr class="odd">
+<td>———</td>
+<td>———–</td>
+<td>—————–</td>
+<td>———————————–</td>
+<td>——————-</td>
+<td>————–</td>
+</tr>
+<tr class="even">
+<td>CAD-&gt;LDL</td>
+<td>None</td>
+<td>0.09</td>
+<td>45.0</td>
+<td>0.08</td>
+<td>2.93</td>
+</tr>
+<tr class="odd">
+<td>CAD-&gt;LDL</td>
+<td>0.5</td>
+<td>0.09</td>
+<td>14.8</td>
+<td>0.08</td>
+<td>0.73</td>
+</tr>
+<tr class="even">
+<td>CAD-&gt;LDL*</td>
+<td>0.5</td>
+<td>0.04</td>
+<td>4.3</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>CAD-&gt;LDL</td>
+<td>0.1</td>
+<td>0.07</td>
+<td>6.6</td>
+<td>-0.01</td>
+<td>-0.06</td>
+</tr>
+<tr class="even">
+<td>———</td>
+<td>———–</td>
+<td>—————–</td>
+<td>———————————–</td>
+<td>——————-</td>
+<td>————–</td>
+</tr>
+<tr class="odd">
+<td>LDL-&gt;HT</td>
+<td>None (2.5m)</td>
+<td>-0.08</td>
+<td>-27.2</td>
+<td>-0.12</td>
+<td>-9.3</td>
+</tr>
+<tr class="even">
+<td>LDL-&gt;HT</td>
+<td>0.5 (402k)</td>
+<td>-0.04</td>
+<td>-7.4</td>
+<td>-0.19</td>
+<td>-5.2</td>
+</tr>
+<tr class="odd">
+<td>LDL-&gt;HT</td>
+<td>0.1 (145k)</td>
+<td>-0.04</td>
+<td>-4.32</td>
+<td>-0.14</td>
+<td>-2.02</td>
+</tr>
+<tr class="even">
+<td>———</td>
+<td>———–</td>
+<td>—————–</td>
+<td>———————————–</td>
+<td>——————-</td>
+<td>————–</td>
+</tr>
+<tr class="odd">
+<td>HT-&gt;LDL</td>
+<td>None</td>
+<td>-0.10</td>
+<td>-95.9</td>
+<td>-0.045</td>
+<td>-21.94</td>
+</tr>
+<tr class="even">
+<td>HT-&gt;LDL</td>
+<td>0.5</td>
+<td>-0.09</td>
+<td>-27.9</td>
+<td>-0.05</td>
+<td>-7.9</td>
+</tr>
+<tr class="odd">
+<td>HT-&gt;LDL</td>
+<td>0.1</td>
+<td>-0.09</td>
+<td>-15.15</td>
+<td>-0.06</td>
+<td>-5.2</td>
+</tr>
+</tbody>
+</table>
 </div>
 
 <hr>

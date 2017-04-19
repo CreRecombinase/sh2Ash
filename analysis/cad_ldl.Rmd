@@ -90,7 +90,10 @@ nrow(dat)
 save(dat, file="../data/LDL_CAD.RData")
 ```
 
-Some basic plots
+
+## Basic plots (approximately) replicating Pickerell et al observations
+
+First look at effect sizes ascertaining based on LDL and ascertaining based on CAD. Note that, in these plots, we haven't pruned for LD. Results after pruning are shown further on.
 ```{r}
 library(readr)
 library(sherlockAsh)
@@ -106,14 +109,16 @@ Visually, these traits appear to have patterns consistent with a causal effect o
 
 Within the set of top LDL SNPs, there is correlation between LDL effect and CAD effect even for SNPs that do not reach the significance threshold for CAD: 
 
-```{r}
+```{r, show="hold"}
+cat("Correlation of effect sizes among all top LDL SNPs: ", with(dat[dat$ldl_qvalue < 0.1,], cor(ldl_effect, cad_log_odds)), "\n")
 cat("Correlation for significant LDL SNPs that have weak CAD effect: ", with(dat[dat$ldl_qvalue < 0.1 & dat$cad_qvalue > 0.1,], cor(ldl_effect, cad_log_odds)), "\n")
 cat("Correlation for significant LDL SNPs that have strong CAD effect: ", with(dat[dat$ldl_qvalue < 0.1 & dat$cad_qvalue < 0.1,], cor(ldl_effect, cad_log_odds)), "\n")
 ```
 
 However, among top CAD SNPs, there is only (positive) correlation in effect sizes for SNPs that are also strong LDL SNPs
 
-```{r}
+```{r, show="hold"}
+cat("Correlation of effect sizes among all top CAD SNPs: ", with(dat[dat$cad_qvalue < 0.1,], cor(ldl_effect, cad_log_odds)), "\n")
 cat("Correlation for significant CAD SNPs that have weak LDL effect: ", with(dat[dat$cad_qvalue < 0.1 & dat$ldl_qvalue > 0.1,], cor(ldl_effect, cad_log_odds)), "\n")
 cat("Correlation for significant CAD SNPs that have strong LDL effect: ", with(dat[dat$cad_qvalue < 0.1 & dat$ldl_qvalue < 0.1,], cor(ldl_effect, cad_log_odds)), "\n")
 ```
@@ -224,4 +229,27 @@ The correlation approach gave significant non-zero estimates of $\lambda$ in bot
 It seems to me that the variance estimates we are obtaining are too small. This might be a result of LD or could be another issue with the model.
 
 ## LD Pruning
+
+We pruned SNPs for LD within windows defined by Pickerell et al and downloaded from (here)[jklkj]. 
+
+
+ Test    | LD Thresh | $\hat{\lambda}$ | $\hat{\lambda}/se(\hat{\lambda})$ | Corr (q-val <0.1) | Corr test
+---------|-----------|-----------------|-----------------------------------|-------------------|------------
+LDL->CAD |None (2.4m)| 0.52            | 76.9                              | 0.53              | 50.2
+LDL->CAD | 0.5 (401k)| 0.54            | 28.6                              | 0.59              | 20.0
+LDL->CAD*| 0.5       | 0.50            | 15.8                              |                   | 
+LDL->CAD | 0.1 (145k)| 0.54            | 16.2                              | 0.58              | 9.8
+---------|-----------|-----------------|-----------------------------------|-------------------|--------------
+CAD->LDL | None      | 0.09            | 45.0                              | 0.08              | 2.93
+CAD->LDL | 0.5       | 0.09            | 14.8                              | 0.08              | 0.73
+CAD->LDL*| 0.5       | 0.04            | 4.3                               |                   | 
+CAD->LDL | 0.1       | 0.07            | 6.6                               | -0.01             | -0.06
+---------|-----------|-----------------|-----------------------------------|-------------------|--------------
+LDL->HT  |None (2.5m)| -0.08           | -27.2                             | -0.12             | -9.3
+LDL->HT  | 0.5 (402k)| -0.04           | -7.4                              | -0.19             | -5.2
+LDL->HT  | 0.1 (145k)| -0.04           | -4.32                             | -0.14             | -2.02
+---------|-----------|-----------------|-----------------------------------|-------------------|--------------
+HT->LDL  | None      | -0.10           | -95.9                             | -0.045            | -21.94
+HT->LDL  | 0.5       | -0.09           | -27.9                             | -0.05             | -7.9
+HT->LDL  | 0.1       | -0.09           | -15.15                            | -0.06             | -5.2
 

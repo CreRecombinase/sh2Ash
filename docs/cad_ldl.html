@@ -314,8 +314,8 @@ div.tocify {
 <p>In this analysis I look for a signature of a causal relationship between LDL cholesterol and coronary artery disease. This analysis was inspired by the positive results reported by Pickrell et al. in “Detection and interpretation of shared genetic influences on 40 human traits” and we use the same data.</p>
 <p>Data sources: + CAD summary statistics were downloaded from <a href="http://www.cardiogramplusc4d.org/data-downloads/">here</a> following the “CARDIoGRAM GWA meta-analysis” link. + LDL summary statistics were downloaded from <a href="http://csg.sph.umich.edu/abecasis/public/lipids2010/">here</a></p>
 </div>
-<div id="read-in-data" class="section level2">
-<h2>Read in data</h2>
+<div id="data-processing-and-summaries" class="section level2">
+<h2>Data processing and summaries</h2>
 <p>Coronary artery disease:</p>
 <pre class="r"><code>library(readr)
 cad &lt;- read_delim(&quot;../data/CARDIoGRAM_GWAS_RESULTS.txt&quot;, delim=&quot;\t&quot;)
@@ -405,14 +405,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, cad_log_odds, cex=0.5, main
 <pre><code>## Correlation for significant CAD SNPs that have strong LDL effect:  0.6966864</code></pre>
 <p>This suggests that the data are more consistant with a causal effect of LDL on CAD than vice versa.</p>
 </div>
-<div id="run-sherlock" class="section level2">
-<h2>Run Sherlock</h2>
-<p>I ran the correlation approach to Sherlock on RCC considering the data from both directions. I used <span class="math inline">\(g_{20} = g_{21}\)</span> in both cases. For the direction LDL-&gt; CAD our estimate of <span class="math inline">\(\lambda\)</span> is 0.52 (se 0.007; t-stat 76.9). For the direction CAD -&gt; LDL we still get a strongly significant but much smaller in magnitude estimate of <span class="math inline">\(\lambda\)</span>: 0.09 (se 0.002; t-stat 45.0).</p>
-<p>One way to make sense of this result is to think that a more accurate model for the relationship between <span class="math inline">\(\beta_{2}\)</span> and <span class="math inline">\(\beta_{1}\)</span> is that <span class="math display">\[ \beta_{2,i} = \lambda_i\beta_{1,i} + u_i\]</span>, where there is a different <span class="math inline">\(\lambda\)</span> for every SNP. The estimate of <span class="math inline">\(\lambda\)</span> we obtain from the correlation approach is somewhat like an average of the <span class="math inline">\(\lambda_i\)</span> over all SNPs. Because there are so many SNPs that are both CAD and LDL SNPs, this average is still significantly positive even though there are many CAD SNPs that have very small LDL effects.</p>
-<p>I think this experiment highlights a problem with the current model and something to work on.</p>
-</div>
-<div id="look-at-height-and-ldl" class="section level2">
-<h2>Look at Height and LDL</h2>
+<div id="height-and-ldl" class="section level2">
+<h2>Height and LDL</h2>
 <p>As far as I know, there are no reports of a strong link between adult height and lipid levels. I am hoping that this can provide a negative example for us. Height data were downloaded from <a href="http://portals.broadinstitute.org/collaboration/giant/index.php/GIANT_consortium_data_files#GWAS_Anthropometric_2014_Height">here</a>.</p>
 <p>LDL cholesterol:</p>
 <pre class="r"><code>ldl &lt;- read_delim(&quot;../data/LDL_with_Effect.tbl&quot;, delim=&quot;\t&quot;)
@@ -485,15 +479,10 @@ with(dat[dat$height_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, 
 with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, main=&quot;Only top LDL SNPs&quot;, xlab=&quot;LDL effect&quot;, ylab=&quot;Height effect&quot;))</code></pre>
 <p><img src="cad_ldl_files/figure-html/unnamed-chunk-10-3.png" width="672" /></p>
 <p>It seems possible that, among top LDL SNPs, there is some negative correlation in the LDL and height effect sizes.</p>
-<div id="sherlock-results" class="section level3">
-<h3>Sherlock Results</h3>
-<p>The correlation approach gave significant non-zero estimates of <span class="math inline">\(\lambda\)</span> in both directions. For the LDL -&gt; height direction the estimate is -0.08 (se 0.002; t-stats -27.2). For the height -&gt; LDL direction the estime is -0.10 (se 0.001; t-stat -95.9).</p>
-<p>It seems to me that the variance estimates we are obtaining are too small. This might be a result of LD or could be another issue with the model.</p>
 </div>
-</div>
-<div id="ld-pruning" class="section level2">
-<h2>LD Pruning</h2>
-<p>We pruned SNPs for LD within windows defined by Pickerell et al and downloaded from (here)[jklkj].</p>
+<div id="sherlock-results" class="section level2">
+<h2>Sherlock Results</h2>
+<p>We pruned SNPs for LD within windows defined by Pickerell et al and downloaded from <a href="https://bitbucket.org/nygcresearch/ldetect-data/src/ac125e47bf7f/EUR/?at=master">(here</a>.</p>
 <table style="width:100%;">
 <colgroup>
 <col width="9%" />
@@ -657,14 +646,15 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <h2>Estimating <span class="math inline">\(g_{2,1}\)</span></h2>
 <p>We saw in simulations that having a bad estimate of <span class="math inline">\(g_{2,1}\)</span> can lead to inflated estimates of <span class="math inline">\(\lambda\)</span> and increased rates of false positives. I tried two alternative methods of estimating <span class="math inline">\(g_{2,1}\)</span>.</p>
 <ul>
-<li>Estimate <span class="math inline">\(g_{2,1}\)</span> using only SNPs that have a <span class="math inline">\(q\)</span>-value less than 0.2 for <strong>either</strong> of the traits considered. (so in the LDL-&gt; CAD analysis, we will estiamte <span class="math inline">\(g_{2,1}\)</span> by fitting ASH to the CAD effects of only SNPs that have either an LDL <span class="math inline">\(q\)</span>-value less than 0.2 or a CAD <span class="math inline">\(q\)</span>-value of less than 0.2 )</li>
-<li>Estimate <span class="math inline">\(g_{2,1}\)</span> using only SNPs that appear in the GWAS catalog.</li>
+<li>Estimate <span class="math inline">\(g_{2,1}\)</span> using only SNPs that have a <span class="math inline">\(q\)</span>-value less than 0.2 for <strong>either</strong> of the traits considered. (so in the LDL-&gt; CAD analysis, we will estiamte <span class="math inline">\(g_{2,1}\)</span> by fitting ASH to the CAD effects of only SNPs that have either an LDL <span class="math inline">\(q\)</span>-value less than 0.2 or a CAD <span class="math inline">\(q\)</span>-value of less than 0.2 ) (qval<span class="math inline">\(&lt;0.2\)</span>)</li>
+<li>Estimate <span class="math inline">\(g_{2,1}\)</span> using only SNPs that appear in the GWAS catalog. (gwas)</li>
+<li>Estimate <span class="math inline">\(g_{2,1}\)</span> using only SNPs that have a <span class="math inline">\(q\)</span>-value less than 0.2 for the first trait. (qval-asc)</li>
 </ul>
-<p>These experiments are done using the set of SNPs pruned at a threshold of 0.1. Using the first strategy, <span class="math inline">\(g_{21}\)</span> is determined using 11,331 SNPs in the LDL-&gt;HT and HT-&gt;LDL analyses and xx SNPs in the CAD-&gt;LDL and LDL-&gt;CAD analyses. Using the first strategy, <span class="math inline">\(g_{2,1}\)</span> is estimated using 1,365 SNPs in the LDL-&gt;HT and HT-&gt;LDL analyses</p>
+<p>These experiments are done using the set of SNPs pruned at a threshold of 0.1. Results are shown in the table below.</p>
 </div>
 <div id="accounting-for-confounding" class="section level2">
 <h2>Accounting for confounding</h2>
-<p>We observed that there is some sample overlap between the CAD and Height cohorts. Additionally, populations structure could lead to correlation between <span class="math inline">\(\hat{\beta}_1\)</span> and <span class="math inline">\(\hat{\beta}_2\)</span> conditional on the true effects <span class="math inline">\(\beta_1\)</span> and <span class="math inline">\(\beta_2\)</span>. To account for this, I added an additional parameter <span class="math inline">\(\rho\)</span> to account for this correlation. This extension of the model is described in <a href="sherlock2_compound_and_correlation.pdf">the notes</a> in Section 2.3. The correlation parameter <span class="math inline">\(\rho\)</span> is also estimated via maximum likelihood. Fitting this model in the four analyses discussed previously (LDL-&gt; CAD, CAD-&gt;LDL, LDL-&gt;HT, HT-&gt;LDL) in the SNP set pruned at an LD threshold of 0.1 gives the results in the table below. Results from the original analysis with no <span class="math inline">\(\rho\)</span> parameter are presented for comparison.</p>
+<p>We observed that there is some sample overlap between the CAD and Height cohorts. Additionally, populations structure could lead to correlation between <span class="math inline">\(\hat{\beta}_1\)</span> and <span class="math inline">\(\hat{\beta}_2\)</span> conditional on the true effects <span class="math inline">\(\beta_1\)</span> and <span class="math inline">\(\beta_2\)</span>. To account for this, I added an additional parameter <span class="math inline">\(\rho\)</span> to account for this correlation. This extension of the model is described in <a href="sherlock2_compound_and_correlation.pdf">the notes</a> in Section 2.3. The correlation parameter <span class="math inline">\(\rho\)</span> is also estimated via maximum likelihood. Fitting this model in the four analyses discussed previously (LDL-&gt; CAD, CAD-&gt;LDL, LDL-&gt;HT, HT-&gt;LDL) in the SNP set pruned at an LD threshold of 0.1 gives the results in the table below.</p>
 <table>
 <thead>
 <tr class="header">

@@ -17,7 +17,7 @@ Data sources:
 + LDL summary statistics were downloaded from [here](http://csg.sph.umich.edu/abecasis/public/lipids2010/)
 
 
-## Read in data
+## Data processing and summaries
 
 Coronary artery disease:
 
@@ -124,16 +124,7 @@ cat("Correlation for significant CAD SNPs that have strong LDL effect: ", with(d
 ```
 This suggests that the data are more consistant with a causal effect of LDL on CAD than vice versa.
 
-## Run Sherlock
-
-I ran the correlation approach to Sherlock on RCC considering the data from both directions. I used $g_{20} = g_{21}$ in both cases. For the direction LDL-> CAD our estimate of $\lambda$ is 0.52 (se 0.007; t-stat 76.9). For the direction CAD -> LDL we still get a strongly significant but much smaller in magnitude estimate of $\lambda$: 0.09 (se 0.002; t-stat 45.0). 
-
-One way to make sense of this result is to think that a more accurate model for the relationship between $\beta_{2}$ and $\beta_{1}$ is that 
-$$ \beta_{2,i} = \lambda_i\beta_{1,i} + u_i$$, where there is a different $\lambda$ for every SNP. The estimate of $\lambda$ we obtain from the correlation approach is somewhat like an average of the $\lambda_i$ over all SNPs. Because there are so many SNPs that are both CAD and LDL SNPs, this average is still significantly positive even though there are many CAD SNPs that have very small LDL effects. 
-
-I think this experiment highlights a problem with the current model and something to work on.
-
-## Look at Height and LDL
+## Height and LDL
 
 As far as I know, there are no reports of a strong link between adult height and lipid levels. I am hoping that this can provide a negative example for us. Height data were downloaded from [here](http://portals.broadinstitute.org/collaboration/giant/index.php/GIANT_consortium_data_files#GWAS_Anthropometric_2014_Height).
 
@@ -222,15 +213,9 @@ with(dat[dat$ldl_qvalue < 0.1,], plot(ldl_effect, height_effect, cex=0.5, main="
 
 It seems possible that, among top LDL SNPs, there is some negative correlation in the LDL and height effect sizes.
 
-### Sherlock Results
+## Sherlock Results
 
-The correlation approach gave significant non-zero estimates of $\lambda$ in both directions. For the LDL -> height direction the estimate is -0.08 (se 0.002; t-stats -27.2). For the height -> LDL direction the estime is -0.10 (se 0.001; t-stat -95.9).
-
-It seems to me that the variance estimates we are obtaining are too small. This might be a result of LD or could be another issue with the model.
-
-## LD Pruning
-
-We pruned SNPs for LD within windows defined by Pickerell et al and downloaded from (here)[jklkj]. 
+We pruned SNPs for LD within windows defined by Pickerell et al and downloaded from [(here](https://bitbucket.org/nygcresearch/ldetect-data/src/ac125e47bf7f/EUR/?at=master). 
 
 
  Test    | LD Thresh | $\hat{\lambda}$ | $\hat{\lambda}/se(\hat{\lambda})$ | Corr (q-val <0.1) | Corr test
@@ -257,13 +242,15 @@ HT->LDL  | 0.1       | -0.09           | -15.15                            | -0.
 
 We saw in simulations that having a bad estimate of $g_{2,1}$ can lead to inflated estimates of $\lambda$ and increased rates of false positives. I tried two alternative methods of estimating $g_{2,1}$. 
 
-+ Estimate $g_{2,1}$ using only SNPs that have a $q$-value less than 0.2 for **either** of the traits considered. (so in the LDL-> CAD analysis, we will estiamte $g_{2,1}$ by fitting ASH to the CAD effects of only SNPs that have either an LDL $q$-value less than 0.2 or a CAD $q$-value of less than 0.2 )
-+ Estimate $g_{2,1}$ using only SNPs that appear in the GWAS catalog. 
++ Estimate $g_{2,1}$ using only SNPs that have a $q$-value less than 0.2 for **either** of the traits considered. (so in the LDL-> CAD analysis, we will estiamte $g_{2,1}$ by fitting ASH to the CAD effects of only SNPs that have either an LDL $q$-value less than 0.2 or a CAD $q$-value of less than 0.2 ) (qval$<0.2$)
++ Estimate $g_{2,1}$ using only SNPs that appear in the GWAS catalog. (gwas)
++ Estimate $g_{2,1}$ using only SNPs that have a $q$-value less than 0.2 for the first trait. (qval-asc)
 
-These experiments are done using the set of SNPs pruned at a threshold of 0.1. Using the first strategy, $g_{21}$ is determined using 11,331 SNPs in the LDL->HT and HT->LDL analyses and xx SNPs in the CAD->LDL and LDL->CAD analyses. Using the first strategy, $g_{2,1}$ is estimated using 1,365 SNPs in the LDL->HT and HT->LDL analyses
+These experiments are done using the set of SNPs pruned at a threshold of 0.1. Results are shown in the table below.
 
 ## Accounting for confounding
-We observed that there is some sample overlap between the CAD and Height cohorts. Additionally, populations structure could lead to correlation between $\hat{\beta}_1$ and $\hat{\beta}_2$ conditional on the true effects $\beta_1$ and $\beta_2$. To account for this, I added an additional parameter $\rho$ to account for this correlation. This extension of the model is described in [the notes](sherlock2_compound_and_correlation.pdf) in Section 2.3. The correlation parameter $\rho$ is also estimated via maximum likelihood. Fitting this model in the four analyses discussed previously (LDL-> CAD, CAD->LDL, LDL->HT, HT->LDL) in the SNP set pruned at an LD threshold of 0.1 gives the  results in the table below. Results from the original analysis with no $\rho$ parameter are presented for comparison.
+We observed that there is some sample overlap between the CAD and Height cohorts. Additionally, populations structure could lead to correlation between $\hat{\beta}_1$ and $\hat{\beta}_2$ conditional on the true effects $\beta_1$ and $\beta_2$. To account for this, I added an additional parameter $\rho$ to account for this correlation. This extension of the model is described in [the notes](sherlock2_compound_and_correlation.pdf) in Section 2.3. The correlation parameter $\rho$ is also estimated via maximum likelihood. Fitting this model in the four analyses discussed previously (LDL-> CAD, CAD->LDL, LDL->HT, HT->LDL) in the SNP set pruned at an LD threshold of 0.1 gives the  results in the table below. 
+
 
 Test     |$g_{2,1}$ |  $\hat{\lambda}$(CI)  | $\lambda$-stat | $\hat{\rho}$(CI)     | $\rho$-stat
 ---------|----------|-----------------------|----------------|----------------------|---------------

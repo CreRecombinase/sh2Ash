@@ -1,0 +1,222 @@
+---
+title: "Simulations Using Sherlock v4"
+author: "Jean Morrison"
+date: 2017-05-01
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+## Introduction
+In this document I run the same simulations discussed in the previous analsis comparing the correlation and compound approaches (See [here](compare_approaches.html)). Here I analyze them using the method that is currently called Sherlock v4 which is the correlation approach allowing for confounding between $\hat{\beta}_1$ and $\hat{\beta}_2$ (discussed in Section 2.3 of [the notes](sherlock2_compound_and_correlation.pdf)). I will refer to the earlier method which does not allow for correlation between $\hat{\beta}_1$ and $\hat{\beta}_2$ conditional on $\beta_1$ and $\beta_2$ as v2 while the newer method is v4.
+
+## Null Simulations
+
+In these simulations, the true value of $\rho$ is 0 and the true value of $\lamdda$ is 0. 
+Results are stored for 100 simulations.
+```{r}
+res_v4_1 <- readRDS("../data/resv4_complete_independence.RData")
+res_v4_2 <- readRDS("../data/resv4_null_corr.RData")
+res_v2_1 <- readRDS("../data/res_complete_independence.RData")
+res_v2_2 <- readRDS("../data/res_null_corr.RData")
+```
+
+
+In both the complete independence and co-regulation scenarios, the estimates of $\lambda$ from v4 are close to the estimates made using v2.
+```{r, echo=FALSE, three}
+library(ggplot2)
+dat1 <- data.frame("v2" = res_v2_1$corr[4,,1], "v4"=res_v4_1$corr[3,,1],
+                   "xlower" = res_v2_1$corr[4,,1] - qnorm(0.975)*res_v2_1$corr[4,,2],
+                   "xupper" = res_v2_1$corr[4,,1] +qnorm(0.975)*res_v2_1$corr[4,,2],
+                   "ylower"=res_v4_1$corr[3,,1]-qnorm(0.975)*res_v4_1$corr[3,,2],
+                   "yupper"=res_v4_1$corr[3,,1]+qnorm(0.975)*res_v4_1$corr[3,,2])
+
+ggplot(dat1) + #geom_errorbar(aes(x=v2, ymax = yupper, ymin=ylower))+
+        # geom_errorbarh(aes(x = v2, y=v4, xmin=xlower, xmax=xupper)) + 
+        geom_point(aes(x=v2, y=v4)) + geom_hline(yintercept=0, linetype=2) + 
+        geom_vline(xintercept = 0, linetype=2) + geom_abline(intercept = 0, slope=1) + 
+        ggtitle("Null - Complete Independence\nLambda estimates for v2 (original) and v4 (new)") + 
+        xlab("Original (v2)") + ylab("New (v4)") + 
+        theme_bw() + theme(panel.grid=element_blank())
+
+dat2 <- data.frame("v2" = res_v2_2$corr[4,,1], "v4"=res_v4_2$corr[3,,1],
+                   "xlower" = res_v2_2$corr[4,,1] - qnorm(0.975)*res_v2_2$corr[4,,2],
+                   "xupper" = res_v2_2$corr[4,,1] +qnorm(0.975)*res_v2_2$corr[4,,2],
+                   "ylower"=res_v4_2$corr[3,,1]-qnorm(0.975)*res_v4_2$corr[3,,2],
+                   "yupper"=res_v4_2$corr[3,,1]+qnorm(0.975)*res_v4_2$corr[3,,2])
+
+ggplot(dat2) + #geom_errorbar(aes(x=v2, ymax = yupper, ymin=ylower))+
+        # geom_errorbarh(aes(x = v2, y=v4, xmin=xlower, xmax=xupper)) + 
+        geom_point(aes(x=v2, y=v4)) + geom_hline(yintercept=0, linetype=2) + 
+        geom_vline(xintercept = 0, linetype=2) + geom_abline(intercept = 0, slope=1) + 
+        ggtitle("Null - Co-regulation\nLambda estimates for v2 (original) and v4 (new)") + 
+        xlab("Original (v2)") + ylab("New (v4)") + 
+        theme_bw() + theme(panel.grid=element_blank())
+```
+
+
+### Type 1 error
+
+The type 1 error is similar between v2 and v4. In general, v4 has slightly higher type 1 error but the difference is not substantial.
+```{r, echo=FALSE}
+library(tidyr)
+t1e <- data.frame("level"= seq(0.01, 0.1, length.out=10))
+thresh_two_sided <- qnorm(1-(t1e$level/2))
+t1e$comp_indep_v2 <- sapply(thresh_two_sided, FUN=function(s){mean(abs(res_v2_1$corr[4, 1:100, 1]/res_v2_1$corr[4, 1:100,2]) > s)})
+t1e$comp_indep_v4 <- sapply(thresh_two_sided, FUN=function(s){mean(abs(res_v4_1$corr[3, 1:100, 1]/res_v4_1$corr[3, 1:100,2]) > s)})
+t1e$coreg_v2 <- sapply(thresh_two_sided, FUN=function(s){mean(abs(res_v2_2$corr[4, , 1]/res_v2_2$corr[4, ,2]) > s)})
+t1e$coreg_v4 <- sapply(thresh_two_sided, FUN=function(s){mean(abs(res_v4_2$corr[3, , 1]/res_v4_2$corr[3, ,2]) > s)})
+t1e_long <- gather(t1e, "Setting", "Type1Error", -level)
+
+#Shading
+n <- 100
+v <- seq(0.01, 0.1, length.out=1000)
+c975 <- sapply(rev(v), FUN=function(prob){
+      qbinom(p=0.975, size=n, prob=prob)/n
+})
+c025 <- sapply(v, FUN=function(prob){
+      qbinom(p=0.025, size=n, prob=prob)/n
+})
+df.shade = data.frame("x"=c(v, rev(v)), "y"=c(c025, c975))
+
+
+ggplot(t1e_long) +  
+  geom_polygon(data=df.shade, aes(x=x, y=y), alpha=0.1, fill="black") + 
+  geom_point(aes(x=level, y=Type1Error, group=Setting, color=Setting, shape=Setting), size=2) +
+  geom_line(aes(x=level, y=Type1Error, group=Setting, color=Setting)) + 
+  geom_abline(slope=1, intercept=0, linetype=2) + 
+  xlab("Level") + ylab("Type 1 Error") + ggtitle("Type 1 Error") + 
+  theme_bw()
+```
+
+
+### Type 1 error of the oracle methods
+These patterns are similar to those seen for v2.
+```{r, echo=FALSE, four}
+library(tidyr)
+t1e <- data.frame("level"= seq(0.01, 0.1, length.out=10))
+thresh_two_sided <- qnorm(1-(t1e$level/2))
+t1e$oracle2 <- sapply(thresh_two_sided, FUN=function(s){mean(abs(res_v4_1$corr[1, , 1]/res_v4_1$corr[1, ,2]) > s)})
+t1e$oracle3 <- sapply(thresh_two_sided, FUN=function(s){mean(abs(res_v4_1$corr[2, , 1]/res_v4_1$corr[2, ,2]) > s)})
+t1e$est <- sapply(thresh_two_sided, FUN=function(s){mean(abs(res_v4_1$corr[3, , 1]/res_v4_1$corr[3, ,2]) > s)})
+t1e_long1 <- gather(t1e, "Method", "Type1Error", -level)
+t1e_long1$Setting <- "Comp_Ind"
+
+t1e <- data.frame("level"= seq(0.01, 0.1, length.out=10))
+thresh_two_sided <- qnorm(1-(t1e$level/2))
+t1e$oracle2 <- sapply(thresh_two_sided, FUN=function(s){mean(abs(res_v4_2$corr[1, , 1]/res_v4_2$corr[1, ,2]) > s)})
+t1e$oracle3 <- sapply(thresh_two_sided, FUN=function(s){mean(abs(res_v4_2$corr[2, , 1]/res_v4_2$corr[2, ,2]) > s)})
+t1e$est <- sapply(thresh_two_sided, FUN=function(s){mean(abs(res_v4_2$corr[3, , 1]/res_v4_2$corr[3, ,2]) > s)})
+t1e_long2 <- gather(t1e, "Method", "Type1Error", -level)
+t1e_long2$Setting <- "Co-Reg"
+t1e_long <- rbind(t1e_long1, t1e_long2)
+t1e_long$methset <- paste0(t1e_long$Method, t1e_long$Setting)
+
+#Shading
+n <- 100
+v <- seq(0.01, 0.1, length.out=1000)
+c975 <- sapply(rev(v), FUN=function(prob){
+      qbinom(p=0.975, size=n, prob=prob)/n
+})
+c025 <- sapply(v, FUN=function(prob){
+      qbinom(p=0.025, size=n, prob=prob)/n
+})
+df.shade = data.frame("x"=c(v, rev(v)), "y"=c(c025, c975))
+
+
+
+ggplot(t1e_long[t1e_long$Setting=="Comp_Ind",]) + 
+  geom_polygon(data=df.shade, aes(x=x, y=y), alpha=0.1, fill="black") +
+  geom_point(aes(x=level, y=Type1Error, group=methset, color=Method, shape=Method), size=2) +
+  geom_line(aes(x=level, y=Type1Error, group=methset, color=Method)) + 
+  geom_abline(slope=1, intercept=0, linetype=2) + 
+  xlab("Level") + ylab("Type 1 Error") + ggtitle("Type 1 Error\nComplete Independence Setting") + 
+  theme_bw()
+
+ggplot(t1e_long[t1e_long$Setting=="Co-Reg",]) + 
+  geom_polygon(data=df.shade, aes(x=x, y=y), alpha=0.1, fill="black") +
+  geom_point(aes(x=level, y=Type1Error, group=methset, color=Method, shape=Method), size=2) +
+  geom_line(aes(x=level, y=Type1Error, group=methset, color=Method)) + 
+  geom_abline(slope=1, intercept=0, linetype=2) + 
+  xlab("Level") + ylab("Type 1 Error") + ggtitle("Type 1 Error\nCo-Regulation Setting") + 
+  theme_bw()
+```
+
+
+
+## Simulations with $\lambda > 0$
+
+In these simulations the power of v2 and v4 are almost the same.
+```{r, echo=FALSE}
+library(tidyr)
+resv4 <- resv2 <- list()
+lams <- c(0, 0.02, 0.05, 0.08, 0.13, 0.2)
+for( i in 1:6){
+  resv4[[i]] <- readRDS(paste0("../data/resv4_causal_", lams[i], ".RData"))
+  resv2[[i]] <- readRDS(paste0("../data/res_causal_", lams[i], ".RData"))
+}
+power <- data.frame("lambda"=lams)
+power$v2 <- power$v4 <-  NA
+for(i in 1:6){
+  v2 <- resv2[[i]]$corr[2, , 1]/resv2[[i]]$corr[2, , 2]
+  v4 <- resv4[[i]]$corr[3, , 1]/resv4[[i]]$corr[3, , 2]
+  power$v2[i] <- mean(abs(v2) > qnorm(0.975))
+  power$v4[i] <- mean(abs(v4) > qnorm(0.975))
+}
+power_long <- gather(power, "stat", "power", -lambda)
+ggplot(power_long) + geom_point(aes(x=lambda, y=power, group=stat, color=stat, shape=stat), size=2) +
+  geom_line(aes(x=lambda, y=power, group=stat, color=stat)) + 
+  xlab("Lambda") + ylab("Power") + ggtitle("Power under causal model") + 
+  theme_bw()
+```
+
+Coverage rates are also very similar.
+```{r, echo=FALSE}
+levels <- c(0.02, 0.05, 0.08, 0.1, 0.15)
+coverage_v2 <- coverage_v4 <- matrix(nrow=length(levels), ncol=length(lams))
+for(i in 1:length(lams)){
+  lam <- lams[i]
+  for(j in 1:length(levels)){
+    upper_v2 <- resv2[[i]]$corr[2, , 1] + qnorm(1-(levels[j]/2))*resv2[[i]]$corr[2, , 2]
+    lower_v2 <- resv2[[i]]$corr[2, , 1] - qnorm(1-(levels[j]/2))*resv2[[i]]$corr[2, , 2]
+    coverage_v2[j, i] <- 1-mean(upper_v2 < lam | lower_v2 > lam)
+    upper_v4 <- resv4[[i]]$corr[3, , 1] + qnorm(1-(levels[j]/2))*resv4[[i]]$corr[3, , 2]
+    lower_v4 <- resv4[[i]]$corr[3, , 1] - qnorm(1-(levels[j]/2))*resv4[[i]]$corr[3, , 2]
+    coverage_v4[j, i] <- 1-mean(upper_v4 < lam | lower_v4 > lam)
+  }
+}
+coverage <- data.frame(rbind(coverage_v2, coverage_v4))
+names(coverage) <- paste0("lambda=", lams)
+coverage$version <- rep(c("v2", "v4"), each=length(levels))
+
+coverage$level <- 1-levels
+coverage_long <- gather(coverage, "lambda", "coverage", -level, -version)
+coverage_long$grp <- paste(coverage_long$lambda, coverage_long$version)
+ggplot(coverage_long[coverage_long$version=="v2",]) + geom_point(aes(x=level, y=coverage, group=grp, color=lambda, shape=lambda), size=2) +
+  geom_line(aes(x=level, y=coverage, group=grp, color=lambda, linetype=version)) + 
+  geom_abline(slope=1, intercept=0, linetype=2) + 
+  xlab("Level") + ylab("Coverage") + ggtitle("Coverage of true lambda under causal model\nv2") + 
+  theme_bw()
+
+
+ggplot(coverage_long[coverage_long$version=="v4",]) + geom_point(aes(x=level, y=coverage, group=grp, color=lambda, shape=lambda), size=2) +
+  geom_line(aes(x=level, y=coverage, group=grp, color=lambda, linetype=version)) + 
+  geom_abline(slope=1, intercept=0, linetype=2) + 
+  xlab("Level") + ylab("Coverage") + ggtitle("Coverage of true lambda under causal model\nv4") + 
+  theme_bw()
+```
+
+

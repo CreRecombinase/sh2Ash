@@ -13,4 +13,8 @@ A document briefly descirbing our two approaches can be found [here](sherlock2_c
 + We compare the orignal Sherlock method on the same simulations [here](sherlock1.html).
   
   
-Next we applied the correlation approach to some real data: [here](cad_ldl.html) we analyze the relationship between LDL cholesterol and coronary artery disease.
+Next we applied the correlation approach to some real data: 
+  + [here](cad_ldl.html) we analyze the relationship between LDL cholesterol and coronary artery disease and between LDL and height.
+
+
+After looking at the real data we added a parameter to the model that can capture genome-wide correlation between the summary statistics that arises due to population structure or overlapping samples. This method is described in Section 2.3 of the notes above and results for the real data are given at the end of [the data analysis document](cad_ldl.html). To verify that adding this parameter did not greatly reduce power or increase type 1 error when there is no global correlation between statistics, we ran it on the original set of simulations used to compare the compound and correlation approaches. These results are [here](simulations_v4.html)

@@ -2,7 +2,7 @@
 title: "Simulations comparing compound and correlation methods"
 author: "Jean Morrison"
 date: "March 8, 2017"
-output: pdf_document
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -129,8 +129,8 @@ colMeans(res$stats)
 
 Results are stored for 100 simulations.
 ```{r}
-res1 <- getobj("../data/res_complete_independence.RData")
-res2 <- getobj("../data/res_null_corr.RData")
+res1 <- readRDS("../data/res_complete_independence.RData")
+res2 <- readRDS("../data/res_null_corr.RData")
 ```
 
 
@@ -448,7 +448,7 @@ library(tidyr)
 res <- list()
 lams <- c(0.02, 0.05, 0.08, 0.13, 0.2)
 for( i in 1:5){
-  res[[i]] <- getobj(paste0("../data/res_causal_", lams[i], ".RData"))
+  res[[i]] <- readRDS(paste0("../data/res_causal_", lams[i], ".RData"))
 }
 power <- data.frame("lambda"=lams)
 power$comp_bf10 <- power$comp_bf100 <- power$comp_elpd <- power$corr <-  NA

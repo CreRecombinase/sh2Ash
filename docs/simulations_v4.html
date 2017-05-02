@@ -9,9 +9,11 @@
 <meta name="generator" content="pandoc" />
 
 
+<meta name="author" content="Jean Morrison" />
 
+<meta name="date" content="2017-05-01" />
 
-<title>Home</title>
+<title>Simulations Using Sherlock v4</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -19,6 +21,9 @@
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-1.1/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-1.1/highlight.js"></script>
@@ -162,6 +167,101 @@ $(document).ready(function () {
 
 
 
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
 
 
 <div class="navbar navbar-default  navbar-fixed-top" role="navigation">
@@ -202,19 +302,45 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Home</h1>
+<h1 class="title toc-ignore">Simulations Using Sherlock v4</h1>
+<h4 class="author"><em>Jean Morrison</em></h4>
+<h4 class="date"><em>2017-05-01</em></h4>
 
 </div>
 
 
-<p>Research website for Sherlock2 project with Jean Morrison, Xin He, and Matthew Stephens.</p>
-<p>A document briefly descirbing our two approaches can be found <a href="sherlock2_compound_and_correlation.pdf">here</a>.</p>
-<ul>
-<li>Simulations comparing the compound and correlation approaches are <a href="compare_approaches.html">here</a></li>
-<li>We compare the orignal Sherlock method on the same simulations <a href="sherlock1.html">here</a>.</li>
-</ul>
-<p>Next we applied the correlation approach to some real data: + <a href="cad_ldl.html">here</a> we analyze the relationship between LDL cholesterol and coronary artery disease and between LDL and height.</p>
-<p>After looking at the real data we added a parameter to the model that can capture genome-wide correlation between the summary statistics that arises due to population structure or overlapping samples. This method is described in Section 2.3 of the notes above and results for the real data are given at the end of <a href="cad_ldl.html">the data analysis document</a>. To verify that adding this parameter did not greatly reduce power or increase type 1 error when there is no global correlation between statistics, we ran it on the original set of simulations used to compare the compound and correlation approaches. These results are <a href="simulations_v4.html">here</a></p>
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>In this document I run the same simulations discussed in the previous analsis comparing the correlation and compound approaches (See <a href="compare_approaches.html">here</a>). Here I analyze them using the method that is currently called Sherlock v4 which is the correlation approach allowing for confounding between <span class="math inline">\(\hat{\beta}_1\)</span> and <span class="math inline">\(\hat{\beta}_2\)</span> (discussed in Section 2.3 of <a href="sherlock2_compound_and_correlation.pdf">the notes</a>). I will refer to the earlier method which does not allow for correlation between <span class="math inline">\(\hat{\beta}_1\)</span> and <span class="math inline">\(\hat{\beta}_2\)</span> conditional on <span class="math inline">\(\beta_1\)</span> and <span class="math inline">\(\beta_2\)</span> as v2 while the newer method is v4.</p>
+</div>
+<div id="null-simulations" class="section level2">
+<h2>Null Simulations</h2>
+<p>In these simulations, the true value of <span class="math inline">\(\rho\)</span> is 0 and the true value of <span class="math inline">\(\lamdda\)</span> is 0. Results are stored for 100 simulations.</p>
+<pre class="r"><code>res_v4_1 &lt;- readRDS(&quot;../data/resv4_complete_independence.RData&quot;)
+res_v4_2 &lt;- readRDS(&quot;../data/resv4_null_corr.RData&quot;)
+res_v2_1 &lt;- readRDS(&quot;../data/res_complete_independence.RData&quot;)
+res_v2_2 &lt;- readRDS(&quot;../data/res_null_corr.RData&quot;)</code></pre>
+<p>In both the complete independence and co-regulation scenarios, the estimates of <span class="math inline">\(\lambda\)</span> from v4 are close to the estimates made using v2. <img src="simulations_v4_files/figure-html/three-1.png" width="672" /><img src="simulations_v4_files/figure-html/three-2.png" width="672" /></p>
+<div id="type-1-error" class="section level3">
+<h3>Type 1 error</h3>
+<p>The type 1 error is similar between v2 and v4. In general, v4 has slightly higher type 1 error but the difference is not substantial. <img src="simulations_v4_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+</div>
+<div id="type-1-error-of-the-oracle-methods" class="section level3">
+<h3>Type 1 error of the oracle methods</h3>
+<p>These patterns are similar to those seen for v2. <img src="simulations_v4_files/figure-html/four-1.png" width="672" /><img src="simulations_v4_files/figure-html/four-2.png" width="672" /></p>
+</div>
+</div>
+<div id="simulations-with-lambda-0" class="section level2">
+<h2>Simulations with <span class="math inline">\(\lambda &gt; 0\)</span></h2>
+<p>In these simulations the power of v2 and v4 are almost the same. <img src="simulations_v4_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>Coverage rates are also very similar. <img src="simulations_v4_files/figure-html/unnamed-chunk-4-1.png" width="672" /><img src="simulations_v4_files/figure-html/unnamed-chunk-4-2.png" width="672" /></p>
+</div>
 
 <hr>
 <p>
@@ -242,6 +368,8 @@ $(document).ready(function () {
 -->
 
 
+</div>
+</div>
 
 </div>
 

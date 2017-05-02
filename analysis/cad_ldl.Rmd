@@ -270,29 +270,106 @@ Test     |$g_{2,1}$ |  $\hat{\lambda}$(CI)  | $\lambda$-stat | $\hat{\rho}$(CI) 
 LDL->CAD |$g_{2,0}$ | 0.536(0.471, 0.600)   | 16.24          |                      |
 LDL->CAD |qval$<0.2$| 0.514(0.408, 0.619)   | 9.55           |                      |
 LDL->CAD | gwas     | 0.527(0.456, 0.596)   | 14.72          |                      |
-LDL->CAD |$g_{2,0}$ | 0.51(0.448, 0.577)    | 15.50          | 0.024(0.019, 0.030)  | 8.68     
-LDL->CAD |qval$<0.2$| 0.480(0.372,0.589)    | 8.69           | 0.025(0.020, 0.031)  | 9.22
-LDL->CAD | gwas     | 0.504(0.434, 0.574)   | 14.19          | 0.024(0.019, 0.029)  | 8.69
+LDL->CAD |$g_{2,0}$ | 0.51(0.448, 0.578)    | 15.55          | 0.024(0.018, 0.029)  | 8.60     
+LDL->CAD |qval$<0.2$| 0.480(0.372,0.589)    | 8.69           | 0.025(0.020, 0.031)  | 9.23
+LDL->CAD | gwas     | 0.501(0.432, 0.570)   | 14.14          | 0.024(0.019, 0.030)  | 8.77
+LDL->CAD | qval-asc | 0.491(0.404, 0.577)   | 11.12          | 0.025(0.019, 0.030)  | 8.97
 ---------|----------|-----------------------|------          |----------------------|-------
 CAD->LDL |$g_{2,0}$ | 0.089(0.067, 0.111)   | 7.76           |                      |
-CAD->LDL |qval$<0.2$ | 0.049(0.005, 0.093) | 2.18           |                      |
+CAD->LDL |qval$<0.2$| 0.049(0.005, 0.093)   | 2.18           |                      |
 CAD->LDL |gwas      | 0.075(0.054, 0.097)   | 6.97           |                      |
-CAD->LDL |$g_{2,0}$ | 0.003 (-0.022, 0.028) | 0.24           | 0.027(0.020, 0.034)  | 7.58 
-CAD->LDL |qval$<0.2$| 0.004(-0.045, 0.054)  | 0.17           | 0.028(0.022, 0.034)  | 8.82
-CAD->LDL |gwas      | 0.005(-0.020, 0.029)  | 0.35           | 0.026(0.019, 0.033)  | 7.52
+CAD->LDL |$g_{2,0}$ | 0.004 (-0.021, 0.030) | 0.33           | 0.027(0.020, 0.034)  | 7.58 
+CAD->LDL |qval$<0.2$| 0.018(-0.029, 0.064)  | 0.78           | 0.028(0.022, 0.034)  | 8.82
+CAD->LDL |gwas      | 0.006(-0.019, 0.031)  | 0.51           | 0.026(0.019, 0.033)  | 7.62
+CAD->LDL | qval-asc | 0.004(-0.021, 0.029)  | 0.33           | 0.027(0.019, 0.034)  | 7.58
 ---------|----------|-----------------------|------          |----------------------|-------
 LDL->HT  |$g_{2,0}$ |-0.041(-0.059, -0.022) | -4.32          |                      |      
 LDL->HT  |qval$<0.2$| -0.07(-0.113, -0.035) | -3.73          |                      |
 LDL->HT  |gwas      | -0.044(-0.066, -0.022)| -3.85          |                      |
-LDL->HT  |$g_{2,0}$ |-0.028(-0.047, -0.010) |-3.03           |-0.049(-0.056, -0.043)| -14.84  
-LDL->HT  |qval$<0.2$|-0.057(-0.096, -0.018) | -2.89          |-0.049(-0.056, -0.043)| -14.66
-LDL->HT  |gwas      |-0.028 (-0.050,-0.006) | -2.54          |-0.049(-0.056, -0.043)| -14.76
+LDL->HT  |$g_{2,0}$ |-0.028(-0.046, -0.009) | -2.94          |-0.049(-0.056, -0.043)| -14.76  
+LDL->HT  |qval$<0.2$|-0.057(-0.096, -0.018) | -2.89          |-0.049(-0.056, -0.042)| -14.65
+LDL->HT  |gwas      |-0.027 (-0.049,-0.006) | -2.46          |-0.049(-0.056, -0.043)| -14.73
+LDL->HT  |qval-asc  | -0.030(-0.054, -0.005)| -2.32          |-0.049(-0.056, -0.043)| -14.81 
 ---------|----------|-----------------------|------          |----------------------|-------
 HT->LDL  |$g_{2,0}$ |-0.092(-0.104, -0.080) | -15.15         |                      | 
 HT->LDL  |qval$<0.2$| -0.079(-0.103, -0.055)| -6.49          |                      |
 HT->LDL  | gwas     | -0.086(-0.098, -0.073)| -13.68         |                      |
-HT->LDL  |$g_{2,0}$ |-0.057(-0.072, -0.042) |-7.43           |-0.032(-0.040, -0.024)| -7.57 
-HT->LDL  |qval$<0.2$| 0.004 (-0.023, 0.031) | 0.28           |-0.087(-0.101, -0.073)| -11.79
-HT->LDL  |gwas      | -0.045 (-0.061, -0.29)| -5.64          |-0.038(-0.047, -0.029)| -8.47
+HT->LDL  |$g_{2,0}$ |-0.057(-0.072, -0.042) | -7.50          |-0.032(-0.040, -0.023)| -7.60 
+HT->LDL  |qval$<0.2$| 0.047 (-0.071, 0.022) | -3.73          |-0.064(-0.076, -0.053)| -10.78
+HT->LDL  |gwas      | -0.050(-0.065, -0.035)| -6.51          |-0.036(-0.044, -0.028)| -8.48
+HT->LDL  | qval-asc | -0.058(-0.073, -0.043)| -7.60          |-0.031(-0.040, -0.023)| -7.57
+
+## Permutations
+Since there was very little difference between estiates with $g_{2,1} = g_{2,0}$ and $g_{2,1}$ estimated using the `qval-asc` method, these permutations are run using $g_{2,1} = g_{2,0}$. In each repetition, I permuted the effects and standard errors (together) for either height or CAD. I then re-ran Sherlock v4 to obtain an estimate of $\lambda$ and $\rho$. Since this permutation scheme breaks the relationship between the two studies, we expect that $E[\lambda_{perm}] = 0$ and $E[\rho_{perm}] = 0$. 
+
+Encouragingly - on permuted data, the statistics are approximately normally distributed.
+
+```{r, perms_ht_ldl}
+library(stats4)
+perm <- readRDS("../results/ht_ldl_v4.perm.RData")
+r <- readRDS("../results/ht_ldl.v4.RData")
+hist(perm$lambda_stat, breaks=30, 
+     main="Height->LDL permutation stats\n500 permutations", xlab="Statistic", 
+     xlim=range(c(perm$lambda_stat), coef(r)[1]/sqrt(vcov(r)[1,1])),
+     probability=TRUE)
+abline(v=coef(r)[1]/sqrt(vcov(r)[1,1]), col="red")
+curve(dnorm(x), add=TRUE)
+
+e <- qnorm(p=seq(0, 1, length.out=502)[2:501])
+plot(sort(perm$lambda_stat), e, xlab="Observed", ylab="Expected")
+abline(0, 1)
+```
 
 
+```{r, perms_ldl_ht}
+library(stats4)
+perm <- readRDS("../results/ldl_ht_v4.perm.RData")
+r <- readRDS("../results/ldl_ht.v4.RData")
+st <- coef(r)[1]/sqrt(vcov(r)[1,1])
+hist(perm$lambda_stat, breaks=30, 
+     main="LDL->HT permutation stats\n500 permutations", xlab="Statistic", 
+     xlim=range(c(perm$lambda_stat), st),
+     probability=TRUE)
+abline(v=st, col="red")
+curve(dnorm(x), add=TRUE)
+
+e <- qnorm(p=seq(0, 1, length.out=502)[2:501])
+plot(sort(perm$lambda_stat), e, xlab="Observed", ylab="Expected")
+abline(0, 1)
+```
+
+
+
+```{r, perms_ldl_cad}
+library(stats4)
+perm <- readRDS("../results/ldl_cad_v4.perm.RData")
+r <- readRDS("../results/ldl_cad.v4.RData")
+st <- coef(r)[1]/sqrt(vcov(r)[1,1])
+hist(perm$lambda_stat, breaks=30, 
+     main="LDL->CAD permutation stats\n500 permutations", xlab="Statistic", 
+     xlim=range(c(perm$lambda_stat), st),
+     probability=TRUE)
+abline(v=st, col="red")
+curve(dnorm(x), add=TRUE)
+
+e <- qnorm(p=seq(0, 1, length.out=502)[2:501])
+plot(sort(perm$lambda_stat), e, xlab="Observed", ylab="Expected")
+abline(0, 1)
+```
+
+```{r, perms_cad_ldl}
+library(stats4)
+perm <- readRDS("../results/cad_ldl_v4.perm.RData")
+r <- readRDS("../results/cad_ldl.v4.RData")
+st <- coef(r)[1]/sqrt(vcov(r)[1,1])
+hist(perm$lambda_stat, breaks=30, 
+     main="CAD->LDL permutation stats\n500 permutations", xlab="Statistic", 
+     xlim=range(c(perm$lambda_stat), st),
+     probability=TRUE)
+abline(v=st, col="red")
+curve(dnorm(x), add=TRUE)
+
+e <- qnorm(p=seq(0, 1, length.out=502)[2:501])
+plot(sort(perm$lambda_stat), e, xlab="Observed", ylab="Expected")
+abline(0, 1)
+```

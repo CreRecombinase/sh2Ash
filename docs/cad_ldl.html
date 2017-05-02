@@ -704,10 +704,10 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <tr class="even">
 <td>LDL-&gt;CAD</td>
 <td><span class="math inline">\(g_{2,0}\)</span></td>
-<td>0.51(0.448, 0.577)</td>
-<td>15.50</td>
-<td>0.024(0.019, 0.030)</td>
-<td>8.68</td>
+<td>0.51(0.448, 0.578)</td>
+<td>15.55</td>
+<td>0.024(0.018, 0.029)</td>
+<td>8.60</td>
 </tr>
 <tr class="odd">
 <td>LDL-&gt;CAD</td>
@@ -715,17 +715,25 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>0.480(0.372,0.589)</td>
 <td>8.69</td>
 <td>0.025(0.020, 0.031)</td>
-<td>9.22</td>
+<td>9.23</td>
 </tr>
 <tr class="even">
 <td>LDL-&gt;CAD</td>
 <td>gwas</td>
-<td>0.504(0.434, 0.574)</td>
-<td>14.19</td>
-<td>0.024(0.019, 0.029)</td>
-<td>8.69</td>
+<td>0.501(0.432, 0.570)</td>
+<td>14.14</td>
+<td>0.024(0.019, 0.030)</td>
+<td>8.77</td>
 </tr>
 <tr class="odd">
+<td>LDL-&gt;CAD</td>
+<td>qval-asc</td>
+<td>0.491(0.404, 0.577)</td>
+<td>11.12</td>
+<td>0.025(0.019, 0.030)</td>
+<td>8.97</td>
+</tr>
+<tr class="even">
 <td>———</td>
 <td>———-</td>
 <td>———————–</td>
@@ -733,7 +741,7 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>———————-</td>
 <td>——-</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>CAD-&gt;LDL</td>
 <td><span class="math inline">\(g_{2,0}\)</span></td>
 <td>0.089(0.067, 0.111)</td>
@@ -741,7 +749,7 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td></td>
 <td></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>CAD-&gt;LDL</td>
 <td>qval<span class="math inline">\(&lt;0.2\)</span></td>
 <td>0.049(0.005, 0.093)</td>
@@ -749,7 +757,7 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td></td>
 <td></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>CAD-&gt;LDL</td>
 <td>gwas</td>
 <td>0.075(0.054, 0.097)</td>
@@ -757,29 +765,37 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td></td>
 <td></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>CAD-&gt;LDL</td>
 <td><span class="math inline">\(g_{2,0}\)</span></td>
-<td>0.003 (-0.022, 0.028)</td>
-<td>0.24</td>
+<td>0.004 (-0.021, 0.030)</td>
+<td>0.33</td>
 <td>0.027(0.020, 0.034)</td>
 <td>7.58</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>CAD-&gt;LDL</td>
 <td>qval<span class="math inline">\(&lt;0.2\)</span></td>
-<td>0.004(-0.045, 0.054)</td>
-<td>0.17</td>
+<td>0.018(-0.029, 0.064)</td>
+<td>0.78</td>
 <td>0.028(0.022, 0.034)</td>
 <td>8.82</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>CAD-&gt;LDL</td>
 <td>gwas</td>
-<td>0.005(-0.020, 0.029)</td>
-<td>0.35</td>
+<td>0.006(-0.019, 0.031)</td>
+<td>0.51</td>
 <td>0.026(0.019, 0.033)</td>
-<td>7.52</td>
+<td>7.62</td>
+</tr>
+<tr class="odd">
+<td>CAD-&gt;LDL</td>
+<td>qval-asc</td>
+<td>0.004(-0.021, 0.029)</td>
+<td>0.33</td>
+<td>0.027(0.019, 0.034)</td>
+<td>7.58</td>
 </tr>
 <tr class="even">
 <td>———</td>
@@ -816,28 +832,36 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <tr class="even">
 <td>LDL-&gt;HT</td>
 <td><span class="math inline">\(g_{2,0}\)</span></td>
-<td>-0.028(-0.047, -0.010)</td>
-<td>-3.03</td>
+<td>-0.028(-0.046, -0.009)</td>
+<td>-2.94</td>
 <td>-0.049(-0.056, -0.043)</td>
-<td>-14.84</td>
+<td>-14.76</td>
 </tr>
 <tr class="odd">
 <td>LDL-&gt;HT</td>
 <td>qval<span class="math inline">\(&lt;0.2\)</span></td>
 <td>-0.057(-0.096, -0.018)</td>
 <td>-2.89</td>
-<td>-0.049(-0.056, -0.043)</td>
-<td>-14.66</td>
+<td>-0.049(-0.056, -0.042)</td>
+<td>-14.65</td>
 </tr>
 <tr class="even">
 <td>LDL-&gt;HT</td>
 <td>gwas</td>
-<td>-0.028 (-0.050,-0.006)</td>
-<td>-2.54</td>
+<td>-0.027 (-0.049,-0.006)</td>
+<td>-2.46</td>
 <td>-0.049(-0.056, -0.043)</td>
-<td>-14.76</td>
+<td>-14.73</td>
 </tr>
 <tr class="odd">
+<td>LDL-&gt;HT</td>
+<td>qval-asc</td>
+<td>-0.030(-0.054, -0.005)</td>
+<td>-2.32</td>
+<td>-0.049(-0.056, -0.043)</td>
+<td>-14.81</td>
+</tr>
+<tr class="even">
 <td>———</td>
 <td>———-</td>
 <td>———————–</td>
@@ -845,7 +869,7 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>———————-</td>
 <td>——-</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>HT-&gt;LDL</td>
 <td><span class="math inline">\(g_{2,0}\)</span></td>
 <td>-0.092(-0.104, -0.080)</td>
@@ -853,7 +877,7 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td></td>
 <td></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>HT-&gt;LDL</td>
 <td>qval<span class="math inline">\(&lt;0.2\)</span></td>
 <td>-0.079(-0.103, -0.055)</td>
@@ -861,7 +885,7 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td></td>
 <td></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>HT-&gt;LDL</td>
 <td>gwas</td>
 <td>-0.086(-0.098, -0.073)</td>
@@ -869,32 +893,104 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td></td>
 <td></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>HT-&gt;LDL</td>
 <td><span class="math inline">\(g_{2,0}\)</span></td>
 <td>-0.057(-0.072, -0.042)</td>
-<td>-7.43</td>
-<td>-0.032(-0.040, -0.024)</td>
-<td>-7.57</td>
-</tr>
-<tr class="even">
-<td>HT-&gt;LDL</td>
-<td>qval<span class="math inline">\(&lt;0.2\)</span></td>
-<td>0.004 (-0.023, 0.031)</td>
-<td>0.28</td>
-<td>-0.087(-0.101, -0.073)</td>
-<td>-11.79</td>
+<td>-7.50</td>
+<td>-0.032(-0.040, -0.023)</td>
+<td>-7.60</td>
 </tr>
 <tr class="odd">
 <td>HT-&gt;LDL</td>
+<td>qval<span class="math inline">\(&lt;0.2\)</span></td>
+<td>0.047 (-0.071, 0.022)</td>
+<td>-3.73</td>
+<td>-0.064(-0.076, -0.053)</td>
+<td>-10.78</td>
+</tr>
+<tr class="even">
+<td>HT-&gt;LDL</td>
 <td>gwas</td>
-<td>-0.045 (-0.061, -0.29)</td>
-<td>-5.64</td>
-<td>-0.038(-0.047, -0.029)</td>
-<td>-8.47</td>
+<td>-0.050(-0.065, -0.035)</td>
+<td>-6.51</td>
+<td>-0.036(-0.044, -0.028)</td>
+<td>-8.48</td>
+</tr>
+<tr class="odd">
+<td>HT-&gt;LDL</td>
+<td>qval-asc</td>
+<td>-0.058(-0.073, -0.043)</td>
+<td>-7.60</td>
+<td>-0.031(-0.040, -0.023)</td>
+<td>-7.57</td>
 </tr>
 </tbody>
 </table>
+</div>
+<div id="permutations" class="section level2">
+<h2>Permutations</h2>
+<p>Since there was very little difference between estiates with <span class="math inline">\(g_{2,1} = g_{2,0}\)</span> and <span class="math inline">\(g_{2,1}\)</span> estimated using the <code>qval-asc</code> method, these permutations are run using <span class="math inline">\(g_{2,1} = g_{2,0}\)</span>. In each repetition, I permuted the effects and standard errors (together) for either height or CAD. I then re-ran Sherlock v4 to obtain an estimate of <span class="math inline">\(\lambda\)</span> and <span class="math inline">\(\rho\)</span>. Since this permutation scheme breaks the relationship between the two studies, we expect that <span class="math inline">\(E[\lambda_{perm}] = 0\)</span> and <span class="math inline">\(E[\rho_{perm}] = 0\)</span>.</p>
+<p>Encouragingly - on permuted data, the statistics are approximately normally distributed.</p>
+<pre class="r"><code>library(stats4)
+perm &lt;- readRDS(&quot;../results/ht_ldl_v4.perm.RData&quot;)
+r &lt;- readRDS(&quot;../results/ht_ldl.v4.RData&quot;)
+hist(perm$lambda_stat, breaks=30, 
+     main=&quot;Height-&gt;LDL permutation stats\n500 permutations&quot;, xlab=&quot;Statistic&quot;, 
+     xlim=range(c(perm$lambda_stat), coef(r)[1]/sqrt(vcov(r)[1,1])),
+     probability=TRUE)
+abline(v=coef(r)[1]/sqrt(vcov(r)[1,1]), col=&quot;red&quot;)
+curve(dnorm(x), add=TRUE)</code></pre>
+<p><img src="cad_ldl_files/figure-html/perms_ht_ldl-1.png" width="672" /></p>
+<pre class="r"><code>e &lt;- qnorm(p=seq(0, 1, length.out=502)[2:501])
+plot(sort(perm$lambda_stat), e, xlab=&quot;Observed&quot;, ylab=&quot;Expected&quot;)
+abline(0, 1)</code></pre>
+<p><img src="cad_ldl_files/figure-html/perms_ht_ldl-2.png" width="672" /></p>
+<pre class="r"><code>library(stats4)
+perm &lt;- readRDS(&quot;../results/ldl_ht_v4.perm.RData&quot;)
+r &lt;- readRDS(&quot;../results/ldl_ht.v4.RData&quot;)
+st &lt;- coef(r)[1]/sqrt(vcov(r)[1,1])
+hist(perm$lambda_stat, breaks=30, 
+     main=&quot;LDL-&gt;HT permutation stats\n500 permutations&quot;, xlab=&quot;Statistic&quot;, 
+     xlim=range(c(perm$lambda_stat), st),
+     probability=TRUE)
+abline(v=st, col=&quot;red&quot;)
+curve(dnorm(x), add=TRUE)</code></pre>
+<p><img src="cad_ldl_files/figure-html/perms_ldl_ht-1.png" width="672" /></p>
+<pre class="r"><code>e &lt;- qnorm(p=seq(0, 1, length.out=502)[2:501])
+plot(sort(perm$lambda_stat), e, xlab=&quot;Observed&quot;, ylab=&quot;Expected&quot;)
+abline(0, 1)</code></pre>
+<p><img src="cad_ldl_files/figure-html/perms_ldl_ht-2.png" width="672" /></p>
+<pre class="r"><code>library(stats4)
+perm &lt;- readRDS(&quot;../results/ldl_cad_v4.perm.RData&quot;)
+r &lt;- readRDS(&quot;../results/ldl_cad.v4.RData&quot;)
+st &lt;- coef(r)[1]/sqrt(vcov(r)[1,1])
+hist(perm$lambda_stat, breaks=30, 
+     main=&quot;LDL-&gt;CAD permutation stats\n500 permutations&quot;, xlab=&quot;Statistic&quot;, 
+     xlim=range(c(perm$lambda_stat), st),
+     probability=TRUE)
+abline(v=st, col=&quot;red&quot;)
+curve(dnorm(x), add=TRUE)</code></pre>
+<p><img src="cad_ldl_files/figure-html/perms_ldl_cad-1.png" width="672" /></p>
+<pre class="r"><code>e &lt;- qnorm(p=seq(0, 1, length.out=502)[2:501])
+plot(sort(perm$lambda_stat), e, xlab=&quot;Observed&quot;, ylab=&quot;Expected&quot;)
+abline(0, 1)</code></pre>
+<p><img src="cad_ldl_files/figure-html/perms_ldl_cad-2.png" width="672" /></p>
+<pre class="r"><code>library(stats4)
+perm &lt;- readRDS(&quot;../results/cad_ldl_v4.perm.RData&quot;)
+r &lt;- readRDS(&quot;../results/cad_ldl.v4.RData&quot;)
+st &lt;- coef(r)[1]/sqrt(vcov(r)[1,1])
+hist(perm$lambda_stat, breaks=30, 
+     main=&quot;CAD-&gt;LDL permutation stats\n500 permutations&quot;, xlab=&quot;Statistic&quot;, 
+     xlim=range(c(perm$lambda_stat), st),
+     probability=TRUE)
+abline(v=st, col=&quot;red&quot;)
+curve(dnorm(x), add=TRUE)</code></pre>
+<p><img src="cad_ldl_files/figure-html/perms_cad_ldl-1.png" width="672" /></p>
+<pre class="r"><code>e &lt;- qnorm(p=seq(0, 1, length.out=502)[2:501])
+plot(sort(perm$lambda_stat), e, xlab=&quot;Observed&quot;, ylab=&quot;Expected&quot;)
+abline(0, 1)</code></pre>
+<p><img src="cad_ldl_files/figure-html/perms_cad_ldl-2.png" width="672" /></p>
 </div>
 
 <hr>

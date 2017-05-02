@@ -655,7 +655,17 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <div id="accounting-for-confounding" class="section level2">
 <h2>Accounting for confounding</h2>
 <p>We observed that there is some sample overlap between the CAD and Height cohorts. Additionally, populations structure could lead to correlation between <span class="math inline">\(\hat{\beta}_1\)</span> and <span class="math inline">\(\hat{\beta}_2\)</span> conditional on the true effects <span class="math inline">\(\beta_1\)</span> and <span class="math inline">\(\beta_2\)</span>. To account for this, I added an additional parameter <span class="math inline">\(\rho\)</span> to account for this correlation. This extension of the model is described in <a href="sherlock2_compound_and_correlation.pdf">the notes</a> in Section 2.3. The correlation parameter <span class="math inline">\(\rho\)</span> is also estimated via maximum likelihood. Fitting this model in the four analyses discussed previously (LDL-&gt; CAD, CAD-&gt;LDL, LDL-&gt;HT, HT-&gt;LDL) in the SNP set pruned at an LD threshold of 0.1 gives the results in the table below.</p>
-<table>
+<table style="width:100%;">
+<colgroup>
+<col width="8%" />
+<col width="9%" />
+<col width="20%" />
+<col width="14%" />
+<col width="20%" />
+<col width="11%" />
+<col width="9%" />
+<col width="5%" />
+</colgroup>
 <thead>
 <tr class="header">
 <th>Test</th>
@@ -664,6 +674,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <th><span class="math inline">\(\lambda\)</span>-stat</th>
 <th><span class="math inline">\(\hat{\rho}\)</span>(CI)</th>
 <th><span class="math inline">\(\rho\)</span>-stat</th>
+<th>LL</th>
+<th>Rel LL</th>
 </tr>
 </thead>
 <tbody>
@@ -674,6 +686,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>16.24</td>
 <td></td>
 <td></td>
+<td>762604.2</td>
+<td>***</td>
 </tr>
 <tr class="even">
 <td>LDL-&gt;CAD</td>
@@ -682,6 +696,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>9.55</td>
 <td></td>
 <td></td>
+<td>762460.4</td>
+<td>-143.8</td>
 </tr>
 <tr class="odd">
 <td>LDL-&gt;CAD</td>
@@ -690,6 +706,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>14.72</td>
 <td></td>
 <td></td>
+<td>762531.2</td>
+<td>-73.0</td>
 </tr>
 <tr class="even">
 <td>LDL-&gt;CAD</td>
@@ -698,6 +716,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>15.55</td>
 <td>0.024(0.018, 0.029)</td>
 <td>8.60</td>
+<td>762641.4</td>
+<td>37.2</td>
 </tr>
 <tr class="odd">
 <td>LDL-&gt;CAD</td>
@@ -706,6 +726,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>8.69</td>
 <td>0.025(0.020, 0.031)</td>
 <td>9.23</td>
+<td>762538.2</td>
+<td>-66.0</td>
 </tr>
 <tr class="even">
 <td>LDL-&gt;CAD</td>
@@ -714,6 +736,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>14.14</td>
 <td>0.024(0.019, 0.030)</td>
 <td>8.77</td>
+<td>762647.5</td>
+<td>43.3</td>
 </tr>
 <tr class="odd">
 <td>LDL-&gt;CAD</td>
@@ -722,6 +746,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>11.12</td>
 <td>0.025(0.019, 0.030)</td>
 <td>8.97</td>
+<td>762637.7</td>
+<td>33.5</td>
 </tr>
 <tr class="even">
 <td>———</td>
@@ -729,7 +755,9 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>———————–</td>
 <td>——</td>
 <td>———————-</td>
-<td>——-</td>
+<td>————</td>
+<td>———-</td>
+<td>——</td>
 </tr>
 <tr class="odd">
 <td>CAD-&gt;LDL</td>
@@ -738,6 +766,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>7.76</td>
 <td></td>
 <td></td>
+<td>762503.6</td>
+<td>-100.6</td>
 </tr>
 <tr class="even">
 <td>CAD-&gt;LDL</td>
@@ -746,6 +776,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>2.18</td>
 <td></td>
 <td></td>
+<td>749394.0</td>
+<td>-13210.2</td>
 </tr>
 <tr class="odd">
 <td>CAD-&gt;LDL</td>
@@ -754,6 +786,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>6.97</td>
 <td></td>
 <td></td>
+<td>762281.8</td>
+<td>-322.4</td>
 </tr>
 <tr class="even">
 <td>CAD-&gt;LDL</td>
@@ -762,6 +796,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>0.33</td>
 <td>0.027(0.020, 0.034)</td>
 <td>7.58</td>
+<td>762526.7</td>
+<td>-77.5</td>
 </tr>
 <tr class="odd">
 <td>CAD-&gt;LDL</td>
@@ -770,6 +806,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>0.78</td>
 <td>0.028(0.022, 0.034)</td>
 <td>8.82</td>
+<td>749433.5</td>
+<td>-13170.7</td>
 </tr>
 <tr class="even">
 <td>CAD-&gt;LDL</td>
@@ -778,6 +816,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>0.51</td>
 <td>0.026(0.019, 0.033)</td>
 <td>7.62</td>
+<td>762306.8</td>
+<td>-297.4</td>
 </tr>
 <tr class="odd">
 <td>CAD-&gt;LDL</td>
@@ -786,6 +826,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>0.33</td>
 <td>0.027(0.019, 0.034)</td>
 <td>7.58</td>
+<td>747832.5</td>
+<td>-14771.7</td>
 </tr>
 <tr class="even">
 <td>———</td>
@@ -793,7 +835,9 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>———————–</td>
 <td>——</td>
 <td>———————-</td>
-<td>——-</td>
+<td>————</td>
+<td>———-</td>
+<td>———-</td>
 </tr>
 <tr class="odd">
 <td>LDL-&gt;HT</td>
@@ -802,6 +846,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>-4.32</td>
 <td></td>
 <td></td>
+<td>959848.0</td>
+<td>***</td>
 </tr>
 <tr class="even">
 <td>LDL-&gt;HT</td>
@@ -810,6 +856,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>-3.73</td>
 <td></td>
 <td></td>
+<td>959845.6</td>
+<td>-2.41</td>
 </tr>
 <tr class="odd">
 <td>LDL-&gt;HT</td>
@@ -818,6 +866,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>-3.85</td>
 <td></td>
 <td></td>
+<td>959878.7</td>
+<td>30.72</td>
 </tr>
 <tr class="even">
 <td>LDL-&gt;HT</td>
@@ -826,6 +876,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>-2.94</td>
 <td>-0.049(-0.056, -0.043)</td>
 <td>-14.76</td>
+<td>959958.2</td>
+<td>110.2</td>
 </tr>
 <tr class="odd">
 <td>LDL-&gt;HT</td>
@@ -834,6 +886,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>-2.89</td>
 <td>-0.049(-0.056, -0.042)</td>
 <td>-14.65</td>
+<td>959953.0</td>
+<td>105.0</td>
 </tr>
 <tr class="even">
 <td>LDL-&gt;HT</td>
@@ -842,6 +896,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>-2.46</td>
 <td>-0.049(-0.056, -0.043)</td>
 <td>-14.73</td>
+<td>959988.0</td>
+<td>140.0</td>
 </tr>
 <tr class="odd">
 <td>LDL-&gt;HT</td>
@@ -850,6 +906,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>-2.32</td>
 <td>-0.049(-0.056, -0.043)</td>
 <td>-14.81</td>
+<td>959995.7</td>
+<td>147.7</td>
 </tr>
 <tr class="even">
 <td>———</td>
@@ -857,7 +915,9 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>———————–</td>
 <td>——</td>
 <td>———————-</td>
-<td>——-</td>
+<td>————</td>
+<td>———-</td>
+<td>———–</td>
 </tr>
 <tr class="odd">
 <td>HT-&gt;LDL</td>
@@ -866,6 +926,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>-15.15</td>
 <td></td>
 <td></td>
+<td>959953.5</td>
+<td>105.46</td>
 </tr>
 <tr class="even">
 <td>HT-&gt;LDL</td>
@@ -874,6 +936,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>-6.49</td>
 <td></td>
 <td></td>
+<td>958338.8</td>
+<td>-1509.2</td>
 </tr>
 <tr class="odd">
 <td>HT-&gt;LDL</td>
@@ -882,6 +946,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>-13.68</td>
 <td></td>
 <td></td>
+<td>958266.8</td>
+<td>-1581.2</td>
 </tr>
 <tr class="even">
 <td>HT-&gt;LDL</td>
@@ -890,6 +956,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>-7.50</td>
 <td>-0.032(-0.040, -0.023)</td>
 <td>-7.60</td>
+<td>959982.3</td>
+<td>134.3</td>
 </tr>
 <tr class="odd">
 <td>HT-&gt;LDL</td>
@@ -898,6 +966,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>-3.73</td>
 <td>-0.064(-0.076, -0.053)</td>
 <td>-10.78</td>
+<td>958349.3</td>
+<td>-1498.7</td>
 </tr>
 <tr class="even">
 <td>HT-&gt;LDL</td>
@@ -906,6 +976,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>-6.51</td>
 <td>-0.036(-0.044, -0.028)</td>
 <td>-8.48</td>
+<td>958303.4</td>
+<td>-1544.6</td>
 </tr>
 <tr class="odd">
 <td>HT-&gt;LDL</td>
@@ -914,6 +986,8 @@ with(dat[dat$ldl_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, mai
 <td>-7.60</td>
 <td>-0.031(-0.040, -0.023)</td>
 <td>-7.57</td>
+<td>959982.4</td>
+<td>134.4</td>
 </tr>
 </tbody>
 </table>

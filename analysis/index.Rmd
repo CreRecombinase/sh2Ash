@@ -1,5 +1,5 @@
 ---
-title: "Home"
+title: "Causal patterns in pairs of GWAS summary statistics"
 output:
   html_document:
     toc: false

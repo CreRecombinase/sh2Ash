@@ -1,0 +1,155 @@
+---
+title: "Simulations with a few strong effects"
+author: "Jean Morrison"
+date: 2017-05-04
+output: html_document
+---
+
+## Introduction
+The goal of these simulations is to understand how few SNPs can have both GWAS and eQTL effects before there is substantial evidence for a correlation in effects. These simulations are motivated by a known flaw in the original Sherlock method. In the original Sherlock, one strong eQTL that also effects the phenotype can lead to a very large Bayes factor
+
+## Simulation set-up
+For these simulations we use the same set-up as the complete-independence case described [in our original set of simulations](compare_approaches.html). We then identify the $N$ SNPs with the largest test statistics for the first trait and the $N$ SNPs with the largest test statistics for the second trait. We shuffle the second trait SNPs so that these are the same set of SNPs. Additionally, we flip the signs of the second trait effects and estimates if necessary to create correlation that is consistent with whatever trend is present in the data. We will explore results for $N = 0, 1,$ and $2$.
+
+## Results
+
+Results are stored for 100 simulations.
+```{r}
+res_v4_0 <- readRDS("../data/res.nt0.RData")
+res_v4_1 <- readRDS("../data/res.nt1.RData")
+res_v4_2 <- readRDS("../data/res.nt2.RData")
+```
+
+We see some elevation in the rate of tests rejecting $\lambda = 0$ when 1 or 2 SNPs strongly effect both traits (with effects in the same direction).
+```{r, echo=FALSE}
+library(tidyr)
+library(ggplot2)
+t1e <- data.frame("level"= seq(0.01, 0.1, length.out=10))
+thresh_two_sided <- qnorm(1-(t1e$level/2))
+t1e$n_0 <- sapply(thresh_two_sided, FUN=function(s){
+  mean(abs(res_v4_0$corr[3,,1]/res_v4_0$corr[3, ,2]) > s)
+})
+t1e$n_1 <- sapply(thresh_two_sided, FUN=function(s){
+  mean(abs(res_v4_1$corr[3,,1]/res_v4_1$corr[3, ,2]) > s)
+})
+t1e$n_2 <- sapply(thresh_two_sided, FUN=function(s){
+  mean(abs(res_v4_2$corr[3,,1]/res_v4_2$corr[3, ,2]) > s)
+})
+
+t1e_long <- gather(t1e, "N", "PositiveRate", -level)
+
+#Shading
+n <- 100
+v <- seq(0.01, 0.1, length.out=1000)
+c975 <- sapply(rev(v), FUN=function(prob){
+      qbinom(p=0.975, size=n, prob=prob)/n
+})
+c025 <- sapply(v, FUN=function(prob){
+      qbinom(p=0.025, size=n, prob=prob)/n
+})
+df.shade = data.frame("x"=c(v, rev(v)), "y"=c(c025, c975))
+
+
+ggplot(t1e_long) +  
+  geom_polygon(data=df.shade, aes(x=x, y=y), alpha=0.1, fill="black") + 
+  geom_point(aes(x=level, y=PositiveRate, group=N, color=N, shape=N), size=2) +
+  geom_line(aes(x=level, y=PositiveRate, group=N, color=N)) + 
+  geom_abline(slope=1, intercept=0, linetype=2) + 
+  xlab("Level") + ylab("Positive Rate") + ggtitle("Sherlock v4\nRate of rejecting lambda = 0") + 
+  theme_bw()
+```
+```{r, echo=FALSE}
+df <- data.frame("nt0" = abs(res_v4_0$corr[3,,1]/res_v4_0$corr[3, ,2]), 
+                 "nt1" = abs(res_v4_1$corr[3,,1]/res_v4_1$corr[3, ,2]), 
+                 "nt2" = abs(res_v4_2$corr[3,,1]/res_v4_2$corr[3, ,2]))
+df_long <- gather(df, "nt", "corrstat")
+ggplot(df_long) + geom_density(aes(x=corrstat, group=nt, fill=nt), alpha=0.3)+ xlab("Absolute Lambda-statistic") + geom_vline(xintercept = qnorm(0.975)) + ggtitle("Sherlock v4\nDistribution of absolute test statistics") + theme_bw()
+```
+
+
+However, the correlation method is much less sensitive than the original sherlock method which will nearly always reject the null hypothesis with only one shared SNP using most reasonable Bayes factor thresholds.
+```{r, echo=FALSE}
+t1e <- data.frame("threshold"= seq(log10(10), log10(200), length.out=10))
+t1e$n_0 <- sapply(t1e$threshold, FUN=function(t){
+  mean(res_v4_0$sherlock1[,2]/log(10) > t)
+})
+t1e$n_1 <- sapply(t1e$threshold, FUN=function(t){
+  mean(res_v4_1$sherlock1[,2]/log(10) > t)
+})
+t1e$n_2 <- sapply(t1e$threshold, FUN=function(t){
+  mean(res_v4_2$sherlock1[,2]/log(10) > t)
+})
+t1e_long <- gather(t1e, "N", "PositiveRate", -threshold)
+
+
+
+ggplot(t1e_long) +  
+  geom_point(aes(x=threshold, y=PositiveRate, group=N, color=N, shape=N), size=2) +
+  geom_line(aes(x=threshold, y=PositiveRate, group=N, color=N)) + 
+  xlab("log10 Threshold") + ylab("Positive Rate") + ggtitle("Sherlock1\nRate of rejecting lambda = 0") + 
+  theme_bw()
+```
+
+
+
+
+```{r, echo=FALSE}
+df <- data.frame("nt0" = res_v4_0$sherlock1[,2], "nt1" = res_v4_1$sherlock1[,2], "nt2" = res_v4_2$sherlock1[,2])
+df <- df/log(10)
+df_long <- gather(df, "nt", "SherlockBF")
+ggplot(df_long) + geom_density(aes(x=SherlockBF, group=nt, fill=nt), alpha=0.3)+ xlab("Sherlock Log10 BF") + geom_vline(xintercept = 1) + geom_vline(xintercept = 2)  + ggtitle("Sherlock1\nDistribution of log10 Bayes Factor") + theme_bw()
+```
+
+
+The simple correlation method is slightly more sensitive than Sherlock v4 but not as sensitive as the original Sherlock method.
+```{r, echo=FALSE}
+t1e <- data.frame("level"= seq(0.01, 0.1, length.out=10))
+thresh_two_sided <- qnorm(1-(t1e$level/2))
+t1e$n_0 <- sapply(thresh_two_sided, FUN=function(s){
+  mean(abs(res_v4_0$simple[,2]) > s, na.rm=TRUE)
+})
+t1e$n_1 <- sapply(thresh_two_sided, FUN=function(s){
+  mean(abs(res_v4_1$simple[,2]) > s, na.rm=TRUE)
+})
+t1e$n_2 <- sapply(thresh_two_sided, FUN=function(s){
+  mean(abs(res_v4_2$simple[,2]) > s, na.rm=TRUE)
+})
+t1e_long <- gather(t1e, "N", "PositiveRate", -level)
+
+
+#Shading
+n <- 100
+v <- seq(0.01, 0.1, length.out=1000)
+c975 <- sapply(rev(v), FUN=function(prob){
+      qbinom(p=0.975, size=n, prob=prob)/n
+})
+c025 <- sapply(v, FUN=function(prob){
+      qbinom(p=0.025, size=n, prob=prob)/n
+})
+df.shade = data.frame("x"=c(v, rev(v)), "y"=c(c025, c975))
+
+
+ggplot(t1e_long) +  
+  geom_polygon(data=df.shade, aes(x=x, y=y), alpha=0.1, fill="black") + 
+  geom_point(aes(x=level, y=PositiveRate, group=N, color=N, shape=N), size=2) +
+  geom_line(aes(x=level, y=PositiveRate, group=N, color=N)) + 
+  geom_abline(slope=1, intercept=0, linetype=2) + 
+  xlab("Level") + ylab("Positive Rate") + ggtitle("Simple correlation method\nRate of rejecting lambda = 0") + 
+  theme_bw()
+```
+
+```{r, echo=FALSE}
+df <- data.frame("nt0" = abs(res_v4_0$simple[ ,2]), 
+                 "nt1" = abs(res_v4_1$simple[ ,2]), 
+                 "nt2" = abs(res_v4_2$simple[,2]))
+df_long <- gather(df, "nt", "corrstat")
+ggplot(df_long) + geom_density(aes(x=corrstat, group=nt, fill=nt), alpha=0.3)+ xlab("Absolute Lambda-statistic") + geom_vline(xintercept = qnorm(0.975)) + ggtitle("Simple correlation method\nDistribution of absolute test statistics") + theme_bw()
+```
+
+<!-- Add your analysis here -->
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```

@@ -9,12 +9,14 @@ Research website for Sherlock2 project with Jean Morrison, Xin He, and Matthew S
 
 A document briefly descirbing our two approaches can be found [here](sherlock2_compound_and_correlation.pdf).
 
-+ Simulations comparing the compound and correlation approaches are [here](compare_approaches.html)
-+ We compare the orignal Sherlock method on the same simulations [here](sherlock1.html).
-  
-  
-Next we applied the correlation approach to some real data: 
-  + [here](cad_ldl.html) we analyze the relationship between LDL cholesterol and coronary artery disease and between LDL and height.
 
+Simulation Experiments:
 
-After looking at the real data we added a parameter to the model that can capture genome-wide correlation between the summary statistics that arises due to population structure or overlapping samples. This method is described in Section 2.3 of the notes above and results for the real data are given at the end of [the data analysis document](cad_ldl.html). To verify that adding this parameter did not greatly reduce power or increase type 1 error when there is no global correlation between statistics, we ran it on the original set of simulations used to compare the compound and correlation approaches. These results are [here](simulations_v4.html)
+1. Simulations comparing the compound and correlation approaches are [here](compare_approaches.html)
+2. Comparing the orignal Sherlock method on the same simulations: [here](sherlock1.html).
+3. Running Sherlock v4 (which includes a parameter allowing correlation between summary statistics conditional on the true effect size) on the same simulation: [here](simulations_v4.html)
+4. Simulations attempting to answer the question "Can signal be driven by only one or two SNPs": [here](sims_numtop.html). Short answer: Yes but it is less likely than using the original sherlock method or the simple correlation approach.
+  
+Application to real data: 
+
++ [here](cad_ldl.html) we analyze the relationship between LDL cholesterol and coronary artery disease and between LDL and height.

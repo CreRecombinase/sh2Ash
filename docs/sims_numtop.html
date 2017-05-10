@@ -9,9 +9,11 @@
 <meta name="generator" content="pandoc" />
 
 
+<meta name="author" content="Jean Morrison" />
 
+<meta name="date" content="2017-05-04" />
 
-<title>Home</title>
+<title>Simulations with a few strong effects</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -19,6 +21,9 @@
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-1.1/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-1.1/highlight.js"></script>
@@ -162,6 +167,101 @@ $(document).ready(function () {
 
 
 
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
 
 
 <div class="navbar navbar-default  navbar-fixed-top" role="navigation">
@@ -202,24 +302,39 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Home</h1>
+<h1 class="title toc-ignore">Simulations with a few strong effects</h1>
+<h4 class="author"><em>Jean Morrison</em></h4>
+<h4 class="date"><em>2017-05-04</em></h4>
 
 </div>
 
 
-<p>Research website for Sherlock2 project with Jean Morrison, Xin He, and Matthew Stephens.</p>
-<p>A document briefly descirbing our two approaches can be found <a href="sherlock2_compound_and_correlation.pdf">here</a>.</p>
-<p>Simulation Experiments:</p>
-<ol style="list-style-type: decimal">
-<li>Simulations comparing the compound and correlation approaches are <a href="compare_approaches.html">here</a></li>
-<li>Comparing the orignal Sherlock method on the same simulations: <a href="sherlock1.html">here</a>.</li>
-<li>Running Sherlock v4 (which includes a parameter allowing correlation between summary statistics conditional on the true effect size) on the same simulation: <a href="simulations_v4.html">here</a></li>
-<li>Simulations attempting to answer the question “Can signal be driven by only one or two SNPs”: <a href="sims_numtop.html">here</a>. Short answer: Yes but it is less likely than using the original sherlock method or the simple correlation approach.</li>
-</ol>
-<p>Application to real data:</p>
-<ul>
-<li><a href="cad_ldl.html">here</a> we analyze the relationship between LDL cholesterol and coronary artery disease and between LDL and height.</li>
-</ul>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>The goal of these simulations is to understand how few SNPs can have both GWAS and eQTL effects before there is substantial evidence for a correlation in effects. These simulations are motivated by a known flaw in the original Sherlock method. In the original Sherlock, one strong eQTL that also effects the phenotype can lead to a very large Bayes factor</p>
+</div>
+<div id="simulation-set-up" class="section level2">
+<h2>Simulation set-up</h2>
+<p>For these simulations we use the same set-up as the complete-independence case described <a href="compare_approaches.html">in our original set of simulations</a>. We then identify the <span class="math inline">\(N\)</span> SNPs with the largest test statistics for the first trait and the <span class="math inline">\(N\)</span> SNPs with the largest test statistics for the second trait. We shuffle the second trait SNPs so that these are the same set of SNPs. Additionally, we flip the signs of the second trait effects and estimates if necessary to create correlation that is consistent with whatever trend is present in the data. We will explore results for <span class="math inline">\(N = 0, 1,\)</span> and <span class="math inline">\(2\)</span>.</p>
+</div>
+<div id="results" class="section level2">
+<h2>Results</h2>
+<p>Results are stored for 100 simulations.</p>
+<pre class="r"><code>res_v4_0 &lt;- readRDS(&quot;../data/res.nt0.RData&quot;)
+res_v4_1 &lt;- readRDS(&quot;../data/res.nt1.RData&quot;)
+res_v4_2 &lt;- readRDS(&quot;../data/res.nt2.RData&quot;)</code></pre>
+<p>We see some elevation in the rate of tests rejecting <span class="math inline">\(\lambda = 0\)</span> when 1 or 2 SNPs strongly effect both traits (with effects in the same direction). <img src="sims_numtop_files/figure-html/unnamed-chunk-2-1.png" width="672" /> <img src="sims_numtop_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>However, the correlation method is much less sensitive than the original sherlock method which will nearly always reject the null hypothesis with only one shared SNP using most reasonable Bayes factor thresholds. <img src="sims_numtop_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p><img src="sims_numtop_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>The simple correlation method is slightly more sensitive than Sherlock v4 but not as sensitive as the original Sherlock method. <img src="sims_numtop_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<pre><code>## Warning: Removed 15 rows containing non-finite values (stat_density).</code></pre>
+<p><img src="sims_numtop_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<!-- Add your analysis here -->
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+</div>
 
 <hr>
 <p>
@@ -247,6 +362,8 @@ $(document).ready(function () {
 -->
 
 
+</div>
+</div>
 
 </div>
 

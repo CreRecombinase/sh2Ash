@@ -1,0 +1,73 @@
+---
+title: "Analysis of 16 GWAS traits"
+author: "Jean Morrison"
+date: "May 18, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+We analyzed 16 of the GWAS traits analyzed by Pickerell et al. 
+
+## Summary of results 
+
+```{r}
+library(ggplot2)
+library(reshape2)
+res <- readRDS("../data/all_res.prune_wts.RData")
+pvals <- 2*pnorm(abs(res[2, , ]), lower.tail=FALSE)
+logpvals <- -1*log10(pvals)
+
+logpvals[(res[1, , ] < 0 & !is.na(res[1, , ])) ] <- -1 * logpvals[(!is.na(res[1, ,]) & res[1, ,] < 0)]
+logpvals[!is.na(pvals) & res[2,,] > 30] <- max(logpvals[!is.na(pvals) & res[2,,] < 30], na.rm=TRUE)
+
+ dat.m <- melt(t(logpvals))
+ dat.m$value[dat.m$value > 10] <- 10
+ dat.m$value[dat.m$value < -10] <- -10
+ dat.m$value[abs(dat.m$value) < 2] <- 0
+ ggplot(dat.m, aes(x=Var1, y=Var2, fill=value)) + 
+   geom_tile() + coord_equal() + 
+   scale_fill_gradient2(low="blue", high="red") + 
+   theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+
+An incomplete list of differences from Pickerell et al:
+
+Trait 1 | Trait 2 | $\lambda$ (stat) | Pickerell et al
+--------|---------|------------------|-----------------
+scz     | bmi     | -0.027 (-6.56)   | 0
+scz     | hdl     | -0.017 (-2.17)   | 0
+height  | bmi     | -0.054 (-9.26)   | 0
+height  | cd      | 0.115 (3.10)     | 0
+hieght  | fn      | 0.019 (1.57)     | -
+bmi     | cad     | 0.36 (4.62)      | 0
+bmi     | tc      | -0.11 (-3.72)    | 0
+bmi     | fg      | 0.052 (2.61)     | 0
+bmi     | height  | 0.15 (4.97)      | 0 
+fn      | height  | 0.071 (2.98)     | 0
+fn      | bmi     | 0.044(2.83)      | 0
+fn      | ad      | 0.20 (2.92)      | 0 
+ls      | ad      | +              | 0
+ls      | height  | +              | 0
+aam     | cad     | -0.056 (-3.98)   | 0
+aam     | height  | 0         | + 
+aam     | cd   | 0           | + 
+aam     | ls  | 0            | -
+tg      | height  | -              | 0
+tg      | bmi     | -              | 0
+tg      | t2d     | pos              | 0 
+ad      | bmi,tc,hdl,ldl,tg |         |0
+t2d     |hdl,cad,cd |            | 0
+cad     | cd, fg  |  +, +            | 0 
+tg      | height, bmi, t2d| -,-,+ | 0
+ldl     | hdl     | +  | 0
+hdl     | aam     | 0 | +
+hdl     | ldl, fg, cad | | 0
+tc      | height, bmi, hdl| -, -, - | 0
+fg | height | + | 0
+cd | fn | - | 0

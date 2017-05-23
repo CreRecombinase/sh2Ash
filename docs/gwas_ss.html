@@ -315,24 +315,8 @@ div.tocify {
 </div>
 <div id="summary-of-results" class="section level2">
 <h2>Summary of results</h2>
-<pre class="r"><code>library(ggplot2)
-library(reshape2)
-res &lt;- readRDS(&quot;../data/all_res.prune_wts.RData&quot;)
-pvals &lt;- 2*pnorm(abs(res[2, , ]), lower.tail=FALSE)
-logpvals &lt;- -1*log10(pvals)
-
-logpvals[(res[1, , ] &lt; 0 &amp; !is.na(res[1, , ])) ] &lt;- -1 * logpvals[(!is.na(res[1, ,]) &amp; res[1, ,] &lt; 0)]
-logpvals[!is.na(pvals) &amp; res[2,,] &gt; 30] &lt;- max(logpvals[!is.na(pvals) &amp; res[2,,] &lt; 30], na.rm=TRUE)
-
- dat.m &lt;- melt(t(logpvals))
- dat.m$value[dat.m$value &gt; 10] &lt;- 10
- dat.m$value[dat.m$value &lt; -10] &lt;- -10
- dat.m$value[abs(dat.m$value) &lt; 2] &lt;- 0
- ggplot(dat.m, aes(x=Var1, y=Var2, fill=value)) + 
-   geom_tile() + coord_equal() + 
-   scale_fill_gradient2(low=&quot;blue&quot;, high=&quot;red&quot;) + 
-   theme(axis.text.x = element_text(angle = 90, hjust = 1))</code></pre>
 <p><img src="gwas_ss_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
+<p><img src="gwas_ss_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
 <p>An incomplete list of differences from Pickerell et al:</p>
 <table>
 <thead>
@@ -372,7 +356,7 @@ logpvals[!is.na(pvals) &amp; res[2,,] &gt; 30] &lt;- max(logpvals[!is.na(pvals) 
 <td>hieght</td>
 <td>fn</td>
 <td>0.019 (1.57)</td>
-<td>-</td>
+<td>0</td>
 </tr>
 <tr class="even">
 <td>bmi</td>

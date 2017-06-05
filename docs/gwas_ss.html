@@ -322,15 +322,23 @@ div.tocify {
 </div>
 <div id="results-on-pruned-data-set" class="section level2">
 <h2>Results on pruned data set</h2>
-<p>Effect sizes in the best fitting model in data pruned for LD at a theshold of 0.1 and with LDAK weights: <img src="gwas_ss_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
-<p>Effect sizes in the full model in data pruned for LD at a theshold of 0.1 and with LDAK weights:: <img src="gwas_ss_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<p>Effect sizes; data pruned for LD at a theshold of 0.1 and with LDAK weights: <img src="gwas_ss_files/figure-html/unnamed-chunk-1-1.png" width="672" /><img src="gwas_ss_files/figure-html/unnamed-chunk-1-2.png" width="672" /></p>
+<p><img src="gwas_ss_files/figure-html/unnamed-chunk-3-1.png" width="672" /><img src="gwas_ss_files/figure-html/unnamed-chunk-3-2.png" width="672" /></p>
 <p>A handmade list of differences from Pickerell et al:</p>
 <table>
+<colgroup>
+<col width="10%" />
+<col width="11%" />
+<col width="28%" />
+<col width="29%" />
+<col width="20%" />
+</colgroup>
 <thead>
 <tr class="header">
 <th>Trait 1</th>
 <th>Trait 2</th>
-<th>Best Model</th>
+<th>Best BIC (Indep Prior)</th>
+<th>Best BIC (Joint Prior)</th>
 <th>Pickerell et al</th>
 </tr>
 </thead>
@@ -339,59 +347,83 @@ div.tocify {
 <td>scz</td>
 <td>bmi</td>
 <td>-</td>
+<td>-</td>
 <td>0</td>
 </tr>
 <tr class="even">
 <td>height</td>
 <td>ad</td>
 <td>0</td>
+<td>0</td>
 <td>-</td>
 </tr>
 <tr class="odd">
+<td>height</td>
+<td>aam</td>
+<td>0</td>
+<td>0</td>
+<td>+</td>
+</tr>
+<tr class="even">
 <td>bmi</td>
 <td>height</td>
 <td>+</td>
 <td>0</td>
-</tr>
-<tr class="even">
-<td>bmi</td>
-<td>cad</td>
-<td>+</td>
 <td>0</td>
 </tr>
 <tr class="odd">
 <td>bmi</td>
+<td>cad</td>
+<td>+</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>bmi</td>
 <td>aam</td>
+<td>0</td>
 <td>0</td>
 <td>-</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>fn</td>
 <td>t2d</td>
 <td>0</td>
+<td>0</td>
 <td>+</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>ls</td>
 <td>height</td>
 <td>+</td>
 <td>0</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>aam</td>
+<td>bmi</td>
+<td>-</td>
+<td>0</td>
+<td>-</td>
 </tr>
 <tr class="even">
 <td>aam</td>
 <td>hdl</td>
 <td>0</td>
+<td>0</td>
 <td>+</td>
 </tr>
 <tr class="odd">
 <td>aam</td>
 <td>ls</td>
+<td>0</td>
 <td>0</td>
 <td>-</td>
 </tr>
 <tr class="even">
 <td>aam</td>
 <td>height</td>
+<td>0</td>
 <td>0</td>
 <td>+</td>
 </tr>
@@ -399,102 +431,126 @@ div.tocify {
 <td>aam</td>
 <td>cd</td>
 <td>0</td>
+<td>0</td>
 <td>+</td>
 </tr>
 <tr class="even">
 <td>cd</td>
 <td>ad</td>
 <td>0</td>
+<td>0</td>
 <td>-</td>
 </tr>
 <tr class="odd">
+<td>fg</td>
+<td>t2d</td>
+<td>+</td>
+<td>0</td>
+<td>+</td>
+</tr>
+<tr class="even">
 <td>tc</td>
 <td>bmi</td>
 <td>-</td>
 <td>0</td>
+<td>0</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>tc</td>
 <td>hdl</td>
 <td>-</td>
 <td>0</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>tc</td>
+<td>cad</td>
+<td>+</td>
+<td>0</td>
+<td>+</td>
 </tr>
 <tr class="odd">
 <td>tc</td>
 <td>ldl</td>
 <td>0</td>
 <td>+</td>
-</tr>
-<tr class="even">
-<td>tc</td>
-<td>aam</td>
-<td>0</td>
-<td>+</td>
-</tr>
-<tr class="odd">
-<td>hdl</td>
-<td>aam</td>
-<td>0</td>
 <td>+</td>
 </tr>
 <tr class="even">
 <td>hdl</td>
 <td>cad</td>
 <td>-</td>
+<td>-</td>
 <td>0</td>
 </tr>
 <tr class="odd">
+<td>ldl</td>
+<td>bmi</td>
+<td>-</td>
+<td>0</td>
+<td>-</td>
+</tr>
+<tr class="even">
 <td>ldl</td>
 <td>hdl</td>
 <td>-</td>
 <td>0</td>
+<td>0</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>ldl</td>
 <td>tg</td>
 <td>0</td>
+<td>0</td>
 <td>+</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>tg</td>
 <td>height</td>
 <td>-</td>
 <td>0</td>
+<td>0</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>tg</td>
 <td>bmi</td>
 <td>-</td>
 <td>0</td>
+<td>0</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>t2d</td>
 <td>hdl</td>
 <td>-</td>
 <td>0</td>
+<td>0</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>t2d</td>
 <td>cad</td>
 <td>+</td>
 <td>0</td>
-</tr>
-<tr class="odd">
-<td>ad</td>
-<td>tc</td>
-<td>+</td>
 <td>0</td>
 </tr>
 <tr class="even">
 <td>ad</td>
-<td>hdl</td>
-<td>-</td>
+<td>tc</td>
+<td>+</td>
+<td>0</td>
 <td>0</td>
 </tr>
 <tr class="odd">
 <td>ad</td>
+<td>hdl</td>
+<td>-</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>ad</td>
 <td>tg</td>
 <td>+</td>
+<td>0</td>
 <td>0</td>
 </tr>
 </tbody>
@@ -502,9 +558,7 @@ div.tocify {
 </div>
 <div id="results-using-all-1.7-million-snps" class="section level2">
 <h2>Results using all 1.7 million SNPs</h2>
-<p>Effect sizes in the best fitting model in data with no LD pruning and with LDAK weights: <img src="gwas_ss_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
-<p><img src="gwas_ss_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
-<p>Difference in models: <img src="gwas_ss_files/figure-html/unnamed-chunk-6-1.png" width="672" /><img src="gwas_ss_files/figure-html/unnamed-chunk-6-2.png" width="672" /><img src="gwas_ss_files/figure-html/unnamed-chunk-6-3.png" width="672" /></p>
+<p><img src="gwas_ss_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
 </div>
 
 <hr>

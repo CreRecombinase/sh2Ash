@@ -22,174 +22,205 @@ For these fits I set the distribution of $\alpha_1$ and $\alpha_2$ using the ASH
 
 ## Results on pruned data set 
 
-Effect sizes in the best fitting model in data pruned for LD at a theshold of 0.1 and with LDAK weights:
-```{r, echo=FALSE}
+Effect sizes; data pruned for LD at a theshold of 0.1 and with LDAK weights:
+```{r, echo=FALSE, show="hold"}
 library(ggplot2)
 library(reshape2)
+library(gridExtra)
 res <- readRDS("../data/all_res.prune_wts.RData")
-pvals <- 2*pnorm(abs(res[2, , ]), lower.tail=FALSE)
+resJ <- readRDS("../data/all_res.prune_wts.joint.RData")
+
+#indep bic
+pvals <- 2*pnorm(abs(res[1, , ]), lower.tail=FALSE)
 logpvals <- -1*log10(pvals)
 
 logpvals[(res[1, , ] < 0 & !is.na(res[1, , ])) ] <- -1 * logpvals[(!is.na(res[1, ,]) & res[1, ,] < 0)]
-logpvals[!is.na(pvals) & res[2,,] > 30] <- max(logpvals[!is.na(pvals) & res[2,,] < 30], na.rm=TRUE)
 
  dat.m <- melt(t(logpvals))
  dat.m$value[dat.m$value > 10] <- 10
  dat.m$value[dat.m$value < -10] <- -10
  dat.m$value[abs(dat.m$value) < 2] <- 0
- ggplot(dat.m, aes(x=Var1, y=Var2, fill=value)) + 
-   geom_tile() + coord_equal() + ggtitle("Pruned, LDAK weighs, Best model") + 
+ (pbic <- ggplot(dat.m, aes(x=Var1, y=Var2, fill=value)) + 
+   geom_tile() + coord_equal() + ggtitle("Pruned, Best model(BIC)\nIndependent Prior") + 
    scale_fill_gradient2(low="blue", high="red") + 
-   theme(axis.text.x = element_text(angle = 90, hjust = 1))
-```
-
-Effect sizes in the full model in data pruned for LD at a theshold of 0.1 and with LDAK weights::
-```{r, echo=FALSE}
-res <- readRDS("../data/all_res.prune_wts.RData")
-pvals <- 2*pnorm(abs(res[4, , ]), lower.tail=FALSE)
+   theme(axis.text.x = element_text(angle = 90, hjust = 1), legend.position = "none"))
+#joint bic
+ pvals <- 2*pnorm(abs(resJ[1, , ]), lower.tail=FALSE)
 logpvals <- -1*log10(pvals)
 
-logpvals[(res[3, , ] < 0 & !is.na(res[3, , ])) ] <- -1 * logpvals[(!is.na(res[3, ,]) & res[3, ,] < 0)]
-#logpvals[!is.na(pvals) & res[4,,] > 30] <- max(logpvals[!is.na(pvals) & res[4,,] < 30], na.rm=TRUE)
+logpvals[(resJ[1, , ] < 0 & !is.na(resJ[1, , ])) ] <- -1 * logpvals[(!is.na(resJ[1, ,]) & resJ[1, ,] < 0)]
 
  dat.m <- melt(t(logpvals))
  dat.m$value[dat.m$value > 10] <- 10
  dat.m$value[dat.m$value < -10] <- -10
  dat.m$value[abs(dat.m$value) < 2] <- 0
- ggplot(dat.m, aes(x=Var1, y=Var2, fill=value)) + 
-   geom_tile() + coord_equal() + ggtitle("Pruned, LDAK weights, full model") + 
+ (pbic <- ggplot(dat.m, aes(x=Var1, y=Var2, fill=value)) + 
+   geom_tile() + coord_equal() + ggtitle("Pruned, Best model(BIC)\nJoint Prior") + 
    scale_fill_gradient2(low="blue", high="red") + 
-   theme(axis.text.x = element_text(angle = 90, hjust = 1))
+   theme(axis.text.x = element_text(angle = 90, hjust = 1), legend.position = "none"))
+ 
 ```
-
-
-
 
 
 ```{r, echo=FALSE, eval=FALSE}
-library(ggplot2)
-library(reshape2)
-res <- readRDS("../data/all_res.full_wts.RData")
-pvals <- 2*pnorm(abs(res[2, , ]), lower.tail=FALSE)
+ #LRT indep
+ pvals <- 2*pnorm(abs(res[2, , ]), lower.tail=FALSE)
 logpvals <- -1*log10(pvals)
 
-logpvals[(res[1, , ] < 0 & !is.na(res[1, , ])) ] <- -1 * logpvals[(!is.na(res[1, ,]) & res[1, ,] < 0)]
-logpvals[!is.na(pvals) & res[2,,] > 30] <- max(logpvals[!is.na(pvals) & res[2,,] < 30], na.rm=TRUE)
+logpvals[(res[2, , ] < 0 & !is.na(res[2, , ])) ] <- -1 * logpvals[(!is.na(res[2, ,]) & res[2, ,] < 0)]
 
  dat.m <- melt(t(logpvals))
  dat.m$value[dat.m$value > 10] <- 10
  dat.m$value[dat.m$value < -10] <- -10
  dat.m$value[abs(dat.m$value) < 2] <- 0
- ggplot(dat.m, aes(x=Var1, y=Var2, fill=value)) + 
-   geom_tile() + coord_equal() + ggtitle("All") + 
+ (plrt <- ggplot(dat.m, aes(x=Var1, y=Var2, fill=value)) + 
+   geom_tile() + coord_equal() + ggtitle("Pruned, Best model(LRT)\nIndependent Prior") + 
    scale_fill_gradient2(low="blue", high="red") + 
-   theme(axis.text.x = element_text(angle = 90, hjust = 1))
+   theme(axis.text.x = element_text(angle = 90, hjust = 1), legend.position = "none"))
+ 
+  #LRT joint
+ pvals <- 2*pnorm(abs(resJ[2, , ]), lower.tail=FALSE)
+logpvals <- -1*log10(pvals)
+
+logpvals[(resJ[2, , ] < 0 & !is.na(resJ[2, , ])) ] <- -1 * logpvals[(!is.na(resJ[2, ,]) & resJ[2, ,] < 0)]
+
+ dat.m <- melt(t(logpvals))
+ dat.m$value[dat.m$value > 10] <- 10
+ dat.m$value[dat.m$value < -10] <- -10
+ dat.m$value[abs(dat.m$value) < 2] <- 0
+ (plrt <- ggplot(dat.m, aes(x=Var1, y=Var2, fill=value)) + 
+   geom_tile() + coord_equal() + ggtitle("Pruned, Best model(LRT)\nJoint Prior") + 
+   scale_fill_gradient2(low="blue", high="red") + 
+   theme(axis.text.x = element_text(angle = 90, hjust = 1), legend.position = "none"))
+ 
+ 
 ```
+ 
+ 
+ 
+```{r, echo=FALSE}
+ pvals <- 2*pnorm(abs(res[3, , ]), lower.tail=FALSE)
+logpvals <- -1*log10(pvals)
+
+logpvals[(res[3, , ] < 0 & !is.na(res[3, , ])) ] <- -1 * logpvals[(!is.na(res[3, ,]) & res[3, ,] < 0)]
+
+ dat.m <- melt(t(logpvals))
+ dat.m$value[dat.m$value > 10] <- 10
+ dat.m$value[dat.m$value < -10] <- -10
+ dat.m$value[abs(dat.m$value) < 2] <- 0
+ (pfull <- ggplot(dat.m, aes(x=Var1, y=Var2, fill=value)) + 
+   geom_tile() + coord_equal() + ggtitle("Pruned, Full model\nIndependent Prior") + 
+   scale_fill_gradient2(low="blue", high="red") + 
+   theme(axis.text.x = element_text(angle = 90, hjust = 1), legend.position = "none"))
+ 
+ 
+ 
+  pvals <- 2*pnorm(abs(resJ[3, , ]), lower.tail=FALSE)
+logpvals <- -1*log10(pvals)
+
+logpvals[(resJ[3, , ] < 0 & !is.na(resJ[3, , ])) ] <- -1 * logpvals[(!is.na(resJ[3, ,]) & resJ[3, ,] < 0)]
+
+ dat.m <- melt(t(logpvals))
+ dat.m$value[dat.m$value > 10] <- 10
+ dat.m$value[dat.m$value < -10] <- -10
+ dat.m$value[abs(dat.m$value) < 2] <- 0
+ (pfull <- ggplot(dat.m, aes(x=Var1, y=Var2, fill=value)) + 
+   geom_tile() + coord_equal() + ggtitle("Pruned, Full model\nJoint Prior") + 
+   scale_fill_gradient2(low="blue", high="red") + 
+   theme(axis.text.x = element_text(angle = 90, hjust = 1), legend.position = "none"))
+ 
+ 
+
+```
+
 
 
 
 A handmade list of differences from Pickerell et al:
 
-Trait 1 | Trait 2 | Best Model | Pickerell et al
---------|---------|------------|-----------------
-scz     | bmi     | -          | 0
-height  | ad      | 0          | -
-bmi     | height  | +          | 0
-bmi     | cad     | +          | 0
-bmi     | aam     | 0          | -
-fn      | t2d     | 0          | + 
-ls      | height  | +          | 0
-aam     | hdl     | 0          | +
-aam     | ls      | 0          | -
-aam     | height  | 0          | +
-aam     | cd      | 0          | +
-cd      | ad      | 0          | -
-tc      | bmi     | -          | 0
-tc      | hdl     | -          | 0
-tc      | ldl     | 0          | +
-tc      | aam     | 0          | +
-hdl     | aam     | 0          | +
-hdl     | cad     | -          | 0
-ldl     | hdl     | -          | 0
-ldl     | tg      | 0          | +
-tg      | height  | -          | 0
-tg      | bmi     | -          | 0
-t2d     | hdl     | -          | 0
-t2d     | cad     | +          | 0
-ad      | tc      | +          | 0
-ad      | hdl     | -          | 0
-ad      | tg      | +          | 0
+Trait 1 | Trait 2 | Best BIC (Indep Prior) |  Best BIC (Joint Prior) | Pickerell et al
+--------|---------|------------------------|-------------------------|-----------------
+scz     | bmi     | -     | -     | 0
+height  | ad      | 0   | 0       | -
+height | aam | 0 | 0 | +
+bmi     | height  | +     | 0     | 0
+bmi     | cad     | +   | 0       | 0
+bmi     | aam     | 0    | 0      | -
+fn      | t2d     | 0     | 0     | + 
+ls      | height  | +     | 0     | 0
+aam | bmi | - | 0 | -
+aam     | hdl     | 0     | 0     | +
+aam     | ls      | 0       | 0   | -
+aam     | height  | 0       | 0   | +
+aam     | cd      | 0      | 0    | +
+cd      | ad      | 0      | 0    | -
+fg      | t2d     | + | 0 | +
+tc      | bmi     | -   | 0       | 0
+tc      | hdl     | -     | 0     | 0
+tc      | cad     | + | 0 | +
+tc      | ldl     | 0   | +        | +
+hdl     | cad     | -   | -       | 0
+ldl     | bmi     | - | 0 | -
+ldl     | hdl     | -   | 0       | 0
+ldl     | tg      | 0    | 0      | +
+tg      | height  | -    | 0      | 0
+tg      | bmi     | -     | 0     | 0
+t2d     | hdl     | -    | 0      | 0
+t2d     | cad     | +     | 0     | 0
+ad      | tc      | +    | 0      | 0
+ad      | hdl     | -     | 0     | 0
+ad      | tg      | +     | 0     | 0
 
 ## Results using all 1.7 million SNPs
 
-Effect sizes in the best fitting model in data with no LD pruning and with LDAK weights:
 ```{r, echo=FALSE}
-library(ggplot2)
-library(reshape2)
 res <- readRDS("../data/all_res.full_wts.RData")
-pvals <- 2*pnorm(abs(res[2, , ]), lower.tail=FALSE)
+pvals <- 2*pnorm(abs(res[1, , ]), lower.tail=FALSE)
 logpvals <- -1*log10(pvals)
 
 logpvals[(res[1, , ] < 0 & !is.na(res[1, , ])) ] <- -1 * logpvals[(!is.na(res[1, ,]) & res[1, ,] < 0)]
-logpvals[!is.na(pvals) & res[2,,] > 30] <- max(logpvals[!is.na(pvals) & res[2,,] < 30], na.rm=TRUE)
 
  dat.m <- melt(t(logpvals))
  dat.m$value[dat.m$value > 10] <- 10
  dat.m$value[dat.m$value < -10] <- -10
  dat.m$value[abs(dat.m$value) < 2] <- 0
- ggplot(dat.m, aes(x=Var1, y=Var2, fill=value)) + 
-   geom_tile() + coord_equal() + ggtitle("Not Pruned, LDAK weighs, Best model") + 
+ pbic <- ggplot(dat.m, aes(x=Var1, y=Var2, fill=value)) + 
+   geom_tile() + coord_equal() + ggtitle("Not pruned, LDAK weighs, Best model(BIC)") + 
    scale_fill_gradient2(low="blue", high="red") + 
    theme(axis.text.x = element_text(angle = 90, hjust = 1))
-```
+ 
+ 
+ pvals <- 2*pnorm(abs(res[2, , ]), lower.tail=FALSE)
+logpvals <- -1*log10(pvals)
 
+logpvals[(res[2, , ] < 0 & !is.na(res[2, , ])) ] <- -1 * logpvals[(!is.na(res[2, ,]) & res[2, ,] < 0)]
 
-
-```{r, echo=FALSE}
-res <- readRDS("../data/all_res.full_wts.RData")
-pvals <- 2*pnorm(abs(res[4, , ]), lower.tail=FALSE)
+ dat.m <- melt(t(logpvals))
+ dat.m$value[dat.m$value > 10] <- 10
+ dat.m$value[dat.m$value < -10] <- -10
+ dat.m$value[abs(dat.m$value) < 2] <- 0
+ plrt <- ggplot(dat.m, aes(x=Var1, y=Var2, fill=value)) + 
+   geom_tile() + coord_equal() + ggtitle("Not Pruned, LDAK weighs, Best model(LRT)") + 
+   scale_fill_gradient2(low="blue", high="red") + 
+   theme(axis.text.x = element_text(angle = 90, hjust = 1))
+ 
+ 
+ 
+ pvals <- 2*pnorm(abs(res[3, , ]), lower.tail=FALSE)
 logpvals <- -1*log10(pvals)
 
 logpvals[(res[3, , ] < 0 & !is.na(res[3, , ])) ] <- -1 * logpvals[(!is.na(res[3, ,]) & res[3, ,] < 0)]
-#logpvals[!is.na(pvals) & res[4,,] > 30] <- max(logpvals[!is.na(pvals) & res[4,,] < 30], na.rm=TRUE)
 
  dat.m <- melt(t(logpvals))
  dat.m$value[dat.m$value > 10] <- 10
  dat.m$value[dat.m$value < -10] <- -10
  dat.m$value[abs(dat.m$value) < 2] <- 0
- ggplot(dat.m, aes(x=Var1, y=Var2, fill=value)) + 
-   geom_tile() + coord_equal() + ggtitle("Not Pruned, LDAK weights, full model") + 
+ pfull <- ggplot(dat.m, aes(x=Var1, y=Var2, fill=value)) + 
+   geom_tile() + coord_equal() + ggtitle("Not Pruned, LDAK weighs, Full model") + 
    scale_fill_gradient2(low="blue", high="red") + 
    theme(axis.text.x = element_text(angle = 90, hjust = 1))
+ 
+ grid.arrange(pbic, plrt, pfull, ncol=2)
 ```
 
 
-Difference in models:
-```{r, echo=FALSE}
-resfull <- readRDS("../data/all_res.full_wts.RData")
-resprune <- readRDS("../data/all_res.prune_wts.RData")
-mfull <- resfull[5,,]
-mprune <- resprune[5,,]
- dat.m <- melt(t(mfull))
- 
- ggplot(dat.m, aes(x=Var1, y=Var2, fill=value)) + 
-   geom_tile() + coord_equal() + ggtitle("Not Pruned, LDAK weights, Model choice") + 
-   scale_fill_gradient2(low="blue", high="red") + 
-   theme(axis.text.x = element_text(angle = 90, hjust = 1))
- 
-  dat.m <- melt(t(mprune))
- 
- ggplot(dat.m, aes(x=Var1, y=Var2, fill=value)) + 
-   geom_tile() + coord_equal() + ggtitle("Pruned, LDAK weights, Model Choice") + 
-   scale_fill_gradient2(low="blue", high="red") + 
-   theme(axis.text.x = element_text(angle = 90, hjust = 1))
- 
- mdiff <- mfull-mprune
-  dat.m <- melt(t(mdiff))
- 
- ggplot(dat.m, aes(x=Var1, y=Var2, fill=value)) + 
-   geom_tile() + coord_equal() + ggtitle("Difference in best model") + 
-   scale_fill_gradient2(low="blue", high="red") + 
-   theme(axis.text.x = element_text(angle = 90, hjust = 1))
- 
-```

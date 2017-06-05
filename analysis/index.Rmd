@@ -20,3 +20,5 @@ Simulation Experiments:
 Application to real data: 
 
 + [here](cad_ldl.html) we analyze the relationship between LDL cholesterol and coronary artery disease and between LDL and height.
+
++ [here](gwas_ss.html) we analyze 13 traits analyzed by Pickerell et al. Also introduces new method for estimating the prior distribution of effect sizes.

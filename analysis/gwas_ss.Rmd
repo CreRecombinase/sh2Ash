@@ -22,19 +22,20 @@ For these fits I set the distribution of $\alpha_1$ and $\alpha_2$ using the ASH
 
 ## Results on pruned data set 
 
-Effect sizes; data pruned for LD at a theshold of 0.1 and with LDAK weights:
+Effect sizes are shown for the best model as determined by BIC. A white square indicates that BIC selected the model in which that parameter is zero. A grey square means the result is missing. SNPs are pruned using an LD threshold of 0.1. LDAK weights are included.
 ```{r, echo=FALSE, show="hold"}
 library(ggplot2)
 library(reshape2)
 library(gridExtra)
-res <- readRDS("../data/all_res.prune_wts.RData")
-resJ <- readRDS("../data/all_res.prune_wts.joint.RData")
+res <- readRDS("../data/all_res.indep.prune_wts.RData")
+resJ <- readRDS("../data/all_res.joint_trim_est.prune_wts.RData")
 
 #indep bic
 pvals <- 2*pnorm(abs(res[1, , ]), lower.tail=FALSE)
 logpvals <- -1*log10(pvals)
 
 logpvals[(res[1, , ] < 0 & !is.na(res[1, , ])) ] <- -1 * logpvals[(!is.na(res[1, ,]) & res[1, ,] < 0)]
+logpvals[is.na(res[1,,]) & !is.na(res[3,,])] <- 0
 
  dat.m <- melt(t(logpvals))
  dat.m$value[dat.m$value > 10] <- 10
@@ -49,18 +50,41 @@ logpvals[(res[1, , ] < 0 & !is.na(res[1, , ])) ] <- -1 * logpvals[(!is.na(res[1,
 logpvals <- -1*log10(pvals)
 
 logpvals[(resJ[1, , ] < 0 & !is.na(resJ[1, , ])) ] <- -1 * logpvals[(!is.na(resJ[1, ,]) & resJ[1, ,] < 0)]
+logpvals[is.na(resJ[1,,])& !is.na(resJ[3,,])] <- 0
+
 
  dat.m <- melt(t(logpvals))
  dat.m$value[dat.m$value > 10] <- 10
  dat.m$value[dat.m$value < -10] <- -10
  dat.m$value[abs(dat.m$value) < 2] <- 0
  (pbic <- ggplot(dat.m, aes(x=Var1, y=Var2, fill=value)) + 
-   geom_tile() + coord_equal() + ggtitle("Pruned, Best model(BIC)\nJoint Prior") + 
+   geom_tile() + coord_equal() + ggtitle("Pruned, Best model(BIC)\nJoint Prior -- Trim then estimate") + 
    scale_fill_gradient2(low="blue", high="red") + 
    theme(axis.text.x = element_text(angle = 90, hjust = 1), legend.position = "none"))
  
+ 
+#Without top hits 
+ resJ5 <- readRDS("../data/all_res.joint_est_trim.prune_wts.RData")
+ pvals <- 2*pnorm(abs(resJ5[1, , ]), lower.tail=FALSE)
+logpvals <- -1*log10(pvals)
+
+logpvals[(resJ5[1, , ] < 0 & !is.na(resJ5[1, , ])) ] <- -1 * logpvals[(!is.na(resJ5[1, ,]) & resJ5[1, ,] < 0)]
+logpvals[is.na(resJ5[1,,]) & !is.na(resJ5[3,,])] <- 0
+
+
+ dat.m <- melt(t(logpvals))
+ dat.m$value[dat.m$value > 10] <- 10
+ dat.m$value[dat.m$value < -10] <- -10
+ dat.m$value[abs(dat.m$value) < 2] <- 0
+ (pbic <- ggplot(dat.m, aes(x=Var1, y=Var2, fill=value)) + 
+   geom_tile() + coord_equal() + ggtitle("Pruned, Best model(BIC)\nJoint Prior-- Estimate then trim") + 
+   scale_fill_gradient2(low="blue", high="red") + 
+   theme(axis.text.x = element_text(angle = 90, hjust = 1), legend.position = "none"))
+ 
+ 
 ```
 
+Effect size estimates from the full model (model 4 above):
 
 ```{r, echo=FALSE, eval=FALSE}
  #LRT indep
@@ -98,7 +122,7 @@ logpvals[(resJ[2, , ] < 0 & !is.na(resJ[2, , ])) ] <- -1 * logpvals[(!is.na(resJ
  
  
  
-```{r, echo=FALSE}
+```{r, echo=FALSE, eval=FALSE}
  pvals <- 2*pnorm(abs(res[3, , ]), lower.tail=FALSE)
 logpvals <- -1*log10(pvals)
 
@@ -138,38 +162,41 @@ logpvals[(resJ[3, , ] < 0 & !is.na(resJ[3, , ])) ] <- -1 * logpvals[(!is.na(resJ
 
 A handmade list of differences from Pickerell et al:
 
-Trait 1 | Trait 2 | Best BIC (Indep Prior) |  Best BIC (Joint Prior) | Pickerell et al
---------|---------|------------------------|-------------------------|-----------------
-scz     | bmi     | -     | -     | 0
-height  | ad      | 0   | 0       | -
-height | aam | 0 | 0 | +
-bmi     | height  | +     | 0     | 0
-bmi     | cad     | +   | 0       | 0
-bmi     | aam     | 0    | 0      | -
-fn      | t2d     | 0     | 0     | + 
-ls      | height  | +     | 0     | 0
-aam | bmi | - | 0 | -
-aam     | hdl     | 0     | 0     | +
-aam     | ls      | 0       | 0   | -
-aam     | height  | 0       | 0   | +
-aam     | cd      | 0      | 0    | +
-cd      | ad      | 0      | 0    | -
-fg      | t2d     | + | 0 | +
-tc      | bmi     | -   | 0       | 0
-tc      | hdl     | -     | 0     | 0
-tc      | cad     | + | 0 | +
-tc      | ldl     | 0   | +        | +
-hdl     | cad     | -   | -       | 0
-ldl     | bmi     | - | 0 | -
-ldl     | hdl     | -   | 0       | 0
-ldl     | tg      | 0    | 0      | +
-tg      | height  | -    | 0      | 0
-tg      | bmi     | -     | 0     | 0
-t2d     | hdl     | -    | 0      | 0
-t2d     | cad     | +     | 0     | 0
-ad      | tc      | +    | 0      | 0
-ad      | hdl     | -     | 0     | 0
-ad      | tg      | +     | 0     | 0
+Trait 1 | Trait 2 | Ind. Prior |  Joint Prior1| Joint Prior2 | Pickerell et al
+--------|---------|------------|--------------|----------|-----------------
+scz     | bmi     | -     | -    | -  | 0
+height  | ad      | 0   | 0    | 0   | -
+height | aam | 0 | 0 | 0 | +
+bmi     | height  | +     | 0    | 0  | 0
+bmi     | cad     | +   | + | + | 0
+bmi     | aam     | 0    | 0   | 0   | -
+bmi     | tc      | 0 | - | 0 | 0
+fn      | t2d     | 0     | 0    | 0  | + 
+ls      | height  | +     | 0  | 0   | 0
+aam     | bmi     | - | 0 | 0 | -
+aam     | hdl     | 0     | 0 | 0    | +
+aam     | ls      | 0       | 0  | 0  | -
+aam     | height  | 0       | 0  | 0  | +
+aam     | cd      | 0      | 0   | 0   | +
+aam     | cad     | 0 | - | - | 0
+cd      | ad      | 0      | 0  | 0   | -
+fg      | t2d     | + | 0  | 0 | +
+tc      | bmi     | -   | 0   | 0    | 0
+tc      | hdl     | -     | 0   | 0  | 0
+tc      | tg    | + | 0  | 0 | +
+tc      | ldl     | 0  | +  | +        | +
+hdl     | cad     | -   | -    | -   | 0
+hdl     | tg      | - | 0 | 0 | -
+ldl     | bmi     | - | 0 | 0 | -
+ldl     | hdl     | -   | 0  | 0      | 0
+ldl     | tg      | 0    | 0  | 0    | +
+tg      | height  | -    | 0   |  0   | 0
+tg      | bmi     | -     | 0  | 0   | 0
+t2d     | hdl     | -   | -  | 0      | 0
+t2d     | cad     | +     | 0 |  0     | 0
+ad      | tc      | +    | 0    | 0  | 0
+ad      | hdl     | -     | 0  | 0    | 0
+ad      | tg      | +     | 0   | 0   | 0
 
 ## Results using all 1.7 million SNPs
 
@@ -179,7 +206,7 @@ pvals <- 2*pnorm(abs(res[1, , ]), lower.tail=FALSE)
 logpvals <- -1*log10(pvals)
 
 logpvals[(res[1, , ] < 0 & !is.na(res[1, , ])) ] <- -1 * logpvals[(!is.na(res[1, ,]) & res[1, ,] < 0)]
-
+logpvals[is.na(res[1,,]) & !is.na(res[3,,])] <- 0
  dat.m <- melt(t(logpvals))
  dat.m$value[dat.m$value > 10] <- 10
  dat.m$value[dat.m$value < -10] <- -10
@@ -220,7 +247,7 @@ logpvals[(res[3, , ] < 0 & !is.na(res[3, , ])) ] <- -1 * logpvals[(!is.na(res[3,
    scale_fill_gradient2(low="blue", high="red") + 
    theme(axis.text.x = element_text(angle = 90, hjust = 1))
  
- grid.arrange(pbic, plrt, pfull, ncol=2)
+pbic
 ```
 
 

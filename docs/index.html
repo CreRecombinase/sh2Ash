@@ -4,7 +4,7 @@
 
 <head>
 
-<meta charset="utf-8">
+<meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 
@@ -208,19 +208,30 @@ $(document).ready(function () {
 
 
 <p>Research website for Sherlock2 project with Jean Morrison, Xin He, and Matthew Stephens.</p>
-<p>A document briefly descirbing our two approaches can be found <a href="sherlock2_compound_and_correlation.pdf">here</a>.</p>
-<p>Simulation Experiments:</p>
+<div id="notes" class="section level2">
+<h2>Notes</h2>
+<ul>
+<li>Our first two approaches, the “correlation” and “compound” approach are described <a href="sherlock2_compound_and_correlation.pdf">here</a></li>
+<li>The two factor model is decribed <a href="two_factor.html">here</a></li>
+<li><a href="three_factor.html">Thoughts on a three factor model</a></li>
+</ul>
+</div>
+<div id="simulation-experiments" class="section level2">
+<h2>Simulation Experiments</h2>
 <ol style="list-style-type: decimal">
 <li>Simulations comparing the compound and correlation approaches are <a href="compare_approaches.html">here</a></li>
 <li>Comparing the orignal Sherlock method on the same simulations: <a href="sherlock1.html">here</a>.</li>
 <li>Running Sherlock v4 (which includes a parameter allowing correlation between summary statistics conditional on the true effect size) on the same simulation: <a href="simulations_v4.html">here</a></li>
 <li>Simulations attempting to answer the question “Can signal be driven by only one or two SNPs”: <a href="sims_numtop.html">here</a>. Short answer: Yes but it is less likely than using the original sherlock method or the simple correlation approach.</li>
 </ol>
-<p>Application to real data:</p>
+</div>
+<div id="application-to-pairs-of-gwas" class="section level2">
+<h2>Application to pairs of GWAS</h2>
 <ul>
 <li><p><a href="cad_ldl.html">here</a> we analyze the relationship between LDL cholesterol and coronary artery disease and between LDL and height.</p></li>
-<li><p><a href="gwas_ss.html">here</a> we analyze 13 traits analyzed by Pickerell et al. Also introduces new method for estimating the prior distribution of effect sizes.</p></li>
+<li><p><a href="gwas_ss.html">here</a> we analyze 15 traits analyzed by Pickerell et al. Also introduces new method for estimating the prior distribution of effect sizes.</p></li>
 </ul>
+</div>
 
 <hr>
 <p>
@@ -269,7 +280,7 @@ $(document).ready(function () {
   (function () {
     var script = document.createElement("script");
     script.type = "text/javascript";
-    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
     document.getElementsByTagName("head")[0].appendChild(script);
   })();
 </script>

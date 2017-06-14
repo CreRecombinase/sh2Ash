@@ -7,18 +7,21 @@ output:
 
 Research website for Sherlock2 project with Jean Morrison, Xin He, and Matthew Stephens. 
 
-A document briefly descirbing our two approaches can be found [here](sherlock2_compound_and_correlation.pdf).
 
+## Notes
++ Our first two approaches, the "correlation" and "compound" approach are described [here](sherlock2_compound_and_correlation.pdf)
++ The two factor model is decribed [here](two_factor.html)
++ [Thoughts on a three factor model](three_factor.html)
 
-Simulation Experiments:
+## Simulation Experiments
 
 1. Simulations comparing the compound and correlation approaches are [here](compare_approaches.html)
 2. Comparing the orignal Sherlock method on the same simulations: [here](sherlock1.html).
 3. Running Sherlock v4 (which includes a parameter allowing correlation between summary statistics conditional on the true effect size) on the same simulation: [here](simulations_v4.html)
 4. Simulations attempting to answer the question "Can signal be driven by only one or two SNPs": [here](sims_numtop.html). Short answer: Yes but it is less likely than using the original sherlock method or the simple correlation approach.
   
-Application to real data: 
+## Application to pairs of GWAS
 
 + [here](cad_ldl.html) we analyze the relationship between LDL cholesterol and coronary artery disease and between LDL and height.
 
-+ [here](gwas_ss.html) we analyze 13 traits analyzed by Pickerell et al. Also introduces new method for estimating the prior distribution of effect sizes.
++ [here](gwas_ss.html) we analyze 15 traits analyzed by Pickerell et al. Also introduces new method for estimating the prior distribution of effect sizes.

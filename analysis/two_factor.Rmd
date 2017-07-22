@@ -51,32 +51,79 @@ P\left[ \begin{pmatrix}
 \end{pmatrix};  \begin{pmatrix}0 \\0 \end{pmatrix}, U_k\
 \right)
 $$
- where $U_k =  \begin{pmatrix}\sigma_{1k} & 0 \\ 0 & \sigma_{2k}\end{pmatrix}$. So far we have used two strategies for estimating the $U_k$ and the $\pi_k$:
+ where $U_k =  \begin{pmatrix}\sigma_{1k} & 0 \\ 0 & \sigma_{2k}\end{pmatrix}$. So far we have used two strategies for choosing the $U_k$ and the $\pi_k$:
  
-1. Independent priors for $\theta_{1j}$ and $\theta_{2j}$: Use ASH to estimate the distribution of SNP effects on trait 1 and on trait 2 separately. This gives us two grids of variances $\sigma_{1,1}, \dots, \sigma_{1,k_1}$ and $\sigma_{2,1}, \dots, \sigma_{2,k_2}$ with corresponding mixing proportions $\pi_{1,1}, \dots , \pi_{1,k_1}$ and $\pi_{2,1}, \dots, \pi_{2,k_2}$. Our prior for the joint distribution of $\begin{pmatrix}
+1. Independent priors for $\theta_{1j}$ and $\theta_{2j}$: Use ASH to estimate the distribution of SNP effects on trait 1 and on trait 2 separately (assuming no causal effects). This gives us two grids of variances $\sigma_{1,1}, \dots, \sigma_{1,k_1}$ and $\sigma_{2,1}, \dots, \sigma_{2,k_2}$ with corresponding mixing proportions $\pi_{1,1}, \dots , \pi_{1,k_1}$ and $\pi_{2,1}, \dots, \pi_{2,k_2}$. Our prior for the joint distribution of $\begin{pmatrix}
 \theta_{1j}\\\ \theta_{2j}
-\end{pmatrix}$ is then 
-
-$$
-P[\theta_{1j}] = \sum_{k=1}^{k_1} \pi_k N(\theta_{1j}; 0, \sigma_{1, k})
-$$
-$$
-P[\theta_{2j}] = \sum_{k=1}^{k_2} \pi_k N(\theta_{2j}; 0, \sigma_{2, k})
-$$
+\end{pmatrix}$ is 
 $$
 P\left[ \begin{pmatrix}
 \theta_{1j}\\\ \theta_{2j}
 \end{pmatrix}\right]  = P[\theta_{1j}]P[\theta_{2j}]
 $$
+where
+$$
+P[\theta_{1j}] = \sum_{k=1}^{k_1} \pi_k N(\theta_{1j}; 0, \sigma_{1, k})
+$$
 
-2. Joint prior for  $\theta_{1j}$ and $\theta_{2j}$: This is an iterative procedure and we have approached it in two ways. First, as before, use ASH to estimate the distribution of SNP effects on trait 1 and on trait 2 separately. Now either
+$$
+P[\theta_{2j}] = \sum_{k=1}^{k_2} \pi_k N(\theta_{2j}; 0, \sigma_{2, k})
+$$
 
-      2a. Thin both grids, keeping only the variances associated with mixing proportions larger than a small threshold (e.g. $10^{-10}$). Form a bivariate grid of $U_k$s by taking all combinations of these smaller grids. Estimate the mixing proportions for the $U_k$s using ASH machinery.
+
+
+
+2. Joint prior for  $\theta_{1j}$ and $\theta_{2j}$: In option 1 we assume that the distributions of SNP effects are independent. This might be violated, for example, if some SNPs are ``functional'' and are more likely to have large effects across multiple traits. We have used two strategies to estimate a joint prior:
+
+      2a. Thin both grids, keeping only the variances associated with mixing proportions larger than a small threshold (e.g. $10^{-10}$). Form a grid of $U_k$s as diagonal 2x2 matrixces with elements equal to all combinations of the variances in the pruned grid. Estimate the mixing proportions for the $U_k$s using ASH machinery.
       
-      2b. Form a bivariate grid of $U_k$s using all combinations of the two (unthinned) grids. Use ASH machinery to estimate the mixing proportions for this large set of variance matrices, then thin the bivariate grid based on the mixing proportions. 
+      2b. Form a grid of $U_k$s using all combinations of the two (unthinned) grids. Use ASH machinery to estimate the mixing proportions for this large set of variance matrices, then thin the $U_k$s based on the mixing proportions. 
       
-    In either case 2a or 2b, we estimate the mixing proportions twice. The first time we assume that $\lambda_{12} = \lambda_{21} = \rho = 0$. We then estimate $\rho$ assuming that $\lambda_{12} = \lambda_{21} = 0$ and then reestimate mixing proportions using the estimated value of $\rho$. In practice we find little change between the first and second iteration.
+    In either case 2a or 2b, we estimate the mixing proportions twice. The first time we assume that $\lambda_{12} = \lambda_{21} = \rho = 0$. We then estimate $\rho$ assuming that $\lambda_{12} = \lambda_{21} = 0$ and then re-estimate mixing proportions using the estimated value of $\rho$. In practice we find little change between the first and second iteration.
  
+
+## Fitting the model
+
+In our first attempts to fit the model we used the following procedure:
+
+1. Select $U_k$s and fix $\pi_k$s using either 2a or 2b above.
+2. Estimate $\lambda_{12}$, $\lambda_{21}$, and $\rho$ by maximizing the likelihood. 
+
+We have since modified the procedure to the following:
+
+0. Select $U_k$s using either 2a or 2b above but do not fix the $\pi_k$s
+
+Iterate until convergence:
+
+1. Estimate $\pi_k$s using ASH machinery.
+2. Estimate $\lambda_{12}$ $\lambda_{21}$, and $\rho$ by maximizing the likelihood.
+
+This gives slightly better fits by allowing us to update the $\pi_k$s. In practice we find that only 2 or 3 iterations are usually required. 
+
+### Likelihood
+By integrating out $\theta_{1}$ and $\theta_{2}$ we can write the likelihood of the pair of effect estimates for one SNP as
+
+
+$$
+P\left(\begin{pmatrix}
+\hat{\beta}_{1j}\\\hat{\beta}_{2j}\end{pmatrix} \vert \lambda_{12}, \lambda_{21}, \rho \right) =  
+\sum_{k=1}^{K} \pi_k N\left( \begin{pmatrix}
+\hat{\beta}_{1j}\\\ \hat{\beta}_{2j}
+\end{pmatrix};  \begin{pmatrix}0 \\0 \end{pmatrix}, AU_kA^{\top} + S_j\
+\right)
+$$
+
+where $S_j = 
+\begin{pmatrix}
+s_{1j}^2 & \rho s_{1j}s_{2j} \\ 
+\rho s_{1j}s_{2j} & s_{2j}^2
+\end{pmatrix}$. 
+The total likelihood is then
+$$
+L(\lambda_{12}, \lambda_{21}, \rho) = \prod_{j=1}^{p} P\left(\begin{pmatrix}
+\hat{\beta}_{1j}\\\hat{\beta}_{2j}\end{pmatrix} \vert \lambda_{12}, \lambda_{21}, \rho \right).
+$$
+ Below, I discuss weights that can be added to the likelihood to account for LD.
  
 ## Comparing models
 We are especially interested in hypotheses about whether one or both of $\lambda_{12}$ and $\lambda_{21}$ are equal to zero. To assess this we fit the model under four sets of constraints:

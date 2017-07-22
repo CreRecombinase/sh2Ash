@@ -341,25 +341,59 @@ P\left[ \begin{pmatrix}
 \theta_{1j}\\\ \theta_{2j}
 \end{pmatrix};  \begin{pmatrix}0 \\0 \end{pmatrix}, U_k\
 \right)
-\]</span> where <span class="math inline">\(U_k = \begin{pmatrix}\sigma_{1k} &amp; 0 \\ 0 &amp; \sigma_{2k}\end{pmatrix}\)</span>. So far we have used two strategies for estimating the <span class="math inline">\(U_k\)</span> and the <span class="math inline">\(\pi_k\)</span>:</p>
+\]</span> where <span class="math inline">\(U_k = \begin{pmatrix}\sigma_{1k} &amp; 0 \\ 0 &amp; \sigma_{2k}\end{pmatrix}\)</span>. So far we have used two strategies for choosing the <span class="math inline">\(U_k\)</span> and the <span class="math inline">\(\pi_k\)</span>:</p>
 <ol style="list-style-type: decimal">
-<li>Independent priors for <span class="math inline">\(\theta_{1j}\)</span> and <span class="math inline">\(\theta_{2j}\)</span>: Use ASH to estimate the distribution of SNP effects on trait 1 and on trait 2 separately. This gives us two grids of variances <span class="math inline">\(\sigma_{1,1}, \dots, \sigma_{1,k_1}\)</span> and <span class="math inline">\(\sigma_{2,1}, \dots, \sigma_{2,k_2}\)</span> with corresponding mixing proportions <span class="math inline">\(\pi_{1,1}, \dots , \pi_{1,k_1}\)</span> and <span class="math inline">\(\pi_{2,1}, \dots, \pi_{2,k_2}\)</span>. Our prior for the joint distribution of <span class="math inline">\(\begin{pmatrix} \theta_{1j}\\\ \theta_{2j} \end{pmatrix}\)</span> is then</li>
-</ol>
-<p><span class="math display">\[
-P[\theta_{1j}] = \sum_{k=1}^{k_1} \pi_k N(\theta_{1j}; 0, \sigma_{1, k})
-\]</span> <span class="math display">\[
-P[\theta_{2j}] = \sum_{k=1}^{k_2} \pi_k N(\theta_{2j}; 0, \sigma_{2, k})
-\]</span> <span class="math display">\[
+<li>Independent priors for <span class="math inline">\(\theta_{1j}\)</span> and <span class="math inline">\(\theta_{2j}\)</span>: Use ASH to estimate the distribution of SNP effects on trait 1 and on trait 2 separately (assuming no causal effects). This gives us two grids of variances <span class="math inline">\(\sigma_{1,1}, \dots, \sigma_{1,k_1}\)</span> and <span class="math inline">\(\sigma_{2,1}, \dots, \sigma_{2,k_2}\)</span> with corresponding mixing proportions <span class="math inline">\(\pi_{1,1}, \dots , \pi_{1,k_1}\)</span> and <span class="math inline">\(\pi_{2,1}, \dots, \pi_{2,k_2}\)</span>. Our prior for the joint distribution of <span class="math inline">\(\begin{pmatrix} \theta_{1j}\\\ \theta_{2j} \end{pmatrix}\)</span> is <span class="math display">\[
 P\left[ \begin{pmatrix}
 \theta_{1j}\\\ \theta_{2j}
 \end{pmatrix}\right]  = P[\theta_{1j}]P[\theta_{2j}]
+\]</span> where <span class="math display">\[
+P[\theta_{1j}] = \sum_{k=1}^{k_1} \pi_k N(\theta_{1j}; 0, \sigma_{1, k})
+\]</span></li>
+</ol>
+<p><span class="math display">\[
+P[\theta_{2j}] = \sum_{k=1}^{k_2} \pi_k N(\theta_{2j}; 0, \sigma_{2, k})
 \]</span></p>
 <ol start="2" style="list-style-type: decimal">
-<li><p>Joint prior for <span class="math inline">\(\theta_{1j}\)</span> and <span class="math inline">\(\theta_{2j}\)</span>: This is an iterative procedure and we have approached it in two ways. First, as before, use ASH to estimate the distribution of SNP effects on trait 1 and on trait 2 separately. Now either</p>
-<p>2a. Thin both grids, keeping only the variances associated with mixing proportions larger than a small threshold (e.g. <span class="math inline">\(10^{-10}\)</span>). Form a bivariate grid of <span class="math inline">\(U_k\)</span>s by taking all combinations of these smaller grids. Estimate the mixing proportions for the <span class="math inline">\(U_k\)</span>s using ASH machinery.</p>
-<p>2b. Form a bivariate grid of <span class="math inline">\(U_k\)</span>s using all combinations of the two (unthinned) grids. Use ASH machinery to estimate the mixing proportions for this large set of variance matrices, then thin the bivariate grid based on the mixing proportions.</p>
-<p>In either case 2a or 2b, we estimate the mixing proportions twice. The first time we assume that <span class="math inline">\(\lambda_{12} = \lambda_{21} = \rho = 0\)</span>. We then estimate <span class="math inline">\(\rho\)</span> assuming that <span class="math inline">\(\lambda_{12} = \lambda_{21} = 0\)</span> and then reestimate mixing proportions using the estimated value of <span class="math inline">\(\rho\)</span>. In practice we find little change between the first and second iteration.</p></li>
+<li><p>Joint prior for <span class="math inline">\(\theta_{1j}\)</span> and <span class="math inline">\(\theta_{2j}\)</span>: In option 1 we assume that the distributions of SNP effects are independent. This might be violated, for example, if some SNPs are ``functional’’ and are more likely to have large effects across multiple traits. We have used two strategies to estimate a joint prior:</p>
+<p>2a. Thin both grids, keeping only the variances associated with mixing proportions larger than a small threshold (e.g. <span class="math inline">\(10^{-10}\)</span>). Form a grid of <span class="math inline">\(U_k\)</span>s as diagonal 2x2 matrixces with elements equal to all combinations of the variances in the pruned grid. Estimate the mixing proportions for the <span class="math inline">\(U_k\)</span>s using ASH machinery.</p>
+<p>2b. Form a grid of <span class="math inline">\(U_k\)</span>s using all combinations of the two (unthinned) grids. Use ASH machinery to estimate the mixing proportions for this large set of variance matrices, then thin the <span class="math inline">\(U_k\)</span>s based on the mixing proportions.</p>
+<p>In either case 2a or 2b, we estimate the mixing proportions twice. The first time we assume that <span class="math inline">\(\lambda_{12} = \lambda_{21} = \rho = 0\)</span>. We then estimate <span class="math inline">\(\rho\)</span> assuming that <span class="math inline">\(\lambda_{12} = \lambda_{21} = 0\)</span> and then re-estimate mixing proportions using the estimated value of <span class="math inline">\(\rho\)</span>. In practice we find little change between the first and second iteration.</p></li>
 </ol>
+</div>
+<div id="fitting-the-model" class="section level2">
+<h2>Fitting the model</h2>
+<p>In our first attempts to fit the model we used the following procedure:</p>
+<ol style="list-style-type: decimal">
+<li>Select <span class="math inline">\(U_k\)</span>s and fix <span class="math inline">\(\pi_k\)</span>s using either 2a or 2b above.</li>
+<li>Estimate <span class="math inline">\(\lambda_{12}\)</span>, <span class="math inline">\(\lambda_{21}\)</span>, and <span class="math inline">\(\rho\)</span> by maximizing the likelihood.</li>
+</ol>
+<p>We have since modified the procedure to the following:</p>
+<ol start="0" style="list-style-type: decimal">
+<li>Select <span class="math inline">\(U_k\)</span>s using either 2a or 2b above but do not fix the <span class="math inline">\(\pi_k\)</span>s</li>
+</ol>
+<p>Iterate until convergence:</p>
+<ol style="list-style-type: decimal">
+<li>Estimate <span class="math inline">\(\pi_k\)</span>s using ASH machinery.</li>
+<li>Estimate <span class="math inline">\(\lambda_{12}\)</span> <span class="math inline">\(\lambda_{21}\)</span>, and <span class="math inline">\(\rho\)</span> by maximizing the likelihood.</li>
+</ol>
+<p>This gives slightly better fits by allowing us to update the <span class="math inline">\(\pi_k\)</span>s. In practice we find that only 2 or 3 iterations are usually required.</p>
+<div id="likelihood" class="section level3">
+<h3>Likelihood</h3>
+<p>By integrating out <span class="math inline">\(\theta_{1}\)</span> and <span class="math inline">\(\theta_{2}\)</span> we can write the likelihood of the pair of effect estimates for one SNP as</p>
+<p><span class="math display">\[
+P\left(\begin{pmatrix}
+\hat{\beta}_{1j}\\\hat{\beta}_{2j}\end{pmatrix} \vert \lambda_{12}, \lambda_{21}, \rho \right) =  
+\sum_{k=1}^{K} \pi_k N\left( \begin{pmatrix}
+\hat{\beta}_{1j}\\\ \hat{\beta}_{2j}
+\end{pmatrix};  \begin{pmatrix}0 \\0 \end{pmatrix}, AU_kA^{\top} + S_j\
+\right)
+\]</span></p>
+<p>where <span class="math inline">\(S_j = \begin{pmatrix} s_{1j}^2 &amp; \rho s_{1j}s_{2j} \\ \rho s_{1j}s_{2j} &amp; s_{2j}^2 \end{pmatrix}\)</span>. The total likelihood is then <span class="math display">\[
+L(\lambda_{12}, \lambda_{21}, \rho) = \prod_{j=1}^{p} P\left(\begin{pmatrix}
+\hat{\beta}_{1j}\\\hat{\beta}_{2j}\end{pmatrix} \vert \lambda_{12}, \lambda_{21}, \rho \right).
+\]</span> Below, I discuss weights that can be added to the likelihood to account for LD.</p>
+</div>
 </div>
 <div id="comparing-models" class="section level2">
 <h2>Comparing models</h2>

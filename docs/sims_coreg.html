@@ -316,9 +316,10 @@ div.tocify {
 </div>
 <div id="data-generation" class="section level2">
 <h2>Data generation</h2>
-<p>I will vary two parameters: + <span class="math inline">\(q\)</span>: The proportion of trait 1 effects that come through the shared factor + <span class="math inline">\(b\)</span>: The effect size of the shared factor on trait 2*</p>
+<p>I will vary two parameters: + <span class="math inline">\(q\)</span>: The proportion of trait 1 effects that come through the shared factor + <span class="math inline">\(b\)</span>: The effect size of the shared factor on trait 2</p>
 <pre class="r"><code>library(ashr)
 library(sherlockAsh)
+library(tidyr)
 
 q &lt;- 0.2
 b &lt;- 0.13
@@ -385,7 +386,7 @@ ggplot(t1e_long) +
   geom_hline(yintercept = 0.05, lty=3) +
   xlab(&quot;Proportion of Type 1 Effects\nFrom Shared Factor&quot;) + ylab(&quot;Type 1 Error&quot;) + ggtitle(&quot;Type 1 Error&quot;) +
   theme_bw()</code></pre>
-<p><img src="sims_coreg_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
+<p><img src="sims_coreg_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
 </div>
 
 <hr>
@@ -437,7 +438,7 @@ $(document).ready(function () {
   (function () {
     var script = document.createElement("script");
     script.type = "text/javascript";
-    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
     document.getElementsByTagName("head")[0].appendChild(script);
   })();
 </script>

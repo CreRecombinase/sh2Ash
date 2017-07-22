@@ -19,11 +19,12 @@ There is some un-known, un-measured factor $F$ that influences both trait 1 and 
 
 I will vary two parameters:
 + $q$: The proportion of trait 1 effects that come through the shared factor
-+ $b$: The effect size of the shared factor on trait 2*
++ $b$: The effect size of the shared factor on trait 2
 
 ```{r, one}
 library(ashr)
 library(sherlockAsh)
+library(tidyr)
 
 q <- 0.2
 b <- 0.13

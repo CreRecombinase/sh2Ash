@@ -144,3 +144,6 @@ Here are the equivalent plots for the posterior distribution of $b$ from the sha
 
 <img src="b_cis_map_start.png" width="800">
 
+And here are credible intervals for $b$ from the causal model: 
+<img src="b_cis_map_start_caus.png" width="800">
+

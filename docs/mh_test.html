@@ -397,6 +397,9 @@ curve(f(x, 0.4), from=-4, to=4)</code></pre>
 <p>If we always start the chains at the MAP, we get the following model classification results (rows and columns and axes of this plot are the same as the equivalent plot above):</p>
 <p><img src="results_models_map_start.png" width="800"></p>
 <p>Using the LOO Compare method, we have eliminated all false postives! However, we still have low power to choose the causal model when <span class="math inline">\(q=1\)</span>. Given that the causal model always has the lowest LOOIC in these settings, we may be being too conservative. It is possible for the shared model to be very similar to the causal model by estimating <span class="math inline">\(q\)</span> to be large. We could consider a model selection scheme in which we choose the causal model if it is better than the shared model <em>or</em> if the two models have similar elpd and the shared model estimates <span class="math inline">\(q\)</span> to be above a certain threshold.</p>
+<p>The following plots show the posterior 90% credible intervals for <span class="math inline">\(q\)</span> from the shared model. The first plot is for data generated with <span class="math inline">\(q = 0\)</span> (i.e. under the null model). The other three plots are respectively for each value of <span class="math inline">\(b\)</span>. Colors indicate the value of <span class="math inline">\(q\)</span>. <img src="q_cis_map_start.png" width="800"></p>
+<p>Here are the equivalent plots for the posterior distribution of <span class="math inline">\(b\)</span> from the shared model.</p>
+<p><img src="b_cis_map_start.png" width="800"></p>
 </div>
 
 <hr>

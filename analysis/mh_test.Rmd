@@ -135,3 +135,12 @@ If we always start the chains at the MAP, we get the following model classificat
 <img src="results_models_map_start.png" width="800">
 
 Using the LOO Compare method, we have eliminated all false postives! However, we still have low power to choose the causal model when $q=1$. Given that the causal model always has the lowest LOOIC in these settings, we may be being too conservative. It is possible for the shared model to be very similar to the causal model by estimating $q$ to be large. We could consider a model selection scheme in which we choose the causal model if it is better than the shared model *or* if the two models have similar elpd and the shared model estimates $q$ to be above a certain threshold. 
+
+The following plots show the posterior 90% credible intervals for $q$ from the shared model. The first plot is for data generated with $q = 0$ (i.e. under the null model). The other three plots are respectively for each value of $b$. Colors indicate the value of $q$.
+<img src="q_cis_map_start.png" width="800">
+
+
+Here are the equivalent plots for the posterior distribution of $b$ from the shared model.
+
+<img src="b_cis_map_start.png" width="800">
+

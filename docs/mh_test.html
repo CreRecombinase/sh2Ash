@@ -315,8 +315,8 @@ div.tocify {
 <p>Here I am looking at trying to sample from the posterior distribution of the parameters in order to get more Bayesian measures of model fit. I am using the R package <code>MHadaptive</code> to run an adaptive Metropolis-Hastings algorithm. I first attempted to use STAN but found that sampling was prohibitively slow due to slow evaluation of the likelihood. Since I have already implemented an efficient calculation of the likelihood in C++ (call-able from R), I found it was much more efficient to use the R package for sampling. So far I haven’t figured out if there is a way to get STAN to use my C++ code.</p>
 <p>There are currently two limitations of this method:</p>
 <ol style="list-style-type: decimal">
-<li>Mixing proportions for SNP effect sizes must be fixed. This is because the mixing proportions lie on a simplex and <code>MHadaptive</code> can’t really sample from a simplex (that I have found, so far). There might be a work-around for this in the future. In this document, I conduct some experiments in which the mixing proportions are known. In the future I will see how performance is using fixed but estimated proportions.</li>
-<li>The models I am currently comparing only allow effects in one direction. It probably is not too hard to allow effects in both directions. For simplicity, for now I am only using one direction.</li>
+<li><p>Mixing proportions for SNP effect sizes must be fixed. This is because the mixing proportions lie on a simplex and <code>MHadaptive</code> can’t really sample from a simplex (that I have found, so far). There might be a work-around for this in the future. In this document, I conduct some experiments in which the mixing proportions are known. Later I add an extension in which we first estimate mixing proportions by attempting to find the MAP and then sample the other parameters conditional on these.</p></li>
+<li><p>The models I am currently comparing only allow effects in one direction. It might not be too hard to allow effects in both directions in the future.</p></li>
 </ol>
 </div>
 <div id="models" class="section level2">
@@ -411,6 +411,39 @@ curve(f(x, 0.4), from=-4, to=4)</code></pre>
 <p>Using a Beta(1.2, 3) prior for <span class="math inline">\(q\)</span> rather than a Beta(1,3) prior resolves issues with failure to compute the derivative at the MAP. I had assumed that using a prior that put more weigth closer to zero might increase power to choose the cuasal model but might also increase false positives when data are generated under the null. The following plots show model choice results using the beta prior.</p>
 <p><img src="results_models_qbeta.png" width="800"></p>
 <p>These results are extremely similar to the results using the normal prior.</p>
+</div>
+<div id="estimating-mixture-proportions-from-the-data" class="section level2">
+<h2>Estimating mixture proportions from the data</h2>
+<p>Next we considred the same set of simulations but attempted to estimate the mixture proportions from the data. We did this by finding the MAP for each of the three models using coordinate descent. It is worth noting that this approach sometimes converges to a local maximum and does not find the globabl MAP estiamte. We then fix the mixture proportions and sample the remaining parameters condistional on the fixed mixture proportions.</p>
+<p><img src="results_models_est_grid_logitqnorm.png" width="800"></p>
+<p>Looking at the last line or results, we have some increased false positives for low values of <span class="math inline">\(b\)</span>, but the method works surprisingly well for larger values of <span class="math inline">\(b\)</span>.</p>
+</div>
+<div id="harder-experiments-addressing-computational-issues" class="section level2">
+<h2>Harder experiments; Addressing computational issues</h2>
+<p>Here I present results in a more realistic set of simulations. In these experiments we have the following conditions:</p>
+<ul>
+<li><span class="math inline">\(b\)</span> takes on values 0.1, 0.2, 0.3, 0.4, or 0.5</li>
+<li><span class="math inline">\(q\)</span> is 0 (null), 0.1, 0.2, 0.5, or 1 (causal)</li>
+<li>There are 100,000 SNPs overall</li>
+<li>On average, there are 80 eQTLs</li>
+<li>On average there are 1000 GWAS SNPs</li>
+</ul>
+<p>In addition to looking at performance of the method, we also attempted to explore some solutions to one of the computational challenges with this method. Currently, the largest computational burden comes from calculating the estimated elpd using LOO. From our previous experiments, it seems that the LOO works much better than the other model comparison options (e.g. in the previous results, the bottom two rows give the best results). The computational burden of using LOO to estimate elpd comes from the needing to calculate the likelihood for each SNP at each set of sampled parameters. One possible solution is to use only a subset of SNPs to calculate the LOO. I considered three options:</p>
+<ul>
+<li>Choose a random 20% (2000) of the SNPs.</li>
+<li>Only use SNPs that have a <span class="math inline">\(z\)</span>-score for either trait larger than the 95th percentil of the standard normal (1.64) in absolute value.</li>
+<li>Group the SNPs at random into 2000 clusters. This provides less of a computational gain than simply subsetting the SNPs.</li>
+</ul>
+<p>In addition, we also calculated the LOO using only the true effect SNPs for either trait since this is known in simulations. The rational for this method and the second proposal above is that true effect SNPs will make a larger contribution to the difference in likelihoods between models. Null SNPs sould have about the same likelihood under all models and so are uninformative.</p>
+<p>In the figure below, I show the results of these experiments. In each plot, <span class="math inline">\(q\)</span> is on the <span class="math inline">\(x\)</span>-axis and the <span class="math inline">\(y\)</span>-axis shows the proportion of simulations assigned to each model. In these results I only use the comparision method using LOO (equivalent to the bottom row of the previous plots). Each column corresponds to a different method of calculating the LOO as just described. Each row corresponds to a different value of <span class="math inline">\(b\)</span>. In these experiments, the grid is estimated from the data and is not assumed known.</p>
+<p><img src="2017-08-30_harder_round1_models_loo.png" width="800"></p>
+<ul>
+<li><p>First look at the second column. These are results comparing the models by calculating LOO with all SNPs. We find that even in the harder setting, the method is actually quite sensitive and avoids false positives for small values of <span class="math inline">\(q\)</span>.</p></li>
+<li><p>Next look at the first column. Here we calculate LOO using only true effect SNPs. We incur a few more false positives at <span class="math inline">\(q=0.5\)</span> but the results are quite similar to the results using all snps.</p></li>
+<li><p>In the last column we use only the top snps based on <span class="math inline">\(z\)</span>-score. Despite the good results when the effect SNPs are known, we see very low power using only top SNPs.</p></li>
+<li><p>There is also low power using a random subset (second to last column).</p></li>
+<li><p>Using random clusters has nearly the same performance as the results with all the SNPs. This may not actually improve computation much. I will look into this further.</p></li>
+</ul>
 </div>
 
 <hr>

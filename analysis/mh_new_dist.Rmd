@@ -58,4 +58,6 @@ $$
 
 ## Fitting the model
 
-I have thought about fitting this model in the same way as we fit the previous model --- we can try to estimate the MAP by coordinate descent, fix $\pi_1$, $\pi_2$, and $\pi_3$ and then sample $b$, $q$ and $\rho$ conditional on those values. One concern is that estimates of $\pi_2$ might be very unstable if the MAP is close to $q = 0$ ($\gamma_2 = 0$) or $b = 0$. I will implement it and see how it works.
+I have thought about fitting this model in the same way as we fit the previous model --- we can try to estimate the MAP by coordinate descent, fix $\pi_1$, $\pi_2$, and $\pi_3$ and then sample $b$, $q$ and $\rho$ conditional on those values. One concern is that estimates of $\pi_2$ might be very unstable if the MAP is close to $q = 0$ ($\gamma_2 = 0$) or $b = 0$. 
+
+After implementing code to find the MAP estimates, I found that the MAP estimates for $\pi_2$ are somewhat odd. I ran a few experiments in some easy simulations. I found that, often the MAP estimate of $\pi_2$ hsa all of the weight on the smallest value of $\sigma$ ($\sigma_1$) rather than being close to $\pi_1$ which is the truth for the cases I looked at. After talking with Xin we agreed not to pursue this model right now and focus energy on the asymmetric model.

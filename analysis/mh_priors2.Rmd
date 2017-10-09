@@ -1,0 +1,324 @@
+---
+title: "Comparison of different priors in b-q model"
+author: "Jean Morrison"
+date: "October 9, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Introduction
+
+In this document I will compare different priors for fitting the b-q model described [here](mh_test.html). Here we are primarily focused on fitting the shared model.
+
+For all experiments, we place a prior on $z = tanh^{-1}(\rho)$ of $z \sim N(0, 0.5)$ and the MH sampler will sample values of $z$ rather than $\rho$. We will alsways run three chains of the sampler with length 4000 samples. We discard the first 2000 samples as burn-in and thin the remaining samples to retain only every 5th sample. The grids of mixture proportions were pre-computed as the MAP estimates.
+
+
+For these experiments I will use five simulated data sets. Each is simulated under the b-q model with b=0.5 and $q$ equal t0 $0, 0.25, 0.5, 0.75$ and 1. These are single realizations from an early set of simulations I ran described [here](mh_test.html#experiments). These simulations have fairly strong signal and have on average 500 variants effecting trait 1 and 1000 variants effecting trait 2. 
+
+```{r, eval=FALSE, echo=FALSE}
+library(ashr)
+library(numDeriv)
+res <- list()
+q <- c(0, 0.25, 0.5, 0.75, 1)
+z_prior_func <- function(z){ dnorm(z, 0, 0.5, log=TRUE)}
+for(i in 1:5){
+  D <- readRDS(paste0("../data/test_data_easy/q", q[i], "_draw.RDS"))
+  dat <- D$dat
+  
+  b1.fit <- ash(betahat = dat$beta_hat_1, sebetahat = dat$seb1,
+              mixcompdist = "normal", prior="nullbiased")
+
+  b2.fit <- ash(betahat = dat$beta_hat_2, sebetahat = dat$seb2,
+              mixcompdist = "normal", prior="nullbiased")
+  sigma1 <- b1.fit$fitted_g$sd[!zapsmall(b1.fit$fitted_g$pi)==0]
+  sigma2 <- b2.fit$fitted_g$sd[!zapsmall(b2.fit$fitted_g$pi)==0]
+  G <- data.frame("S1"=rep(sigma1, length(sigma2)),
+                "S2"=rep(sigma2, each=length(sigma1)),
+                "pi"=rep(0, length(sigma1)*length(sigma2)))
+  arctanh <- function(rho){
+    0.5*log((1+rho)/(1-rho))
+  }
+  map_null <- get_map(pars.start=c(0),
+                    data=dat, grid=G,
+                    par.bounds=cbind(c(-1), c(1)),
+                    type="null", z_prior_func= z_prior_func, n.iter=20)
+  grid <- map_null$grid
+  grid$pi <- map_null$pi
+  saveRDS(grid, file=paste0("../data/test_data_easy/q", q[i], "_grid.RDS"))
+}
+```
+
+
+## Normal b, Beta q
+Priors:
+
++ $b \sim N(0, 0.6)$
++ $q \sim Beta(0.1, 0.9)$
+
+```{r, cache=TRUE, eval=FALSE, results="hide", one}
+library(sherlockAsh)
+#Set priors
+z_prior_func <- function(z){ dnorm(z, 0, 0.5, log=TRUE)}
+zsamp <- function(n){rnorm(n, 0, 0.5)}
+b_prior_func <- function(b){dnorm(b, 0, 0.6, log=TRUE)}
+bsamp <- function(n){rnorm(n, 0, 0.6)}
+q_prior_func <- function(q){dbeta(q, 0.1, 0.9, log=TRUE)}
+qsamp <- function(n){runif(n, 0, 1)}
+
+#Starting variance of sampling distribution
+prop_sigma <- c(1e-4, 1e-4, 1e-4)
+
+res <- list()
+q <- c(0, 0.25, 0.5, 0.75, 1)
+for(i in 1:5){
+  D <- readRDS(paste0("../data/test_data_easy/q", q[i], "_draw.RDS"))
+  dat <- D$dat
+  grid <- readRDS(paste0("../data/test_data_easy/q", q[i], "_grid.RDS"))
+  res[[i]] <- mh_compare2(dat, grid, logitq=F, seed=1e8, models=3,
+                   z_prior_func = z_prior_func, zsamp=zsamp,
+                   b_prior_func = b_prior_func, bsamp=bsamp,
+                   q_prior_func = q_prior_func, qsamp=qsamp,
+                   prop_sigma = prop_sigma,
+                   nchain=3, niter_perchain=4000, burn_in = 2000, thin=5,
+                   return_mh=TRUE)
+}
+saveRDS(res, file="../data/test_data_easy/res1.RDS")
+```
+
+Trace plots for all five data sets
+
+```{r, echo=FALSE, two}
+library(sherlockAsh)
+library(ggplot2)
+library(tidyr)
+res1 <- readRDS("../data/test_data_easy/res1.RDS")
+q <- c(0, 0.25, 0.5, 0.75, 1)
+n <- dim(res1[[1]]$traces)[2]/3
+tr_1 <- cbind(res1[[1]]$traces[3,,], rep(1:3, each=n), rep(1:n, 3), rep(q[1], 3*n))
+for(i in 2:5){
+  tr1 <- cbind(res1[[i]]$traces[3,,], rep(1:3, each=n), rep(1:n, 3), rep(q[i], 3*n))
+  tr_1 <- rbind(tr_1, tr1)
+}
+tr_1 <- data.frame(tr_1)
+names(tr_1) <- c("z", "b", "q", "chain", "iter", "trueq")
+tr_1 <- gather(tr_1, "variable", "value", -chain, -iter, -trueq)
+tr_1$chain <- as.factor(tr_1$chain)
+p <- ggplot(tr_1) + geom_line(aes(x=iter, y=value, group=chain, col=chain)) + 
+  facet_wrap(~trueq + variable, scales="free", nrow=5, ncol=3) + theme_bw()
+p
+```
+
+The following table shows 90\% credible intervals for each of the three parameters as well as acceptance rates for all three chains.
+```{r, echo=FALSE, three}
+library(knitr)
+ar <- sapply(res1, function(x){
+  paste0(x$acceptance_rat[,3], collapse=",")
+})
+qci <- sapply(res1, function(x){
+  yy <- as.numeric(quantile(x$traces[3,,3], probs = c(0.05, 0.95)))
+  paste0(round(yy, digits=2), collapse=",")
+})
+bci <- sapply(res1, function(x){
+  yy <- as.numeric(quantile(x$traces[3,,2], probs = c(0.05, 0.95)))
+  paste0(round(yy, digits=2), collapse=",")
+})
+zci <- sapply(res1, function(x){
+  yy <- as.numeric(quantile(x$traces[3,,1], probs = c(0.05, 0.95)))
+  paste0(round(yy, digits=2), collapse=",")
+})
+df <- data.frame("q"=q, "acceptance_rate" = ar, "qci"=qci, 
+                 "bci"=bci, "zci"=zci)
+kable(df, caption="Normal b, Beta q")
+```
+
+This combination of priors can sometimes lead to low acceptance rates as in the case of the third chain with $q=0.75$. For the most part, the credible intervals overlap the target parameter values or are close. The credible intervals for $b$ are all slightly low (in this case $b = 0.5$) when $q > 0$.
+
+
+
+
+## "Non-local" $b$, Normal $logit(q)$ sample from $logit(q)$
+Priors:
+
++ $b$ non-local
+$$
+\pi_b(b) = \frac{b^2}{0.4^2}N(b; 0, 0.4)
+$$
++ $logit(q) \sim N(0, 1.2)$
+
+```{r, cache=TRUE, results="hide", eval=FALSE, four}
+#Set priors
+z_prior_func <- function(z){ dnorm(z, 0, 0.5, log=TRUE)}
+zsamp <- function(n){rnorm(n, 0, 0.5)}
+b_prior_func <- function(b){
+  log((b/0.4)^2) + dnorm(b, 0, 0.4, log=TRUE)
+}
+bsamp <- function(n){rnorm(n, 0, 0.6)}
+q_prior_func <- function(logitq){dnorm(logitq, 0, 1.2, log=TRUE)}
+qsamp <- function(n){logit(runif(n, 0, 1))}
+
+#Starting variance of sampling distribution
+prop_sigma <- c(1e-4, 1e-4, 1e-4)
+
+res <- list()
+q <- c(0, 0.25, 0.5, 0.75, 1)
+for(i in 1:5){
+  D <- readRDS(paste0("../data/test_data_easy/q", q[i], "_draw.RDS"))
+  dat <- D$dat
+  grid <- readRDS(paste0("../data/test_data_easy/q", q[i], "_grid.RDS"))
+  res[[i]] <- mh_compare2(dat, grid, logitq=T, seed=1e8, models=3,
+                   z_prior_func = z_prior_func, zsamp=zsamp,
+                   b_prior_func = b_prior_func, bsamp=bsamp,
+                   q_prior_func = q_prior_func, qsamp=qsamp,
+                   prop_sigma = prop_sigma,
+                   nchain=3, niter_perchain=4000, burn_in = 2000, thin=5,
+                   return_mh=TRUE)
+}
+saveRDS(res, file="../data/test_data_easy/res2.RDS")
+```
+
+Trace plots for all five data sets
+
+```{r, echo=FALSE, five}
+res2 <- readRDS("../data/test_data_easy/res2.RDS")
+n <- dim(res2[[1]]$traces)[2]/3
+tr_2 <- cbind(res2[[1]]$traces[3,,], rep(1:3, each=n), rep(1:n, 3), rep(q[1], 3*n))
+for(i in 2:5){
+  tr1 <- cbind(res2[[i]]$traces[3,,], rep(1:3, each=n), rep(1:n, 3), rep(q[i], 3*n))
+  tr_2 <- rbind(tr_2, tr1)
+}
+tr_2 <- data.frame(tr_2)
+names(tr_2) <- c("z", "b", "q", "chain", "iter", "trueq")
+tr_2 <- gather(tr_2, "variable", "value", -chain, -iter, -trueq)
+tr_2$chain <- as.factor(tr_2$chain)
+p <- ggplot(tr_2) + geom_line(aes(x=iter, y=value, group=chain, col=chain)) + 
+  facet_wrap(~trueq + variable, scales="free", nrow=5, ncol=3) + theme_bw()
+p
+```
+
+
+```{r, echo=FALSE, six}
+library(knitr)
+ar <- sapply(res2, function(x){
+  paste0(x$acceptance_rat[,3], collapse=",")
+})
+qci <- sapply(res2, function(x){
+  yy <- as.numeric(quantile(x$traces[3,,3], probs = c(0.05, 0.95)))
+  paste0(round(yy, digits=2), collapse=",")
+})
+bci <- sapply(res2, function(x){
+  yy <- as.numeric(quantile(x$traces[3,,2], probs = c(0.05, 0.95)))
+  paste0(round(yy, digits=2), collapse=",")
+})
+zci <- sapply(res2, function(x){
+  yy <- as.numeric(quantile(x$traces[3,,1], probs = c(0.05, 0.95)))
+  paste0(round(yy, digits=2), collapse=",")
+})
+df <- data.frame("q"=q, "acceptance_rate" = ar, "qci"=qci, 
+                 "bci"=bci, "zci"=zci)
+kable(df, caption="Non-local b, normal logit(q), sample logit(q)")
+```
+
+The credible intervals using this set of priors is quite similar to the ones in the previous section. They are a bit smaller and the sampler did not have as much trouble with low acceptance rates. Note that in this scheme, the intervals for $q$ cannot include 0 or 1 because we are sampling on the $logit(q)$ scale but have transformed back to the original scale to compute intervals.
+
+
+## Normal b, Beta q, sampled on $logit(q)$ scale
+I tried sampling from the posterior of $logit(q)$ using the first set of priors to see if this improves the acceptance rate, however, this had the opposite effect. I found that the variance of the proposal distribution tended to end up too large in the adaptive MH algorithm, leading to acceptance rates of zero:
+
+```{r, cache=TRUE, results="hide", echo=FALSE, eval=FALSE, seven}
+library(sherlockAsh)
+#Set priors
+z_prior_func <- function(z){ dnorm(z, 0, 0.5, log=TRUE)}
+zsamp <- function(n){rnorm(n, 0, 0.5)}
+b_prior_func <- function(b){dnorm(b, 0, 0.6, log=TRUE)}
+bsamp <- function(n){rnorm(n, 0, 0.6)}
+q_prior_func <- function(logitq){dbeta(expit(logitq), 0.1, 0.9, log=TRUE)}
+qsamp <- function(n){logit(runif(n, 0, 1))}
+
+#Starting variance of sampling distribution
+prop_sigma <- c(1e-4, 1e-4, 1e-4)
+
+res <- list()
+q <- c(0, 0.25, 0.5, 0.75, 1)
+for(i in 1:5){
+  D <- readRDS(paste0("../data/test_data_easy/q", q[i], "_draw.RDS"))
+  dat <- D$dat
+  grid <- readRDS(paste0("../data/test_data_easy/q", q[i], "_grid.RDS"))
+  res[[i]] <- mh_compare2(dat, grid, logitq=T, seed=1e8, models=3,
+                   z_prior_func = z_prior_func, zsamp=zsamp,
+                   b_prior_func = b_prior_func, bsamp=bsamp,
+                   q_prior_func = q_prior_func, qsamp=qsamp,
+                   prop_sigma = prop_sigma,
+                   nchain=3, niter_perchain=4000, burn_in = 2000, thin=5,
+                   return_mh=TRUE)
+}
+saveRDS(res, file="../data/test_data_easy/res3.RDS")
+```
+
+
+```{r, echo=FALSE, eval=FALSE, eight}
+res3 <- readRDS("../data/test_data_easy/res3.RDS")
+q <- c(0, 0.25, 0.5, 0.75, 1)
+n <- dim(res3[[1]]$traces)[2]/3
+tr <- cbind(res3[[1]]$traces[3,,], rep(1:3, each=n), rep(1:n, 3), rep(q[1], 3*n))
+for(i in 2:5){
+  tr1 <- cbind(res3[[i]]$traces[3,,], rep(1:3, each=n), rep(1:n, 3), rep(q[i], 3*n))
+  tr <- rbind(tr, tr1)
+}
+tr <- data.frame(tr)
+names(tr) <- c("z", "b", "q", "chain", "iter", "trueq")
+tr <- gather(tr, "variable", "value", -chain, -iter, -trueq)
+tr$chain <- as.factor(tr$chain)
+p <- ggplot(tr) + geom_line(aes(x=iter, y=value, group=chain, col=chain)) + 
+  facet_wrap(~trueq + variable, scales="free", nrow=5, ncol=3) + theme_bw()
+p
+```
+
+```{r, echo=FALSE, nine}
+res3 <- readRDS("../data/test_data_easy/res3.RDS")
+q <- c(0, 0.25, 0.5, 0.75, 1)
+ar <- sapply(res3, function(x){
+  paste0(x$acceptance_rat[,3], collapse=",")
+})
+qci <- sapply(res3, function(x){
+  yy <- as.numeric(quantile(x$traces[3,,3], probs = c(0.05, 0.95)))
+  paste0(round(yy, digits=2), collapse=",")
+})
+bci <- sapply(res3, function(x){
+  yy <- as.numeric(quantile(x$traces[3,,2], probs = c(0.05, 0.95)))
+  paste0(round(yy, digits=2), collapse=",")
+})
+zci <- sapply(res3, function(x){
+  yy <- as.numeric(quantile(x$traces[3,,1], probs = c(0.05, 0.95)))
+  paste0(round(yy, digits=2), collapse=",")
+})
+df <- data.frame("q"=q, "acceptance_rate" = ar, "qci"=qci, 
+                 "bci"=bci, "zci"=zci)
+kable(df, caption="Normal b, Beta q, sampled on logit(q) scale")
+```
+
+## Comparing posterior and prior distributions of $q$
+
+Plots below show histograms of posterior samples of $q$. The solid lines show the prior density.
+```{r, echo=FALSE, ten}
+q_prior_func1 <- function(q){dbeta(q, 0.1, 0.9)}
+
+n <- with(tr_2, sum(variable=="q" & trueq==0))
+bandwidth <- 1/30
+
+q_prior_func2 <- function(q){dnorm(logit(q), 0, 1.2)*(1/(q-q^2))*n*bandwidth}
+q_prior_func1 <- function(q){dbeta(q, 0.1, 0.9)*n*bandwidth}
+
+ggplot(tr_1[tr_1$variable=="q",]) +
+  geom_histogram(aes(x=value)) + facet_wrap("trueq") + 
+  stat_function(fun=q_prior_func1, xlim=c(0, 1)) + theme_bw()
+
+ggplot(tr_2[tr_2$variable=="q",]) +
+  geom_histogram(aes(x=value)) + facet_wrap("trueq") + 
+  stat_function(fun=q_prior_func2, xlim=c(0, 1)) + theme_bw()
+
+
+```

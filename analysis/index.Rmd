@@ -7,25 +7,38 @@ output:
 
 Research website for Sherlock2 project with Jean Morrison, Xin He, and Matthew Stephens. 
 
+## Project updates (most recent to older)
 
-## Notes
-+ Our first two approaches, the "correlation" and "compound" approach are described [here](sherlock2_compound_and_correlation.pdf)
-+ The two factor model is decribed [here](two_factor.html)
-+ [Thoughts on a three factor model](three_factor.html)
-+ After some difficulty with model comparison using the two and three factor models, I looked into Bayesian model comparison. [here](mh_test.html) are some experiments I did using Metropolis-Hastings to sample from the posterior distribution of the parameters.
++ Working on understanding the effects of LD, possibilities of subsetting SNPS [here](ld_subsets.html)
++ Working on write-up of method. Document in progress is [here](cause_methods.pdf)
++ 10-23-17 Added grid approximation for posterior distributoins. [Summary](grid.html)
++ 10-12-17 Compared different priors in original "b-q" model. Moved away from "non-local" priors. [Summary](mh_priors2.htlml)
++ 10-5-17 (detour) Looked at estimating distributions of angles. [Summary](polar_intro.html)
++ 9-25-17 (detour) Explored the possibility of a "more symmetric" model. [Summary](mh_new_dist.html)
++ 7-22 to 9-17-17 Implemented sampling based method for fitting models which samples posteriors of b and q using MH and then compairs models using WAIC. [This summary](mh_test.html) includes method description and simulation results.
 
-## Simulation Experiments
+Before this we were estimating parameters by maximum likelihood. Results prior to this were based on that approach.
 
-1. Simulations comparing the compound and correlation approaches are [here](compare_approaches.html)
-2. Comparing the orignal Sherlock method on the same simulations: [here](sherlock1.html).
-3. Running Sherlock v4 (which includes a parameter allowing correlation between summary statistics conditional on the true effect size) on the same simulation: [here](simulations_v4.html)
-4. Simulations attempting to answer the question "Can signal be driven by only one or two SNPs": [here](sims_numtop.html). Short answer: Yes but it is less likely than using the original sherlock method or the simple correlation approach.
-  
-## Application to pairs of GWAS
+## First application to GWAS
++ 6-13-17 [here](gwas_ss.html) we analyze 15 traits analyzed by Pickerell et al using the two-factor model fit by ML. Also introduces new method for estimating the prior distribution of effect sizes.
++ 5-15-17 Applictaion to LDL an CAD. [Here](cad_ldl.html) we analyze the relationship between LDL cholesterol and coronary artery disease and between LDL and height using the two-factor model fit by ML.
 
-+ [here](cad_ldl.html) we analyze the relationship between LDL cholesterol and coronary artery disease and between LDL and height using the two-factor model fit by ML.
+## Early simulations
++ 5-5-17 Simulations attempting to answer the question "Can signal be driven by only one or two SNPs": [here](sims_numtop.html). Short answer: Yes but it is less likely than using the original sherlock method or the simple correlation approach
++ 5-2-17 Added a parameter to account for overlapping samples, genome-wide correlation between summary statistics. [here](simulations_v4.html)
++ 3-29-17 Comparing the orignal Sherlock method on the same simulations: [here](sherlock1.html).
++ 5-2-17 Simulations comparing the compound and correlation approaches are [here](compare_approaches.html).
 
-+ [here](gwas_ss.html) we analyze 15 traits analyzed by Pickerell et al using the two-factor model fit by ML. Also introduces new method for estimating the prior distribution of effect sizes.
+## Notes from model development phase (also reverse chronological order)
++ 6-14-17 [Thoughts on a three factor model](three_factor.html)
++ 3-6-17 The two factor model is decribed [here](two_factor.html)
++ 3-6-17 Created workflowr project. Our first two approaches, the "correlation" and "compound" approach are described [here](sherlock2_compound_and_correlation.pdf)
+
+
+
+
+
+
 
 
 

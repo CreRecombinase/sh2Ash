@@ -9,7 +9,7 @@ Research website for Sherlock2 project with Jean Morrison, Xin He, and Matthew S
 
 ## Project updates (most recent to older)
 
-+ Working on understanding the effects of LD, possibilities of subsetting SNPS [here](ld_subsets.html), [here](subset_snps.html)
++ Working on understanding the effects of LD, possibilities of subsetting SNPS [here](subset_snps.html)
 + Working on write-up of method. Document in progress is [here](cause_methods.pdf)
 + 10-23-17 Added grid approximation for posterior distributoins. Summary coming.
 + 10-12-17 Compared different priors in original "b-q" model. Moved away from "non-local" priors. [Summary](mh_priors2.htlml)

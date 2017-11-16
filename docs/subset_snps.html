@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Jean Morrison" />
+
+<meta name="date" content="2017-11-15" />
+
+<title>Subsetting SNPs</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-1.1/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-1.1/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Sherlock2 model using Ash</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Subsetting SNPs</h1>
+<h4 class="author"><em>Jean Morrison</em></h4>
+<h4 class="date"><em>November 15, 2017</em></h4>
+
+</div>
+
+
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>My goal is to understand two questions:</p>
+<ol style="list-style-type: decimal">
+<li><p>Given a decent estimate of the posterior distributions of <span class="math inline">\(b\)</span> and <span class="math inline">\(q\)</span>, can I use only a subset of SNPs to estimate the difference in ELPD between the shared and causal models.</p></li>
+<li><p>Can I get a reasonable estimate of the posterior using only a subset of SNPs</p></li>
+</ol>
+<p>In both cases, I am interested in subsetting SNPs using <span class="math inline">\(p\)</span>-values from the first trait.</p>
+<p>In these experiments, I will use two simluted data sets. Both have 100,000 SNPs. Data set S is generated under the shared model with <span class="math inline">\(q=0.5\)</span> and <span class="math inline">\(b=0.4\)</span>. Data set C genrated under the causal model with <span class="math inline">\(q=1\)</span> and <span class="math inline">\(b=0.4\)</span>.</p>
+</div>
+<div id="likelihood-ratios-using-known-parameters" class="section level2">
+<h2>Likelihood ratios using known parameters</h2>
+<p>First we assume the value of <span class="math inline">\(b\)</span> is known. We look at log likelihood ratios comparing <span class="math inline">\(q=1\)</span> to <span class="math inline">\(q=0.5\)</span> and <span class="math inline">\(q=1\)</span> to <span class="math inline">\(q=0\)</span>.</p>
+<pre class="r"><code>order_s &lt;- with(draw_s$dat, order(abs(beta_hat_1/seb1), decreasing = TRUE))
+order_c &lt;- with(draw_c$dat, order(abs(beta_hat_1/seb1), decreasing = TRUE))
+
+df_q1_q0.5 &lt;- data.frame(
+  n = (1:100000),
+  &quot;S&quot; = with(s_ll[order_s,] , cumsum(q1-q0.5)),
+  &quot;C&quot; = with(c_ll[order_c,] , cumsum(q1-q0.5))
+)
+df_q1_q0 &lt;- data.frame(
+  n = (1:100000),
+  &quot;S&quot; = with(s_ll[order_s,] , cumsum(q1-q0)),
+  &quot;C&quot; = with(c_ll[order_c,] , cumsum(q1-q0))
+)
+
+df_long &lt;- gather(df_q1_q0.5, &quot;data_set&quot;, &quot;ll_ratio&quot;, -n)
+
+df_lines &lt;- data.frame(data_set = rep(c(&quot;C&quot;, &quot;S&quot;)), val=rep(c(&quot;oracle_only&quot;, &quot;all&quot;), each=2), &quot;llr&quot; = NA)
+df_lines$llr[ df_lines$data_set==&quot;S&quot; &amp; df_lines$val==&quot;oracle_only&quot;] &lt;- with(s_ll, sum((q1-q0.5)[s_oracle_ix]))
+df_lines$llr[ df_lines$data_set==&quot;C&quot; &amp; df_lines$val==&quot;oracle_only&quot;] &lt;- with(c_ll, sum((q1-q0.5)[s_oracle_ix]))
+df_lines$llr[ df_lines$data_set==&quot;S&quot; &amp; df_lines$val==&quot;all&quot;] &lt;- with(s_ll, sum(q1-q0.5))
+df_lines$llr[ df_lines$data_set==&quot;C&quot; &amp; df_lines$val==&quot;all&quot;] &lt;-  with(c_ll, sum(q1-q0.5))
+
+plt1 &lt;- ggplot(df_long) + geom_line(aes(x=n, y=ll_ratio, color=data_set)) +
+        geom_hline(data = df_lines, aes(yintercept=llr, color=data_set, linetype=val)) +
+        scale_linetype_manual(values=2:3) + 
+        ggtitle(&quot;Log likelihood ratio: q = 1 to q=0.5&quot;) + 
+        labs(x=&quot;Number of SNPs included&quot;, y=&quot;Log Likelihood Ratio&quot;) + 
+        theme_bw()
+
+
+df_long &lt;- gather(df_q1_q0, &quot;data_set&quot;, &quot;ll_ratio&quot;, -n)
+
+df_lines &lt;- data.frame(data_set = rep(c(&quot;C&quot;, &quot;S&quot;)), val=rep(c(&quot;oracle_only&quot;, &quot;all&quot;), each=2), &quot;llr&quot; = NA)
+df_lines$llr[ df_lines$data_set==&quot;S&quot; &amp; df_lines$val==&quot;oracle_only&quot;] &lt;- with(s_ll, sum((q1-q0)[s_oracle_ix]))
+df_lines$llr[ df_lines$data_set==&quot;C&quot; &amp; df_lines$val==&quot;oracle_only&quot;] &lt;- with(c_ll, sum((q1-q0)[s_oracle_ix]))
+df_lines$llr[ df_lines$data_set==&quot;S&quot; &amp; df_lines$val==&quot;all&quot;] &lt;- with(s_ll, sum(q1-q0))
+df_lines$llr[ df_lines$data_set==&quot;C&quot; &amp; df_lines$val==&quot;all&quot;] &lt;-  with(c_ll, sum(q1-q0))
+
+plt2 &lt;- ggplot(df_long) + geom_line(aes(x=n, y=ll_ratio, color=data_set)) + 
+        geom_hline(data = df_lines, aes(yintercept=llr, color=data_set, linetype=val)) +
+        scale_linetype_manual(values=2:3) + 
+        ggtitle(&quot;Log likelihood ratio: q = 1 to q=0&quot;) + 
+        labs(x=&quot;Number of SNPs included&quot;, y=&quot;Log Likelihood Ratio&quot;) + 
+        theme_bw()
+grid.arrange(plt1 + scale_x_continuous(limits=c(0, 5000)),
+                  plt2 + scale_x_continuous(limits=c(0, 5000)) , ncol=2)</code></pre>
+<pre><code>Warning: Removed 190000 rows containing missing values (geom_path).
+
+Warning: Removed 190000 rows containing missing values (geom_path).</code></pre>
+<p><img src="figure/subset_snps.Rmd/plot_ll_known-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>In both data sets, with a small number of SNPs (1 or 2% of the top trait 1 SNPs) we can do a good job of approximating the log likelihood ratio we would obtain with all the SNPs. Horizontal lines show the log likelihood ratio we would obtain using only the SNPs for which the true trait 1 effect size is not zero (which we will call the “oracle” SNP set). Note that when we include the top few percent of SNPs, we retain fewer than half of the true trait 1 effect SNPs. The plot below shows the number of SNPs retained vs the proprtion of true effect SNPs retained (both data sets contain 74 trait 1 effects). SNPs in both data sets have the same trait 1 effects so the difference between these two lines is due to stochasitic differences in <span class="math inline">\(\hat{\beta}_1\)</span>.</p>
+<p><img src="figure/subset_snps.Rmd/plot2-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="oracle-posteriors" class="section level2">
+<h2>“Oracle” posteriors</h2>
+<p>Now we consider comparing the ELPD under the causal model to the ELPD under the shared model. For the causal model, we use the data to estimate the posterior distribution of <span class="math inline">\(b\)</span>. For the shared model we estimate the posteriors of <span class="math inline">\(b\)</span> and <span class="math inline">\(q\)</span>.</p>
+<p>We start with the best possible posterior distribution we can get from these data. To estimate the “oracle” posterior, we use only SNPs with non-zero true effects on trait 1 and we assume we know the joint distribution of direct effects on trait 1 and trait 2. We also assume we know <span class="math inline">\(\rho=0\)</span>.</p>
+<p>The plots below show the marginal posterior distributions of <span class="math inline">\(b\)</span> and <span class="math inline">\(q\)</span> from the shared models and the posterior of <span class="math inline">\(b\)</span> from the causal model.</p>
+<pre><code>seed:  730629891 
+Model 2.
+Model 3.</code></pre>
+<pre><code>seed:  200198259 
+Model 2.
+Model 3.</code></pre>
+<p><img src="figure/subset_snps.Rmd/oracle_posterior-1.png" width="1056" style="display: block; margin: auto;" /></p>
+<p>We now estimate the difference in ELPD from these two posterior distributions using subsets of the SNPs. The plots below show the <span class="math inline">\(z\)</span>-score for the change in ELPD between the causal model and the shared model using only a subset of SNPs (number of SNPs included on horizontal axis). The dotted lines show the <span class="math inline">\(z\)</span>-scores we would obtain using only the true trait 1 effect SNPs. The dashed line shows the <span class="math inline">\(z\)</span>-score obtained using all SNPs. In this plot, positive <span class="math inline">\(z\)</span>-scores are evidence for the shared model and negative <span class="math inline">\(z\)</span>-scores are evidence for the causal model.</p>
+<pre><code>Warning: Removed 2 rows containing missing values (geom_path).</code></pre>
+<p><img src="figure/subset_snps.Rmd/plot_oracle_posterior-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>We find that we can approximate the delta ELPD <span class="math inline">\(z\)</span>-score that we would obtain from the full set of SNPs using a few thousand of the top SNPs. Data set S shows strong evidence in favor of the shared model as we expect. Data set C shows evidence in favor of the causal model – <span class="math inline">\(z\)</span>-score of -1.68 using all SNPs. This <span class="math inline">\(z\)</span>-score is not larger because the posterior for <span class="math inline">\(q\)</span> is very close to 1 and the posteriors for <span class="math inline">\(b\)</span> are very similar under the two models. This makes the posterior distribution under the shared model for data set C look very similar to the posterior under the causal model.</p>
+</div>
+<div id="posteriors-estimated-with-all-snps" class="section level2">
+<h2>Posteriors estimated with all SNPs</h2>
+<p>Now we consider the posteriors that we would get using all the SNPs and without knowing the true joint distribution of direct effects on traits 1 and 2.</p>
+<p><img src="figure/subset_snps.Rmd/all_posterior_plot-1.png" width="1056" style="display: block; margin: auto;" /></p>
+<p>These posteriors differ from the posteriors calculated using only the true trait 1 effects in a few ways:</p>
+<ul>
+<li>The posteriors of <span class="math inline">\(b\)</span> for data set S under the causal and shared models are lower.</li>
+<li>The posteriors of <span class="math inline">\(q\)</span> for both data sets are somewhat lower. The MAP for data set <span class="math inline">\(S\)</span> is around 0.17 using all SNPs while it was around 0.38 using only the oracle SNPs.</li>
+<li>The posteriors for <span class="math inline">\(b\)</span> under both models for data set C are similar to those estimated with only the oracle SNPs.</li>
+</ul>
+<p>Using these priors to calculate <span class="math inline">\(\Delta\)</span> ELPD <span class="math inline">\(z\)</span>-scores gives the following results:</p>
+<pre><code>Warning: Removed 2 rows containing missing values (geom_path).</code></pre>
+<p><img src="figure/subset_snps.Rmd/plot_all_posterior-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="posteriors-estimated-with-top-snps" class="section level2">
+<h2>Posteriors estimated with top SNPs</h2>
+<p>Now we estimate the posteriors using only the top 1000 SNPs. We still assume we know the joint distribution of direct effects.</p>
+<pre><code>seed:  810103962 
+Model 2.
+Model 3.</code></pre>
+<pre><code>seed:  310111347 
+Model 2.
+Model 3.</code></pre>
+<p><img src="figure/subset_snps.Rmd/top_posterior_plot-1.png" width="1056" style="display: block; margin: auto;" /></p>
+<pre><code>Warning: Removed 2 rows containing missing values (geom_path).</code></pre>
+<p><img src="figure/subset_snps.Rmd/plot_top_posterior-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>Data set S</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">snp_set</th>
+<th align="right">oracle</th>
+<th align="right">all</th>
+<th align="right">top</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Oracle</td>
+<td align="right">2.859767</td>
+<td align="right">1.6402168</td>
+<td align="right">1.419499</td>
+</tr>
+<tr class="even">
+<td align="left">All</td>
+<td align="right">2.404318</td>
+<td align="right">1.2231396</td>
+<td align="right">1.270381</td>
+</tr>
+<tr class="odd">
+<td align="left">Top 1%</td>
+<td align="right">2.138711</td>
+<td align="right">0.8368595</td>
+<td align="right">1.046690</td>
+</tr>
+</tbody>
+</table>
+<pre><code>Data set C</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">snp_set</th>
+<th align="right">oracle</th>
+<th align="right">all</th>
+<th align="right">top</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Oracle</td>
+<td align="right">-3.866599</td>
+<td align="right">-4.490976</td>
+<td align="right">-4.381549</td>
+</tr>
+<tr class="even">
+<td align="left">All</td>
+<td align="right">-1.675814</td>
+<td align="right">-1.696810</td>
+<td align="right">-1.835314</td>
+</tr>
+<tr class="odd">
+<td align="left">Top 1%</td>
+<td align="right">-1.944962</td>
+<td align="right">-1.807492</td>
+<td align="right">-2.008867</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.4.1 (2017-06-30)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 17.04
+
+Matrix products: default
+BLAS: /usr/lib/libblas/libblas.so.3.7.0
+LAPACK: /usr/lib/lapack/liblapack.so.3.7.0
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] knitr_1.16        cumstats_1.0      gridExtra_2.2.1   sherlockAsh_0.1.0
+[5] ggplot2_2.2.1     tidyr_0.6.3      
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.13        highr_0.6           compiler_3.4.1     
+ [4] plyr_1.8.4          iterators_1.0.8     tools_3.4.1        
+ [7] digest_0.6.12       MHadaptive_1.1-8    evaluate_0.10      
+[10] tibble_1.3.1        gtable_0.2.0        lattice_0.20-35    
+[13] rlang_0.1.1         Matrix_1.2-10       foreach_1.4.3      
+[16] DBI_0.6-1           yaml_2.1.14         parallel_3.4.1     
+[19] loo_1.1.0           dplyr_0.5.0         stringr_1.2.0      
+[22] stats4_3.4.1        rprojroot_1.2       grid_3.4.1         
+[25] R6_2.2.1            rmarkdown_1.6       ashr_2.1-27        
+[28] magrittr_1.5        backports_1.1.0     scales_0.4.1       
+[31] codetools_0.2-15    htmltools_0.3.6     matrixStats_0.52.2 
+[34] MASS_7.3-47         assertthat_0.2.0    colorspace_1.3-2   
+[37] numDeriv_2016.8-1   labeling_0.3        stringi_1.1.5      
+[40] RcppParallel_4.3.20 lazyeval_0.2.0      munsell_0.4.3      
+[43] doParallel_1.0.11   pscl_1.5.1          truncnorm_1.0-7    
+[46] SQUAREM_2016.8-2   </code></pre>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

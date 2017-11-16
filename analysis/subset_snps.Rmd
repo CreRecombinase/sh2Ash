@@ -14,13 +14,13 @@ knitr::read_chunk("chunks.R")
 ```
 
 <!-- Insert the date the file was last updated -->
-```{r last-updated, echo=FALSE, results='asis'}
+```{r last-updated, results='asis'}
 ```
 
 
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-```{r code-version, echo=FALSE, results='asis'}
+```{r code-version, results='asis'}
 ```
 
 
@@ -65,7 +65,7 @@ c_ll <- data.frame(
 names(s_ll) <- names(c_ll) <- c("q1", "q0.5", "q0")
 ```
 
-```{r, plot_ll_known}
+```{r, echo=FALSE, plot_ll_known}
 order_s <- with(draw_s$dat, order(abs(beta_hat_1/seb1), decreasing = TRUE))
 order_c <- with(draw_c$dat, order(abs(beta_hat_1/seb1), decreasing = TRUE))
 
@@ -433,6 +433,7 @@ plt <- ggplot(df_long) + geom_line(aes(x=n, y=delta_elpd_z_score, color=data_set
 plt
 ```
 
+Combining results for both data sets across all three estimates of the posterior gives the following tables. The tables below show $\Delta$ ELPD $z$ scores comparing the causal to the shared model. Negative $z$-scores are in favor of the causal model. Each column corresponds to a different estimate of the posterior distribution.
 
 ```{r, echo=FALSE, res_tab3}
 res_tab_s$top[1] <- df_lines$llr[df_lines$data_set=="S" & df_lines$val=="oracle_only"]

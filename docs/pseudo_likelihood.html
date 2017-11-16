@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Jean Morrison" />
+
+<meta name="date" content="2017-11-13" />
+
+<title>Pseudo Likelihood for Correlated Data</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-1.1/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-1.1/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Sherlock2 model using Ash</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Pseudo Likelihood for Correlated Data</h1>
+<h4 class="author"><em>Jean Morrison</em></h4>
+<h4 class="date"><em>November 13, 2017</em></h4>
+
+</div>
+
+
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Our goal is to explore how good the weighted likelihood is at approximating the true likelihood for correlated data.</p>
+</div>
+<div id="one-trait" class="section level2">
+<h2>One trait</h2>
+<p>Suppose we observe <span class="math inline">\(\hat{\beta}\)</span> and <span class="math inline">\(se(\hat{\beta})\)</span>, both <span class="math inline">\(p\)</span>-vectors. Suppose that <span class="math display">\[ \hat{\beta} \sim N(\theta, S R S) \]</span> where <span class="math inline">\(\theta\)</span> is an unknown mean and <span class="math inline">\(R\)</span> is a correlation matix. Our question is, can we approximate the true likelihood with <span class="math display">\[ \prod_{j=1}^{p} \left( N( \hat{\beta}_j ; \theta_j, s_j^{2}) \right)^{w_j}\]</span> where <span class="math inline">\(w_j\)</span> are weights. I look at using <span class="math inline">\(w_j\)</span> equal to the inverse of the LD score <span class="math inline">\(w_j = \frac{1}{\sum_{i=1}^{p} r_{ij}^{2}}\)</span>, <span class="math inline">\(w_j = 1\)</span> and <span class="math inline">\(w_j\)</span> equal to the LD score <span class="math inline">\(\sum_{i=1}^{p} r_{ij}^{2}\)</span>.</p>
+<p>Here is one LD bock estimated from 1000 genomes data using the method of Guan and Stephens (20??).</p>
+<pre class="r"><code>library(reshape2)
+library(ggplot2)
+library(matrixStats)
+R &lt;- readRDS(&quot;../data/one_ld_block.RDS&quot;)
+melted_R &lt;- melt(R)
+ggplot(melted_R) + geom_tile(aes(x=Var1, y=Var2, fill=value)) + scale_fill_gradient2(low=&quot;blue&quot;, high=&quot;red&quot;, mid=&quot;white&quot;)</code></pre>
+<p><img src="figure/pseudo_likelihood.Rmd/pl1-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>We first generate some data. The standard errors are generated as though these are GWAS effect sizes from a study with sample size 1000.</p>
+<pre class="r"><code>library(mvtnorm)
+set.seed(1e8)
+true_theta &lt;- rnorm(n=76, sd=0.1)
+maf &lt;- rbeta(n=500, 1, 5)
+maf &lt;- maf[maf &gt; 0.01][1:76]
+se &lt;- sqrt(1/(2*1000*maf*(1-maf)))
+sigma &lt;- diag(se) %*% R %*% diag(se)
+betahat &lt;- rmvnorm(n=1, mean = true_theta, sigma = sigma )
+hist(betahat/se, breaks=30)</code></pre>
+<p><img src="figure/pseudo_likelihood.Rmd/gendata-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Now that we have some data, we calculate the likelihood for many possible values of <span class="math inline">\(\theta\)</span> using the true likelihood and the weighed approximation.</p>
+<pre class="r"><code>ldsc &lt;- colSums(R^2)
+
+ll_true &lt;- ll_ldsc &lt;- ll_1 &lt;- ll_invldsc &lt;- c()
+
+nsample &lt;- 1000
+for(i in 1:nsample){
+  theta &lt;- rnorm(n=76, sd=0.1)
+  ll_true &lt;- c(ll_true, dmvnorm(betahat, mean=theta, sigma= sigma, log=T))
+  aa &lt;- dnorm(x=betahat, mean=theta, sd=se, log = T)
+  ll_ldsc &lt;- c(ll_ldsc, sum(ldsc*aa))
+  ll_1 &lt;- c(ll_1, sum(aa))
+  ll_invldsc &lt;- c(ll_invldsc, sum((1/ldsc)*aa))
+  
+}
+cor(ll_ldsc, ll_true)</code></pre>
+<pre><code>[1] 0.5149099</code></pre>
+<pre class="r"><code>cor(ll_1, ll_true)</code></pre>
+<pre><code>[1] 0.4311517</code></pre>
+<pre class="r"><code>cor(ll_invldsc, ll_true)</code></pre>
+<pre><code>[1] 0.2760101</code></pre>
+<pre class="r"><code>plot(ll_true, ll_invldsc, ylab=&quot;Approximate ll - inverse LD score weights&quot;)</code></pre>
+<p><img src="figure/pseudo_likelihood.Rmd/likelihood-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(ll_true, ll_1, ylab=&quot;Approximate ll - weights equal to 1&quot;)</code></pre>
+<p><img src="figure/pseudo_likelihood.Rmd/likelihood-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(ll_true, ll_ldsc, ylab=&quot;Approximate ll - LD score weights&quot;)</code></pre>
+<p><img src="figure/pseudo_likelihood.Rmd/likelihood-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>We find that the true and approximate likelihoods are significantly correlated. Approximating the likelihood using the LD score gives the best correlation, followed by weights equal to 1 and then followed by weights equal to the inverse of the LD score.</p>
+<p>For all three approximations, the approximate log likelihood is much larger than the true log likelihood. This won’t matter if we want to use the approximate likelihood to estimate an MLE — we expect to get similar answers maximizing the true and approximate likelihoods since the likelihoods are correlated but will effect the trade-off between the likelihood and the prior if we are trying to approximate a posterior distribution.</p>
+<p>If we consider all weights of the form <span class="math inline">\(w_{jk} = \left(\sum_{i=1}^{p}r_{ij}^2 \right)^{k}\)</span> we can find the value of <span class="math inline">\(k\)</span> that minimizes the mean squared error in the log likelihood <span class="math display">\[\frac{1}{S} \sum_{s} \left( \log L(\hat{\theta}\vert \theta_s) - \sum_{j=1}^{p}w_{jk}\log L(\hat{\theta}_{j} \vert \theta_{sj})) \right)^{2} \]</span> where the sum is taken over random samples of <span class="math inline">\(\theta\)</span> or the value of <span class="math inline">\(k\)</span> that maximizes the correlation between the true and approximate log likelihood.</p>
+<pre class="r"><code>fact &lt;- seq(-2, 2.5, length.out=100)
+ll_approx &lt;- matrix(nrow=nsample, ncol=100)
+ll_true &lt;- c()
+for(i in 1:nsample){
+  theta &lt;- rnorm(n=76, sd=0.1)
+  ll_true &lt;- c(ll_true, dmvnorm(betahat, mean=theta, sigma= sigma, log=T))
+  aa &lt;- dnorm(x=betahat, mean=theta, sd=se, log = T)
+  ll_approx[i,] &lt;- sapply(fact, function(x){sum((ldsc^x)*aa)})
+}
+mse &lt;- apply(ll_approx, 2, function(x){sum(x-ll_true)^2})
+plot(fact, mse, ylab=&quot;Mean squared error between true and approximate log likelihoods&quot;, xlab=&quot;k&quot;)</code></pre>
+<p><img src="figure/pseudo_likelihood.Rmd/bestweights-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>cc &lt;- apply(ll_approx, 2, function(x){cor(x, ll_true)})
+plot(fact, cc, xlab=&quot;k&quot;, ylab=&quot;correlation between true and approximate log likelihoods&quot;)</code></pre>
+<p><img src="figure/pseudo_likelihood.Rmd/bestweights-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>For this particular example, the correlation is maximized at <span class="math inline">\(k \approx\)</span> 1.64 and the MSE is minimized at <span class="math inline">\(k \approx\)</span> 2.27.</p>
+<div id="approximating-a-posterior-distribution" class="section level3">
+<h3>Approximating a posterior distribution</h3>
+<p>Now suppose that there is a prior distribution for <span class="math inline">\(\theta \sim N(0, \sigma^2 I)\)</span> and we want to estimate <span class="math inline">\(\sigma^2\)</span> or compute a posterior distribution for it given some prior. Integrating <span class="math inline">\(\theta\)</span> out we get <span class="math display">\[
+\hat{\beta} \sim N (0, \sigma^2I + SRS )
+\]</span> We will compare the true likelihood of <span class="math inline">\(\sigma^2\)</span> to the approximate likelihood computed as <span class="math display">\[ \prod_{j=1}^{p} \left( N(\hat{\beta}_j ; 0, \sigma^2 + s_j^2) \right)^{w_j}\]</span></p>
+<pre class="r"><code>library(tidyr)</code></pre>
+<pre><code>
+Attaching package: &#39;tidyr&#39;</code></pre>
+<pre><code>The following object is masked from &#39;package:reshape2&#39;:
+
+    smiths</code></pre>
+<pre class="r"><code>ll_true &lt;- ll_ldsc &lt;- ll_1 &lt;- ll_invldsc &lt;- c()
+sigmas &lt;- seq(0, 0.5, length.out=nsample)
+for(i in 1:nsample){
+  ll_true &lt;- c(ll_true, dmvnorm(betahat, mean=theta, sigma= ((sigmas[i]^2)*diag(rep(1, 76)) + sigma), log=T))
+  aa &lt;- dnorm(x=betahat, mean=theta, sd=sqrt(sigmas[i]^2 + se^2), log = T)
+  ll_ldsc &lt;- c(ll_ldsc, sum(ldsc*aa))
+  ll_1 &lt;- c(ll_1, sum(aa))
+  ll_invldsc &lt;- c(ll_invldsc, sum((1/ldsc)*aa))
+}
+df &lt;- data.frame(&quot;sigma&quot; = sigmas, ll_true, ll_ldsc, ll_1, ll_invldsc)
+cor(df[,-1])</code></pre>
+<pre><code>             ll_true   ll_ldsc      ll_1 ll_invldsc
+ll_true    1.0000000 0.5835901 0.5879889  0.5763320
+ll_ldsc    0.5835901 1.0000000 0.9999636  0.9999451
+ll_1       0.5879889 0.9999636 1.0000000  0.9998394
+ll_invldsc 0.5763320 0.9999451 0.9998394  1.0000000</code></pre>
+<pre class="r"><code>df_long &lt;- gather(df, &quot;type&quot;, &quot;ll&quot;, -sigma)
+plt &lt;- ggplot(df_long) + geom_line(aes(x=sigma, y=ll, group=type,color=type)) + theme_bw()
+plt </code></pre>
+<p><img src="figure/pseudo_likelihood.Rmd/likelihood2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#plt + facet_wrap(~ type, scales = &quot;free&quot;)
+df_long &lt;- gather(df, &quot;type&quot;, &quot;ll&quot;, -sigma, -ll_true)
+ 
+plt &lt;- ggplot(df_long) + geom_point(aes(x=ll_true, y=ll, group=type,color=type)) + theme_bw() + geom_abline(slope=1, intercept=0, lty=2) 
+plt</code></pre>
+<p><img src="figure/pseudo_likelihood.Rmd/likelihood2-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>There is strong correlation between the approximate and the true likelihoods and the MLE is similar. The pseudo-log likelihood with weights equal to 1 seems to be a better approximateion of the true log likelihood over most of the range of <span class="math inline">\(\sigma\)</span>.</p>
+<pre class="r"><code>ll_approx &lt;- matrix(nrow=nsample, ncol=100)
+ll_true &lt;- c()
+for(i in 1:nsample){
+  ll_true &lt;- c(ll_true, dmvnorm(betahat, mean=theta, 
+                                sigma= ((sigmas[i]^2)*diag(rep(1, 76)) + sigma), log=T))
+  aa &lt;- dnorm(x=betahat, mean=theta, sd=sqrt(sigmas[i]^2 + se^2), log = T)
+  ll_approx[i,] &lt;- sapply(fact, function(x){sum((ldsc^x)*aa)})
+}</code></pre>
+<p>Now suppose there is a flat prior of <span class="math inline">\(\sigma\)</span> between 0 and 0.5. For each value of <span class="math inline">\(k\)</span> we can compute the posterior and compute the KL divergence between the true posterior and the approximate posterior.</p>
+<pre class="r"><code>post_int &lt;- sum(diff(sigmas)*exp(ll_true)[-1])
+post_true &lt;- exp(ll_true)[-1]/(post_int)
+post_approx &lt;- apply(ll_approx, 2, function(x){
+  post_int &lt;- sum(diff(sigmas)*exp(x)[-1])
+  exp(x)[-1]/(post_int)
+})
+kl &lt;- apply(post_approx, 2, function(x){
+  sum(diff(sigmas)*post_true*(log(post_true)-log(x)), na.rm=T)
+})
+plot(fact, kl, xlab=&quot;k&quot;, ylab=&quot;KL divergence true and approximate posteriors&quot;)</code></pre>
+<p><img src="figure/pseudo_likelihood.Rmd/posterior1-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>In this case, the KL divergence between the true posterior and the approximate posterior is minimized when <span class="math inline">\(k\approx\)</span> -0.23.</p>
+<p>Do we see the same pattern with other priors? Suppose that <span class="math inline">\(\sigma \sim Gamma(2, 4)\)</span>.</p>
+<pre class="r"><code>sigmas &lt;- seq(0, 3, length.out=nsample)
+ll_approx &lt;- matrix(nrow=nsample, ncol=100)
+ll_true &lt;- c()
+for(i in 1:nsample){
+  ll_true &lt;- c(ll_true, dmvnorm(betahat, mean=theta, 
+                                sigma= ((sigmas[i]^2)*diag(rep(1, 76)) + sigma), log=T))
+  aa &lt;- dnorm(x=betahat, mean=theta, sd=sqrt(sigmas[i]^2 + se^2), log = T)
+  ll_approx[i,] &lt;- sapply(fact, function(x){sum((ldsc^x)*aa)})
+}
+post_int &lt;- sum(diff(sigmas)*exp(ll_true [-1]+ dgamma(sigmas[-1], 2, 4, log=T)))
+post_true &lt;- exp(ll_true[-1]+ dgamma(sigmas[-1], 2, 4, log=T))/(post_int)
+post_approx &lt;- apply(ll_approx, 2, function(x){
+  post_int &lt;- sum(diff(sigmas)*exp(x[-1]+ dgamma(sigmas[-1], 2, 4, log=T)))
+  exp(x[-1]+ dgamma(sigmas[-1], 2, 4, log=T))/(post_int)
+})
+kl &lt;- apply(post_approx, 2, function(x){
+  sum(diff(sigmas)*post_true*(log(post_true)-log(x)), na.rm=T)
+})
+plot(fact, kl)</code></pre>
+<p><img src="figure/pseudo_likelihood.Rmd/bestweights3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>df &lt;- data.frame(post_approx[, fact %in% c(-1, 0, 1, fact[which.min(kl)])])
+names(df) &lt;- fact[fact %in% c(-1, 0, 1, fact[which.min(kl)]) ]
+df$true &lt;- post_true
+df$sigma &lt;- sigmas[-1]
+df_long &lt;- gather(df, &quot;k&quot;, &quot;likelihood&quot;, -sigma)
+plt &lt;- ggplot(df_long[df_long$sigma &lt;= 0.5,]) + geom_line(aes(x=sigma, y=likelihood, group=k, color=k)) + theme_bw()
+plt</code></pre>
+<p><img src="figure/pseudo_likelihood.Rmd/bestweights3-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="two-traits" class="section level2">
+<h2>Two traits</h2>
+<p>Suppose that <span class="math display">\[ \hat{\beta}_1 \sim N(\theta, S_1 R S_1) \]</span> and <span class="math display">\[ \hat{\beta}_2 \sim N(b \theta + \gamma, S_2 R S_2) \]</span></p>
+<p>We first generate some data. We use <span class="math inline">\(b=0.4\)</span> and generate standard errors for the second set of effect size estimates as though they are estimates from a GWAS with sample size 5000.</p>
+<pre class="r"><code>beta_hat_1 &lt;- betahat
+b &lt;- 0.4
+true_gamma &lt;- rnorm(n=76, mean=0, sd=0.05)
+se1 &lt;- se
+se2 &lt;- sqrt(1/(2*5000*maf*(1-maf)))
+sigma2 &lt;- diag(se2) %*% R %*% diag(se2)
+sigma1 &lt;- sigma
+beta_hat_2 &lt;- rmvnorm(n=1, mean=b * true_theta + true_gamma, sigma=sigma2)</code></pre>
+<p>We first assume <span class="math inline">\(\theta\)</span> and <span class="math inline">\(\gamma\)</span> are known and calculate the likelihood of <span class="math inline">\(\hat{\beta}_2\)</span> for different values of <span class="math inline">\(b\)</span>.</p>
+<pre class="r"><code>nsample &lt;- 4000
+bs &lt;- seq(-4, 4, length.out=nsample)
+ll_true &lt;-  c()
+ll_approx &lt;- matrix(nrow=nsample, ncol=100)
+for(i in 1:nsample){
+  ll_true &lt;- c(ll_true, 
+               dmvnorm(beta_hat_2, mean=bs[i]*true_theta + true_gamma, 
+                       sigma= sigma2, log=T))
+  aa &lt;- dnorm(x=beta_hat_2, mean=bs[i]*true_theta  + true_gamma, sd=se2, log = T)
+  ll_approx[i,] &lt;- sapply(fact, function(x){sum((ldsc^x)*aa)})
+}</code></pre>
+<p>Suppose that <span class="math inline">\(b\sim N(0, 1)\)</span>. The posterior distribution for <span class="math inline">\(b\)</span> using approximations with different values of <span class="math inline">\(k\)</span> are shown below.</p>
+<pre class="r"><code>post &lt;- ll_true + dnorm(bs, 0, 1, log=T)
+post_int &lt;- sum(diff(bs)* exp(post[-1]))
+post_true &lt;- exp(post[-1])/(post_int)
+
+post_approx &lt;- apply(ll_approx, 2, function(x){
+  post &lt;- x + dnorm(bs, 0, 1, log=T)
+  log_post_int &lt;- logSumExp(log(diff(bs)) + post[-1])
+  exp(post[-1] - log_post_int)
+})
+kl &lt;- apply(post_approx, 2, function(x){
+  sum(diff(bs)*post_true*(log(post_true)-log(x)), na.rm=T)
+})
+plot(fact, kl)</code></pre>
+<p><img src="figure/pseudo_likelihood.Rmd/postb-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>df &lt;- data.frame(post_approx[, fact %in% c(-1, 0, fact[which.min(kl)], 1, 2)])
+names(df) &lt;- fact[fact %in% c(-1, 0, fact[which.min(kl)], 1, 2)]
+df$true &lt;- post_true
+df$b &lt;- bs[-1]
+df_long &lt;- gather(df, &quot;k&quot;, &quot;likelihood&quot;, -b)
+plt &lt;- ggplot(df_long) + geom_line(aes(x=b, y=likelihood, group=k, color=k)) + 
+  scale_x_continuous(limits=c(0, 0.74)) + 
+  theme_bw()
+plt</code></pre>
+<pre><code>Warning: Removed 21774 rows containing missing values (geom_path).</code></pre>
+<p><img src="figure/pseudo_likelihood.Rmd/postb-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>post_mean_true &lt;- sum(diff(bs)*bs[-1]*post_true, na.rm=T)
+post_mean &lt;- apply(post_approx, 2, function(x){
+  sum(diff(bs)*bs[-1]*x, na.rm=T)
+})
+post_var_true &lt;- sum(diff(bs)*((bs[-1]-post_mean_true)^2)*post_true, na.rm=T)
+post_var &lt;- apply(post_approx, 2, function(x){
+  pm &lt;- sum(diff(bs)*bs[-1]*x, na.rm=T)
+  sum(diff(bs)*((bs[-1]-pm)^2)*x, na.rm=T)
+})</code></pre>
+<p>For this case, the KL divergence between the true posterior and the approximate is minimized by <span class="math inline">\(k \approx\)</span> 0.55.</p>
+</div>
+<div id="something-closer-to-cause-problem" class="section level2">
+<h2>Something closer to CAUSE problem</h2>
+<p>Now suppose that, conditional on <span class="math inline">\(\theta\)</span> and <span class="math inline">\(\gamma\)</span>, there is no correlation between <span class="math inline">\(\hat{\beta}_1\)</span> and <span class="math inline">\(\hat{\beta}_2\)</span>. Suppose that <span class="math inline">\(\theta \sim N(0, \Sigma_1)\)</span> and <span class="math inline">\(\gamma \sim N(0, \Sigma_2)\)</span>. Then</p>
+<p><span class="math display">\[
+\begin{pmatrix} \hat{\beta}_1\\\hat{\beta}_2 \end{pmatrix} \sim N\left( \begin{pmatrix} 0\\0\end{pmatrix}, 
+\begin{pmatrix} S_1 R S_1 + \Sigma_1 &amp; b \Sigma_1 \\
+ b \Sigma_1 &amp; S_2 R S_2 + b\Sigma_1  + \Sigma_2 
+\end{pmatrix}
+\right)
+\]</span></p>
+<p>We will try to approximate this likelihood using</p>
+<p><span class="math display">\[
+\prod_{j=1}^{p} \left( N \left(\begin{pmatrix} \hat{\beta}_{1j}\\\hat{\beta}_{2j} \end{pmatrix}; 
+\begin{pmatrix} 0 \\ 0\end{pmatrix}, 
+\begin{pmatrix} s_{1j}^2 + \sigma_{1j}^2 &amp; b \sigma_{1j}^2\\
+b \sigma_{1j}^2 &amp; s_{2j}^2 + b^2 \sigma_{1j}^2 + \sigma_{2j}^2 \end{pmatrix}\right) \right)^{w_j}
+\]</span></p>
+<p>Suppose that <span class="math inline">\(\Sigma_1\)</span> and <span class="math inline">\(\Sigma_2\)</span> are known. For this example, we use diagonal matrices, <span class="math inline">\(\Sigma_1 = (0.1)^2 I\)</span> and <span class="math inline">\(\Sigma_2 = (0.05)^2 I\)</span>. We assume there a <span class="math inline">\(N(0, 1)\)</span> prior for <span class="math inline">\(b\)</span> and wish to estimate the posterior of <span class="math inline">\(b\)</span>.</p>
+<pre class="r"><code>nsample &lt;- 1000
+bs &lt;- seq(-1, 1, length.out=nsample)
+ll_true &lt;-  c()
+ll_approx &lt;- matrix(nrow=nsample, ncol=100)
+s1 &lt;- 0.1
+s2 &lt;- 0.05
+v_11 &lt;- se1^2 + s1^2
+
+for(i in 1:nsample){
+  big_sigma &lt;- rbind( cbind(sigma1 + diag(rep(s1^2, 76)), bs[i]*diag(rep(s1^2, 76))), 
+                      cbind(bs[i]*diag(rep(s1^2, 76)), sigma2 + 
+                                                         (bs[i]^2)*diag(rep(s1^2, 76)) +  
+                                                         diag(rep(s2^2, 76))))
+  v_12 &lt;- bs[i]*s1^2
+  v_22 &lt;- se2^2  + (bs[i]^2)*s1^2 + s2^2
+  v_2g1 &lt;- v_22 - ((v_12^2)/v_11)
+  #cat(sum(v_2g1 &lt; 0), &quot; &quot;)
+  ll_true &lt;- c(ll_true, 
+               dmvnorm(c(beta_hat_1, beta_hat_2), mean=rep(0, 2*76), 
+                       sigma= big_sigma, log=T))
+  aa &lt;- dnorm(x=beta_hat_1, mean=0, sd=sqrt(v_11), log = T) + 
+        dnorm(x=beta_hat_2, mean=(v_12/v_11)*beta_hat_1, sd=sqrt(v_22 - ((v_12^2)/v_11)), log = T)
+  ll_approx[i,] &lt;- sapply(fact, function(x){sum((ldsc^x)*aa)})
+}</code></pre>
+<pre class="r"><code>post &lt;- ll_true + dnorm(bs, 0, 1, log=T)
+post_int &lt;- sum(diff(bs)* exp(post[-1]))
+post_true &lt;- exp(post[-1])/(post_int)
+
+post_approx &lt;- apply(ll_approx, 2, function(x){
+  post &lt;- x + dnorm(bs, 0, 1, log=T)
+  log_post_int &lt;- logSumExp(log(diff(bs)) + post[-1])
+  exp(post[-1] - log_post_int)
+})
+kl &lt;- apply(post_approx, 2, function(x){
+  sum(diff(bs)*post_true*(log(post_true)-log(x)), na.rm=T)
+})
+plot(fact, kl)</code></pre>
+<p><img src="figure/pseudo_likelihood.Rmd/postb2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>df &lt;- data.frame(post_approx[, fact %in% c(-1, 0, fact[which.min(kl)], 1, 2)])
+names(df) &lt;- fact[fact %in% c(-1, 0, fact[which.min(kl)], 1, 2)]
+df$true &lt;- post_true
+df$b &lt;- bs[-1]
+df_long &lt;- gather(df, &quot;k&quot;, &quot;likelihood&quot;, -b)
+plt &lt;- ggplot(df_long) + geom_line(aes(x=b, y=likelihood, group=k, color=k)) + 
+  scale_x_continuous(limits=c(0, 0.74)) + 
+  theme_bw()
+plt</code></pre>
+<pre><code>Warning: Removed 3774 rows containing missing values (geom_path).</code></pre>
+<p><img src="figure/pseudo_likelihood.Rmd/postb2-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>The best approximation in this example uses <span class="math inline">\(k \approx\)</span> 0.41. These approximations of the posterior actually seem surprsingly good.</p>
+<p>Ok. Now suppose that <span class="math inline">\(\Sigma_m = S_1 R S_1^{-1} \Gamma_m S_1^{-1} R S_1\)</span> for <span class="math inline">\(m = 1,2\)</span> where <span class="math inline">\(\Gamma_m\)</span> is diagonal and most of the diagonal elements are equal to zero. Suppose we know the diagona elements of <span class="math inline">\(\Sigma_1\)</span> and <span class="math inline">\(\Sigma_2\)</span>.</p>
+<pre class="r"><code>set.seed(3456789)
+gamma_1 &lt;- gamma_2 &lt;- rep(0, 76)
+gamma_1[sample(5:70, size=2)] &lt;- 0.1^2
+gamma_2[sample(5:70, size=5)] &lt;- 0.05^2
+S1 &lt;- diag(se1) %*% R %*% diag( (1/se1)*gamma_1*(1/se1)) %*% R %*% diag(se1)
+S2 &lt;- diag(se2) %*% R %*% diag( (1/se2)*gamma_2*(1/se2)) %*% R %*% diag(se2)
+theta &lt;- rmvnorm(n=1, mean=rep(0, 76), sigma = S1)
+gamma &lt;- rmvnorm(n=1, mean=rep(0, 76), sigma=S2)
+beta_hat_1 &lt;- rmvnorm(n=1, mean=theta, sigma=sigma1)
+beta_hat_2 &lt;- rmvnorm(n=1, mean=(b*theta + gamma), sigma=sigma2)</code></pre>
+<pre class="r"><code>ll_true &lt;-  c()
+ll_approx &lt;- matrix(nrow=nsample, ncol=100)
+
+v_11 &lt;- se1^2 + diag(S1)
+
+for(i in 1:nsample){
+  big_sigma &lt;- rbind( cbind(sigma1 + S1, bs[i]*S1), 
+                      cbind(bs[i]*S1, sigma2 + (bs[i]^2)*S1 + S2))
+  v_12 &lt;- bs[i]*diag(S1)
+  v_22 &lt;- se2^2  + (bs[i]^2)*diag(S1)+ diag(S2)
+  v_2g1 &lt;- v_22 - ((v_12^2)/v_11)
+  #cat(sum(v_2g1 &lt; 0), &quot; &quot;)
+  ll_true &lt;- c(ll_true, 
+               dmvnorm(c(beta_hat_1, beta_hat_2), mean=rep(0, 2*76), 
+                       sigma= big_sigma, log=T))
+  aa &lt;- dnorm(x=beta_hat_1, mean=0, sd=sqrt(v_11), log = T) + 
+        dnorm(x=beta_hat_2, mean=(v_12/v_11)*beta_hat_1, 
+              sd=sqrt(v_22 - ((v_12^2)/v_11)), log = T)
+  ll_approx[i,] &lt;- sapply(fact, function(x){sum((ldsc^x)*aa)})
+}</code></pre>
+<pre class="r"><code>post &lt;- ll_true + dnorm(bs, 0, 1, log=T)
+post_int &lt;- sum(diff(bs)* exp(post[-1]))
+post_true &lt;- exp(post[-1])/(post_int)
+
+post_approx &lt;- apply(ll_approx, 2, function(x){
+  post &lt;- x + dnorm(bs, 0, 1, log=T)
+  log_post_int &lt;- logSumExp(log(diff(bs)) + post[-1])
+  exp(post[-1] - log_post_int)
+})
+kl &lt;- apply(post_approx, 2, function(x){
+  sum(diff(bs)*post_true*(log(post_true)-log(x)), na.rm=T)
+})
+plot(fact, kl)</code></pre>
+<p><img src="figure/pseudo_likelihood.Rmd/postb3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>df &lt;- data.frame(post_approx[, fact %in% c(-1, 0, fact[which.min(kl)], 1, 2)])
+names(df) &lt;- fact[fact %in% c(-1, 0, fact[which.min(kl)], 1, 2)]
+df$true &lt;- post_true
+df$b &lt;- bs[-1]
+df_long &lt;- gather(df, &quot;k&quot;, &quot;likelihood&quot;, -b)
+plt &lt;- ggplot(df_long) + geom_line(aes(x=b, y=likelihood, group=k, color=k)) + 
+  theme_bw()
+plt</code></pre>
+<p><img src="figure/pseudo_likelihood.Rmd/postb3-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>In this case, the posterior is much better approximated using <span class="math inline">\(k \approx\)</span> -0.91 than the larger vlaues that worked better for the non-sparse case.</p>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.4.1 (2017-06-30)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 17.04
+
+Matrix products: default
+BLAS: /usr/lib/libblas/libblas.so.3.7.0
+LAPACK: /usr/lib/lapack/liblapack.so.3.7.0
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] tidyr_0.6.3        mvtnorm_1.0-6      matrixStats_0.52.2
+[4] ggplot2_2.2.1      reshape2_1.4.2    
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.13     knitr_1.16       magrittr_1.5     munsell_0.4.3   
+ [5] colorspace_1.3-2 R6_2.2.1         rlang_0.1.1      dplyr_0.5.0     
+ [9] stringr_1.2.0    plyr_1.8.4       tools_3.4.1      grid_3.4.1      
+[13] gtable_0.2.0     DBI_0.6-1        htmltools_0.3.6  assertthat_0.2.0
+[17] yaml_2.1.14      lazyeval_0.2.0   rprojroot_1.2    digest_0.6.12   
+[21] tibble_1.3.1     evaluate_0.10    rmarkdown_1.6    labeling_0.3    
+[25] stringi_1.1.5    compiler_3.4.1   scales_0.4.1     backports_1.1.0 </code></pre>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

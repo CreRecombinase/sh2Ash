@@ -25,8 +25,8 @@
 <link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
 <script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
-<link href="site_libs/highlightjs-1.1/textmate.css" rel="stylesheet" />
-<script src="site_libs/highlightjs-1.1/highlight.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 <link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
 
 <style type="text/css">code{white-space: pre;}</style>
@@ -36,10 +36,12 @@
   }
 </style>
 <script type="text/javascript">
-if (window.hljs && document.readyState && document.readyState === "complete") {
-   window.setTimeout(function() {
-      hljs.initHighlighting();
-   }, 0);
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlightingOnLoad(); }, 0);
+  }
 }
 </script>
 
@@ -378,10 +380,8 @@ save(dat, file=&quot;../data/LDL_CAD.RData&quot;)</code></pre>
 <h2>Basic plots (approximately) replicating Pickerell et al observations</h2>
 <p>First look at effect sizes ascertaining based on LDL and ascertaining based on CAD. Note that, in these plots, we haven’t pruned for LD. Results after pruning are shown further on.</p>
 <pre class="r"><code>library(readr)
-library(sherlockAsh)</code></pre>
-<pre><code>## Warning: replacing previous import &#39;ks::compare&#39; by &#39;loo::compare&#39; when
-## loading &#39;sherlockAsh&#39;</code></pre>
-<pre class="r"><code>dat &lt;- getobj(&quot;../data/LDL_CAD.RData&quot;)
+library(sherlockAsh)
+dat &lt;- readRDS(&quot;../data/LDL_CAD.RDS&quot;)
 dat$cad_qvalue &lt;- p.adjust(dat$cad_pvalue, method=&quot;BH&quot;)
 with(dat[dat$cad_qvalue &lt; 0.1,], plot(ldl_effect, cad_log_odds, cex=0.5, main=&quot;Only top CAD SNPs&quot;, xlab=&quot;LDL effect&quot;, ylab=&quot;CAD Log Odds&quot;))</code></pre>
 <p><img src="cad_ldl_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
@@ -468,7 +468,7 @@ save(dat, file=&quot;../data/LDL_HEIGHT.RData&quot;)</code></pre>
 <p>Some basic plots</p>
 <pre class="r"><code>library(readr)
 library(sherlockAsh)
-dat &lt;- getobj(&quot;../data/LDL_HEIGHT.RData&quot;)
+dat &lt;- readRDS(&quot;../data/LDL_HEIGHT.RDS&quot;)
 dat$height_qvalue &lt;- p.adjust(dat$height_pvalue, method=&quot;BH&quot;)
 with(dat[dat$height_qvalue &lt; 0.1,], plot(ldl_effect, height_effect, cex=0.5, main=&quot;Only top Height SNPs&quot;, xlab=&quot;LDL effect&quot;, ylab=&quot;Height effect&quot;))</code></pre>
 <p><img src="cad_ldl_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
@@ -1144,7 +1144,7 @@ $(document).ready(function () {
   (function () {
     var script = document.createElement("script");
     script.type = "text/javascript";
-    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
     document.getElementsByTagName("head")[0].appendChild(script);
   })();
 </script>

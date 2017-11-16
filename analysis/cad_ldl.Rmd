@@ -97,7 +97,7 @@ First look at effect sizes ascertaining based on LDL and ascertaining based on C
 ```{r}
 library(readr)
 library(sherlockAsh)
-dat <- getobj("../data/LDL_CAD.RData")
+dat <- readRDS("../data/LDL_CAD.RDS")
 dat$cad_qvalue <- p.adjust(dat$cad_pvalue, method="BH")
 with(dat[dat$cad_qvalue < 0.1,], plot(ldl_effect, cad_log_odds, cex=0.5, main="Only top CAD SNPs", xlab="LDL effect", ylab="CAD Log Odds"))
 
@@ -202,7 +202,7 @@ Some basic plots
 ```{r}
 library(readr)
 library(sherlockAsh)
-dat <- getobj("../data/LDL_HEIGHT.RData")
+dat <- readRDS("../data/LDL_HEIGHT.RDS")
 dat$height_qvalue <- p.adjust(dat$height_pvalue, method="BH")
 with(dat[dat$height_qvalue < 0.1,], plot(ldl_effect, height_effect, cex=0.5, main="Only top Height SNPs", xlab="LDL effect", ylab="Height effect"))
 with(dat[dat$height_qvalue < 0.1,], plot(ldl_effect, height_effect, cex=0.5, 

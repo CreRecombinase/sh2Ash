@@ -25,8 +25,8 @@
 <link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
 <script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
-<link href="site_libs/highlightjs-1.1/textmate.css" rel="stylesheet" />
-<script src="site_libs/highlightjs-1.1/highlight.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 <link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
 
 <style type="text/css">code{white-space: pre;}</style>
@@ -36,10 +36,12 @@
   }
 </style>
 <script type="text/javascript">
-if (window.hljs && document.readyState && document.readyState === "complete") {
-   window.setTimeout(function() {
-      hljs.initHighlighting();
-   }, 0);
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlightingOnLoad(); }, 0);
+  }
 }
 </script>
 
@@ -326,52 +328,6 @@ div.tocify {
 <div id="likelihood-ratios-using-known-parameters" class="section level2">
 <h2>Likelihood ratios using known parameters</h2>
 <p>First we assume the value of <span class="math inline">\(b\)</span> is known. We look at log likelihood ratios comparing <span class="math inline">\(q=1\)</span> to <span class="math inline">\(q=0.5\)</span> and <span class="math inline">\(q=1\)</span> to <span class="math inline">\(q=0\)</span>.</p>
-<pre class="r"><code>order_s &lt;- with(draw_s$dat, order(abs(beta_hat_1/seb1), decreasing = TRUE))
-order_c &lt;- with(draw_c$dat, order(abs(beta_hat_1/seb1), decreasing = TRUE))
-
-df_q1_q0.5 &lt;- data.frame(
-  n = (1:100000),
-  &quot;S&quot; = with(s_ll[order_s,] , cumsum(q1-q0.5)),
-  &quot;C&quot; = with(c_ll[order_c,] , cumsum(q1-q0.5))
-)
-df_q1_q0 &lt;- data.frame(
-  n = (1:100000),
-  &quot;S&quot; = with(s_ll[order_s,] , cumsum(q1-q0)),
-  &quot;C&quot; = with(c_ll[order_c,] , cumsum(q1-q0))
-)
-
-df_long &lt;- gather(df_q1_q0.5, &quot;data_set&quot;, &quot;ll_ratio&quot;, -n)
-
-df_lines &lt;- data.frame(data_set = rep(c(&quot;C&quot;, &quot;S&quot;)), val=rep(c(&quot;oracle_only&quot;, &quot;all&quot;), each=2), &quot;llr&quot; = NA)
-df_lines$llr[ df_lines$data_set==&quot;S&quot; &amp; df_lines$val==&quot;oracle_only&quot;] &lt;- with(s_ll, sum((q1-q0.5)[s_oracle_ix]))
-df_lines$llr[ df_lines$data_set==&quot;C&quot; &amp; df_lines$val==&quot;oracle_only&quot;] &lt;- with(c_ll, sum((q1-q0.5)[s_oracle_ix]))
-df_lines$llr[ df_lines$data_set==&quot;S&quot; &amp; df_lines$val==&quot;all&quot;] &lt;- with(s_ll, sum(q1-q0.5))
-df_lines$llr[ df_lines$data_set==&quot;C&quot; &amp; df_lines$val==&quot;all&quot;] &lt;-  with(c_ll, sum(q1-q0.5))
-
-plt1 &lt;- ggplot(df_long) + geom_line(aes(x=n, y=ll_ratio, color=data_set)) +
-        geom_hline(data = df_lines, aes(yintercept=llr, color=data_set, linetype=val)) +
-        scale_linetype_manual(values=2:3) + 
-        ggtitle(&quot;Log likelihood ratio: q = 1 to q=0.5&quot;) + 
-        labs(x=&quot;Number of SNPs included&quot;, y=&quot;Log Likelihood Ratio&quot;) + 
-        theme_bw()
-
-
-df_long &lt;- gather(df_q1_q0, &quot;data_set&quot;, &quot;ll_ratio&quot;, -n)
-
-df_lines &lt;- data.frame(data_set = rep(c(&quot;C&quot;, &quot;S&quot;)), val=rep(c(&quot;oracle_only&quot;, &quot;all&quot;), each=2), &quot;llr&quot; = NA)
-df_lines$llr[ df_lines$data_set==&quot;S&quot; &amp; df_lines$val==&quot;oracle_only&quot;] &lt;- with(s_ll, sum((q1-q0)[s_oracle_ix]))
-df_lines$llr[ df_lines$data_set==&quot;C&quot; &amp; df_lines$val==&quot;oracle_only&quot;] &lt;- with(c_ll, sum((q1-q0)[s_oracle_ix]))
-df_lines$llr[ df_lines$data_set==&quot;S&quot; &amp; df_lines$val==&quot;all&quot;] &lt;- with(s_ll, sum(q1-q0))
-df_lines$llr[ df_lines$data_set==&quot;C&quot; &amp; df_lines$val==&quot;all&quot;] &lt;-  with(c_ll, sum(q1-q0))
-
-plt2 &lt;- ggplot(df_long) + geom_line(aes(x=n, y=ll_ratio, color=data_set)) + 
-        geom_hline(data = df_lines, aes(yintercept=llr, color=data_set, linetype=val)) +
-        scale_linetype_manual(values=2:3) + 
-        ggtitle(&quot;Log likelihood ratio: q = 1 to q=0&quot;) + 
-        labs(x=&quot;Number of SNPs included&quot;, y=&quot;Log Likelihood Ratio&quot;) + 
-        theme_bw()
-grid.arrange(plt1 + scale_x_continuous(limits=c(0, 5000)),
-                  plt2 + scale_x_continuous(limits=c(0, 5000)) , ncol=2)</code></pre>
 <pre><code>Warning: Removed 190000 rows containing missing values (geom_path).
 
 Warning: Removed 190000 rows containing missing values (geom_path).</code></pre>
@@ -422,6 +378,7 @@ Model 3.</code></pre>
 <p><img src="figure/subset_snps.Rmd/top_posterior_plot-1.png" width="1056" style="display: block; margin: auto;" /></p>
 <pre><code>Warning: Removed 2 rows containing missing values (geom_path).</code></pre>
 <p><img src="figure/subset_snps.Rmd/plot_top_posterior-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Combining results for both data sets across all three estimates of the posterior gives the following tables. The tables below show <span class="math inline">\(\Delta\)</span> ELPD <span class="math inline">\(z\)</span> scores comparing the causal to the shared model. Negative <span class="math inline">\(z\)</span>-scores are in favor of the causal model. Each column corresponds to a different estimate of the posterior distribution.</p>
 <pre><code>Data set S</code></pre>
 <table>
 <thead>
@@ -509,19 +466,19 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] knitr_1.16        cumstats_1.0      gridExtra_2.2.1   sherlockAsh_0.1.0
+[1] knitr_1.17        cumstats_1.0      gridExtra_2.2.1   sherlockAsh_0.1.0
 [5] ggplot2_2.2.1     tidyr_0.6.3      
 
 loaded via a namespace (and not attached):
  [1] Rcpp_0.12.13        highr_0.6           compiler_3.4.1     
  [4] plyr_1.8.4          iterators_1.0.8     tools_3.4.1        
- [7] digest_0.6.12       MHadaptive_1.1-8    evaluate_0.10      
+ [7] digest_0.6.12       MHadaptive_1.1-8    evaluate_0.10.1    
 [10] tibble_1.3.1        gtable_0.2.0        lattice_0.20-35    
 [13] rlang_0.1.1         Matrix_1.2-10       foreach_1.4.3      
 [16] DBI_0.6-1           yaml_2.1.14         parallel_3.4.1     
 [19] loo_1.1.0           dplyr_0.5.0         stringr_1.2.0      
 [22] stats4_3.4.1        rprojroot_1.2       grid_3.4.1         
-[25] R6_2.2.1            rmarkdown_1.6       ashr_2.1-27        
+[25] R6_2.2.1            rmarkdown_1.7       ashr_2.1-27        
 [28] magrittr_1.5        backports_1.1.0     scales_0.4.1       
 [31] codetools_0.2-15    htmltools_0.3.6     matrixStats_0.52.2 
 [34] MASS_7.3-47         assertthat_0.2.0    colorspace_1.3-2   

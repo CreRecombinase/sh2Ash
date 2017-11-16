@@ -20,8 +20,8 @@
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
-<link href="site_libs/highlightjs-1.1/textmate.css" rel="stylesheet" />
-<script src="site_libs/highlightjs-1.1/highlight.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 <link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
 
 <style type="text/css">code{white-space: pre;}</style>
@@ -31,10 +31,12 @@
   }
 </style>
 <script type="text/javascript">
-if (window.hljs && document.readyState && document.readyState === "complete") {
-   window.setTimeout(function() {
-      hljs.initHighlighting();
-   }, 0);
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlightingOnLoad(); }, 0);
+  }
 }
 </script>
 
@@ -211,7 +213,7 @@ $(document).ready(function () {
 <div id="project-updates-most-recent-to-older" class="section level2">
 <h2>Project updates (most recent to older)</h2>
 <ul>
-<li>Working on understanding the effects of LD, possibilities of subsetting SNPS <a href="ld_subsets.html">here</a>, <a href="subset_snps.html">here</a></li>
+<li>Working on understanding the effects of LD, possibilities of subsetting SNPS <a href="subset_snps.html">here</a></li>
 <li>Working on write-up of method. Document in progress is <a href="cause_methods.pdf">here</a></li>
 <li>10-23-17 Added grid approximation for posterior distributoins. Summary coming.</li>
 <li>10-12-17 Compared different priors in original “b-q” model. Moved away from “non-local” priors. <a href="mh_priors2.htlml">Summary</a></li>

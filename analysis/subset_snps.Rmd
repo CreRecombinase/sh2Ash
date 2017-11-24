@@ -433,7 +433,7 @@ plt <- ggplot(df_long) + geom_line(aes(x=n, y=delta_elpd_z_score, color=data_set
 plt
 ```
 
-Combining results for both data sets across all three estimates of the posterior gives the following tables. The tables below show $\Delta$ ELPD $z$ scores comparing the causal to the shared model. Negative $z$-scores are in favor of the causal model. Each column corresponds to a different estimate of the posterior distribution.
+Combining results for both data sets across all three estimates of the posterior gives the following results. The tables below show $\Delta$ ELPD $z$ scores comparing the causal to the shared model. Negative $z$-scores are in favor of the causal model. Each column corresponds to a different estimate of the posterior distribution.
 
 ```{r, echo=FALSE, res_tab3}
 res_tab_s$top[1] <- df_lines$llr[df_lines$data_set=="S" & df_lines$val=="oracle_only"]
@@ -452,7 +452,22 @@ kable(res_tab_c)
 
 
 
+## Simulation Results
 
+I repeated the above experiments in simulations. In the results shown below, data are generated with $b=0.4$ for all simulations. There are 20 data sets generated using each of 7 values of $q$: 0, 0.1, 0.2, 0.3, 0.5, 0.7 and 1. The scatter plots below compare $z$-scores computed using each of the following four methods:
+
++ All/All: The posterior is calculated using all SNPs, the $\Delta$ ELPD $z$-score is calculated using all SNPs.
++ Top/Top: The posterior is calculted using the top 1\% of SNPs, the $z$-score is calculated using the top 1\% of SNPs. 
++ Top/All: The posterior is calculted using the top 1\% of SNPs, the $z$-score is calculated using all SNPs. 
++ All/Top: The posterior is calculted using all SNPs, the $z$-score is calculated using the top 1\% of SNPs. 
+
+The Top/Top method is the least computationally costly. Points in the scatter plot are colored according to the value of $q$. 
+
+<img src="z_score_subsetpairs_2017-11-17.png" width="400">
+
+We find that the All/All $z$-scores and Top/Top $z$-scores are highly correlated. They both do a good job of distinguishing the simulations with $q=1$ from the other simulations. Below I show ROC curves for the same set of simulations. Each point on the curve for a particular method corresponds to a $z$-score cutoff. The true positive rate is the proportion of the 20 simulations with $q=1$ that have $z$-scores falling below the cutoff. The false positive rate is the proportion of the 120 simulations with $q < 1$ that have $z$-scores below the cutoff. Colored points show the results that would be obtained with a cutoff of $\Phi(0.95)$. 
+
+<img src="roc_subsets_2017-11-17.png" width="400">
 
 
 ## Session information

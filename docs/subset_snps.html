@@ -378,7 +378,7 @@ Model 3.</code></pre>
 <p><img src="figure/subset_snps.Rmd/top_posterior_plot-1.png" width="1056" style="display: block; margin: auto;" /></p>
 <pre><code>Warning: Removed 2 rows containing missing values (geom_path).</code></pre>
 <p><img src="figure/subset_snps.Rmd/plot_top_posterior-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Combining results for both data sets across all three estimates of the posterior gives the following tables. The tables below show <span class="math inline">\(\Delta\)</span> ELPD <span class="math inline">\(z\)</span> scores comparing the causal to the shared model. Negative <span class="math inline">\(z\)</span>-scores are in favor of the causal model. Each column corresponds to a different estimate of the posterior distribution.</p>
+<p>Combining results for both data sets across all three estimates of the posterior gives the following results. The tables below show <span class="math inline">\(\Delta\)</span> ELPD <span class="math inline">\(z\)</span> scores comparing the causal to the shared model. Negative <span class="math inline">\(z\)</span>-scores are in favor of the causal model. Each column corresponds to a different estimate of the posterior distribution.</p>
 <pre><code>Data set S</code></pre>
 <table>
 <thead>
@@ -441,6 +441,21 @@ Model 3.</code></pre>
 </tr>
 </tbody>
 </table>
+</div>
+<div id="simulation-results" class="section level2">
+<h2>Simulation Results</h2>
+<p>I repeated the above experiments in simulations. In the results shown below, data are generated with <span class="math inline">\(b=0.4\)</span> for all simulations. There are 20 data sets generated using each of 7 values of <span class="math inline">\(q\)</span>: 0, 0.1, 0.2, 0.3, 0.5, 0.7 and 1. The scatter plots below compare <span class="math inline">\(z\)</span>-scores computed using each of the following four methods:</p>
+<ul>
+<li>All/All: The posterior is calculated using all SNPs, the <span class="math inline">\(\Delta\)</span> ELPD <span class="math inline">\(z\)</span>-score is calculated using all SNPs.</li>
+<li>Top/Top: The posterior is calculted using the top 1% of SNPs, the <span class="math inline">\(z\)</span>-score is calculated using the top 1% of SNPs.</li>
+<li>Top/All: The posterior is calculted using the top 1% of SNPs, the <span class="math inline">\(z\)</span>-score is calculated using all SNPs.</li>
+<li>All/Top: The posterior is calculted using all SNPs, the <span class="math inline">\(z\)</span>-score is calculated using the top 1% of SNPs.</li>
+</ul>
+<p>Points in the scatter plot are colored according to the value of <span class="math inline">\(q\)</span>.</p>
+<p>The <span class="math inline">\(z\)</span>-scores in these plots differ from those calculated above in an important way. In the experiments we just described, we assumed that we knew the bivariate distribution of direct effects on traits 1 and 2. In the simulations results presented, this distribution is estimated from the data. In all cases, we estimate <span class="math inline">\(\rho\)</span> and the distribution of direct effects using all SNPs.</p>
+<p><img src="z_score_subsetpairs_2017-11-17.png" width="700"></p>
+<p>We find that the All/All <span class="math inline">\(z\)</span>-scores and Top/Top <span class="math inline">\(z\)</span>-scores are highly correlated. They both do a good job of distinguishing the simulations with <span class="math inline">\(q=1\)</span> from the other simulations. Below I show ROC curves for the same set of simulations. Each point on the curve for a particular method corresponds to a <span class="math inline">\(z\)</span>-score cutoff. The true positive rate is the proportion of the 20 simulations with <span class="math inline">\(q=1\)</span> that have <span class="math inline">\(z\)</span>-scores falling below the cutoff. The false positive rate is the proportion of the 120 simulations with <span class="math inline">\(q &lt; 1\)</span> that have <span class="math inline">\(z\)</span>-scores below the cutoff. Colored points show the results that would be obtained with a cutoff of <span class="math inline">\(\Phi(0.95)\)</span>.</p>
+<p><img src="roc_subsets_2017-11-17.png" width="700"></p>
 </div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>

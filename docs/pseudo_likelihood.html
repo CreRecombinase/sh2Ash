@@ -25,8 +25,8 @@
 <link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
 <script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
-<link href="site_libs/highlightjs-1.1/textmate.css" rel="stylesheet" />
-<script src="site_libs/highlightjs-1.1/highlight.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 <link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
 
 <style type="text/css">code{white-space: pre;}</style>
@@ -36,10 +36,12 @@
   }
 </style>
 <script type="text/javascript">
-if (window.hljs && document.readyState && document.readyState === "complete") {
-   window.setTimeout(function() {
-      hljs.initHighlighting();
-   }, 0);
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlightingOnLoad(); }, 0);
+  }
 }
 </script>
 
@@ -315,7 +317,7 @@ div.tocify {
  package git2r is installed -->
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
-<p>Our goal is to explore how good the weighted likelihood is at approximating the true likelihood for correlated data.</p>
+<p>Our goal is to explore how good the weighted pseudo-likelihood is at approximating the true likelihood for correlated data. We would also like to know how well we can approximate posterior distributions using a weighted pseudo-likelihood.</p>
 </div>
 <div id="one-trait" class="section level2">
 <h2>One trait</h2>
@@ -688,12 +690,12 @@ other attached packages:
 [4] ggplot2_2.2.1      reshape2_1.4.2    
 
 loaded via a namespace (and not attached):
- [1] Rcpp_0.12.13     knitr_1.16       magrittr_1.5     munsell_0.4.3   
+ [1] Rcpp_0.12.13     knitr_1.17       magrittr_1.5     munsell_0.4.3   
  [5] colorspace_1.3-2 R6_2.2.1         rlang_0.1.1      dplyr_0.5.0     
  [9] stringr_1.2.0    plyr_1.8.4       tools_3.4.1      grid_3.4.1      
 [13] gtable_0.2.0     DBI_0.6-1        htmltools_0.3.6  assertthat_0.2.0
 [17] yaml_2.1.14      lazyeval_0.2.0   rprojroot_1.2    digest_0.6.12   
-[21] tibble_1.3.1     evaluate_0.10    rmarkdown_1.6    labeling_0.3    
+[21] tibble_1.3.1     evaluate_0.10.1  rmarkdown_1.7    labeling_0.3    
 [25] stringi_1.1.5    compiler_3.4.1   scales_0.4.1     backports_1.1.0 </code></pre>
 </div>
 

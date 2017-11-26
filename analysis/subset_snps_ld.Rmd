@@ -1,0 +1,298 @@
+---
+title: "Subsetting SNPs; Dealing with LD"
+author: "Jean Morrison"
+date: 2017-11-24
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+
+```{r, echo=FALSE, functions}
+plot_marg_posteriors <- function(out_s, out_c){
+  df_b <- data.frame("b" = out_c$marge_b$b,
+                   "C_causal_model" = out_c$marge_b$m2,
+                   "C_shared_model" = out_c$marge_b$m3,
+                   "S_causal_model" = out_s$marge_b$m2,
+                   "S_shared_model" = out_s$marge_b$m3
+  )
+  df_q <- data.frame("q" = out_c$marge_q$q,
+                   "C_shared_model" = out_c$marge_q$m3,
+                   "S_shared_model" = out_s$marge_q$m3
+  )
+  df_b_long <- gather(df_b, "mod", "posterior", -b)
+  df_b_long$data_set <- "C"
+  df_b_long$data_set[grep("S", df_b_long$mod)] <- "S"
+  df_b_long$model <- "shared"
+  df_b_long$model[grep("causal", df_b_long$mod)] <- "causal"
+  df_b_long$model <- factor(df_b_long$model, levels=c("shared", "causal"))
+  pltb <- ggplot(df_b_long) + geom_line(aes(x=b, y=posterior, color=data_set, lty=model), alpha=0.5) +
+  ggtitle("Marginal Posteriors - b") + 
+  theme_bw() 
+
+  df_q_long <- gather(df_q, "mod", "posterior", -q)
+  df_q_long$data_set <- "C"
+  df_q_long$data_set[grep("S", df_q_long$mod)] <- "S"
+  pltq <- ggplot(df_q_long) + geom_line(aes(x=q, y=posterior, color=data_set), alpha=0.5) + 
+  ggtitle("Marginal Posteriors - q\n(shared model only)") + 
+  theme_bw() 
+  return(list("b"=pltb, "q"=pltq))
+}
+
+step_quantile <- function(x, start, stop, p){
+  stopifnot(length(start)==length(stop))
+  stopifnot(length(stop)==length(p))
+  cdf <- cumsum(p*(stop-start))
+  ix <- min(which(cdf > x))
+  if(ix==1) res <- x
+    else res <- x-cdf[ix-1]
+  q <- (res/p[ix]) + start[ix]
+  return(q)
+}
+```
+## Introduction
+
+In [this](subset_snps.html) analysis, we determined that using the top 1\% of SNPs only seemed like a viable option in a setting with no LD. In this anlysis, my goal is to determine if this is also reasonable. 
+
+LD complicates this question in two ways:
+
+1. With LD, the true likelihood is too difficult to calculate so we have been approximating it using a weighted pseudo-likelihood. Results [here](pseudo_likelihood.html) indicate that if the effect sizes are sparse, weights of $w_j = \left( \sum_{ij} r_{ij}^2 \right)^{-1}$ may work well for approximating the posterior but may not be the best choice if true effects are not sparse. 
+
+2. With LD, there are many possible ways that we could choose a set of ``top SNPs''. In this analysis I will experiment with choosing a set of SNPs in minimal LD with each other.
+
+In these explorations we will use two test data sets. Both have 100,000 SNPs falling into 299 LD blocks. LD structure is taken from Wen and Stephens estimates of LD from the 1,000 genomes European cohort. Data set S is generated under the shared model with $q=0.5$ and $b=0.4$. Data set C genrated under the causal model with $q=1$ and $b=0.4$.
+
+
+## Distribution of true effect sizes
+In our model without LD, we assume that, conditional on the true effects, effect size estimates are independent. That is, we assume that
+\[ \hat{\beta}_k \sim N(\beta_k, S_k^{2})\]
+where $\hat{\beta}_k$ is the $p$-vector of effect size estimates for study $k \in \lbrace 1, 2 \rbrace$, $\beta_k$ are the vectors of true effects and $S_k$ is a diagonal matrix with $(S_k)_{jj} = se(\hat{\beta}_{kj})$. We assume that the correlation between $\hat{\beta}_{1i}$ and $\hat{\beta}_{2j}$ is 0 if $i\neq j$ and $\rho$ if $i=j$.
+
+If there is LD then, using results from Zhu and Stephens (2016), 
+\[ \hat{\beta}_k \sim N(S_k R S_k^{-1} \beta_k, S_kRS_k),\]
+where $R$ is the correlation matrix between SNPs. For simplicity, we assume the same LD between the two studies. We define the LD trasformed effects as 
+\[ \tilde{\beta}_k = S_k R S_k^{-1} \beta_k. \]
+If $R$ is block diagonal and the effects in both studies are sparse, we might expect that most of the time there will be at most one effect in either study within an LD block. 
+
+If the true effects are described by the "b-q" model we have talked about previously, then
+\[   \beta_{2j} = b\beta_{1j}Z_j + \gamma_j, \]
+where $b$ is the effect size of the shared factor on trait 1, $Z_j \sim Bern(q)$ and $\gamma_j$ is the effect of SNP $j$ directly on trait 2 and not through the shared factor, $\gamma_j \sim g(\pi_2, \sigma)$ where $g$ is an ash distribution with mixture parameters $\pi_2$ and grid of variances $\sigma$. Therefore,
+\[ \tilde{\beta}_2 = b S_2 R S_2^{-1} (\beta_1 \circ Z) + S_2 R S_2^{-1} \gamma. \]
+
+If each SNP has the same allele frequency in the two studies then $S_2 = c S_1$ where $c$ is a constant that depends on the sample sizes of the two studies. In this case, we can re-write the relationship above as
+\[ \tilde{\beta}_2 = b S_1 R S_1^{-1} (\beta_1 \circ Z) + S_2 R S_2^{-1} \gamma. \]
+
+Now assume that $R$ is block diagonal and can be decomposed into $B$ blocks. We use $p_b$ to indicate the number of SNPs in block $b$ so $\sum_{b=1}^{B}p_b = p$. If $x$ is a $p$-vector then we will use $x_b$ to indicate the $p_b$-vector of elements corresponding to SNPs in block $b$. If true effects for the two traits are sparse enough that there is at most one effect from either study within an LD block then 
+
+\[ \tilde{\beta}_{2,b} = b \tilde{\beta}_{1,b} \tilde{Z}_b + S_2 R S_2^{-1} \gamma_b, \]
+where $\tilde{Z}_b$ is an indicator that any SNP in block $b$ acts through the shared factor and $Z_b \sim Bern(q)$. This means that under the special conditions that 
+
++ $R$ is block diagonal
++ LD is the same between studies
++ Allele frequencies are the same between studies
++ There is at most one effect in either study per LD block
+
+we can use summary statistics from studies with LD to estimate the same parameters we were able to estimate in the case without LD.
+We can maximize the same likelihood we used in the case without LD to obtain unbiased point estimates of $b$ and $q$.
+
+This does not, however, account for correlation between effect size estimates for different SNP which will effect our estimates of the posterior distributions of $b$ and $q$. If SNPs are independent, we can write the total likelihood as
+\[L(\hat{\beta}_1, \hat{\beta}_2 \vert b, q, \rho, S_1, S_2, \theta)  = \prod_{j=1}^{p} L(\hat{\beta}_{1,j}, \hat{\beta}_{2,j} \vert b, q, \rho, (S_1)_{jj}, (S_2)_{jj}, \theta).\]
+Here, the hyper-parameter $\theta$ includes the mixture proportions and grids of variances for the ash prior distributions of $\beta_{1}$ and $\gamma$. 
+
+In the presence of LD, this no  longer holds. We have taken an approach similar to that of Liley et al (2016). We construct a "pseudo-log likelihood" as a weighted sum of the log likelihoods for each SNP. 
+\[PL(\hat{\beta}_1, \hat{\beta}_2 \vert b, q, \rho, S_1, S_2, \theta)  = \prod_{j=1}^{p} \left(L(\hat{\beta}_{1,j}, \hat{\beta}_{2,j} \vert b, q, \rho, (S_1)_{jj}, (S_2)_{jj}, \theta) \right)^{w_j}.\]
+Here, $w_j$ captures the amount of LD between SNP $j$ and other SNPs. We set $w_j$ equal to the inverse of the LD score, $w_j = \frac{1}{\sum_{i\in S_b} r_{ij}^2}$ where $b$ is the LD block containing SNP $j$. 
+
+We then estimate a "pseudo-poseterior" distribution for $b$ and $q$ by assuming independent priors for $b$ and $q$ $P_b$ and $P_q$ and defining
+\[
+P(b, q \vert \rho, \hat{\beta}_1, \hat{\beta}_2, S_1, S_2, \theta ) \propto  PL(\hat{\beta}_1, \hat{\beta}_2 \vert b, q, \rho, S_1, S_2, \theta) \cdot P(b) \cdot P(q)
+\]
+
+## Distributions of LD transformed effect sizes in data
+
+In reality, the four conditions above will not hold exactly. This means that the model of 
+\[ \tilde{\beta}_{2,b} = b \tilde{\beta}_{1,b} \tilde{Z}_b + S_2 R S_2^{-1} \gamma_b, \]
+is an approximation. We can look at the joint distribution of LD transformed effect sizes in the simulated data sets. Below, I show the tue and LD transformed effects for the two data sets. We can see that in the LD transformed effects, there are many more SNPs that have non-zero effects on both traits and that not all of these lie on the line with slope $b$. 
+
+```{r, echo = FALSE, fig.show='hold', ll_known}
+library(tidyr)
+library(ggplot2)
+library(sherlockAsh)
+library(gridExtra)
+library(cumstats)
+library(knitr)
+
+draw_s <- readRDS("../data/subset_snps_ld/shared_draw_ld.RDS")
+draw_c  <- readRDS("../data/subset_snps_ld/causal_draw_ld.RDS")
+p1s <- ggplot(draw_s$dat) + geom_point(aes(x=b1, y=b2), alpha=0.4) + 
+       ggtitle("Data set S: True effects")  + theme_bw()
+p2s <- ggplot(draw_s$dat) + geom_point(aes(x=b1_tilde, y=b2_tilde), alpha=0.4) +
+        ggtitle("Data set S: LD transformed effects") + theme_bw()
+
+p1c <- ggplot(draw_c$dat) + geom_point(aes(x=b1, y=b2), alpha=0.4) + 
+       ggtitle("Data set C: True effects")  + theme_bw()
+p2c <- ggplot(draw_c$dat) + geom_point(aes(x=b1_tilde, y=b2_tilde), alpha=0.4) +
+        ggtitle("Data set C: LD transformed effects") + theme_bw()
+
+grid.arrange(p1s, p2s, p1c, p2c , ncol=2)
+```
+
+In the following experiments, the distribution of \emph{LD transformed} direct effects and $\rho$ are estimated from the data using all SNPs and assuming $b = q = 0$. 
+
+## Posterior distribution using all SNPs and weights
+
+We first calculate the posterior distribution using all SNPs and the LD weights. Below I show plots of the marginal posteriors for $b$ and $q$.
+
+```{r, fig.show='hold', fig.width=11, echo=FALSE, all_posterior}
+out_all_c_wts <- readRDS("../data/subset_snps_ld/out_all_c_ld_wts.RDS")  
+out_all_s_wts <- readRDS("../data/subset_snps_ld/out_all_s_ld_wts.RDS") 
+```
+
+
+```{r, fig.show='hold', fig.width=11, echo=FALSE, all_posterior_plot}
+plts <- plot_marg_posteriors(out_s = out_all_s_wts, out_c = out_all_c_wts)
+grid.arrange(plts$b, plts$q, ncol=2)
+```
+
+Under the shared model, the distribution of $q$ is shifted farther to the right for data set C than for data set S but it is not nearly as peaked as it was using [the data with no LD](subset_snps.html). 
+
+```{r, echo=FALSE, eval=FALSE, quantiles1}
+qstart <- with(out_all_c_wts, sapply(marge_q$q, function(x){ 
+                                  post[[2]]$qstart[which(post[[2]]$q==x)[1]]
+}))
+qend <- with(out_all_c_wts, sapply(marge_q$q, function(x){ 
+                                  post[[2]]$qend[which(post[[2]]$q==x)[1]]
+}))
+qwidth <- qend-qstart
+quantsq_c <- with(out_all_c_wts$marge_q, 
+                  c(step_quantile(0.05, qstart, qend, m3),
+                    step_quantile(0.25, qstart, qend, m3),
+                    step_quantile(0.5, qstart, qend, m3),
+                    step_quantile(0.75, qstart, qend, m3),
+                    step_quantile(0.95, qstart, qend, m3)))
+meanq_c <- with(out_all_c_wts$marge_q, sum(m3*(qstart*qwidth + 0.5*(qwidth^2))))
+
+
+quantsq_s <- with(out_all_s_wts$marge_q, 
+                  c(step_quantile(0.05, qstart, qend, m3),
+                    step_quantile(0.25, qstart, qend, m3),
+                    step_quantile(0.5, qstart, qend, m3),
+                    step_quantile(0.75, qstart, qend, m3),
+                    step_quantile(0.95, qstart, qend, m3)))
+meanq_s <- with(out_all_s_wts$marge_q, sum(m3*(qstart*qwidth + 0.5*(qwidth^2))))
+```
+
+
+Using all SNPs, the $z$-score comparing the shared model to the causal model for data set C is `r round(with(out_all_c_wts$waic, waic[1,2]/se[1,2]), digits=2)`. For data set S it is `r round(with(out_all_s_wts$waic, waic[1,2]/se[1,2]), digits=2)` with negative $z$-scores favoring the causal model. 
+
+## Posterior distribution using all SNPs and no weights
+
+
+```{r, fig.show='hold', fig.width=11, echo=FALSE, all_posterior_nowts}
+out_all_c_nowts <- readRDS("../data/subset_snps_ld/out_all_c_ld_nowts.RDS")  
+out_all_s_nowts <- readRDS("../data/subset_snps_ld/out_all_s_ld_nowts.RDS") 
+```
+
+
+```{r, fig.show='hold', fig.width=11, echo=FALSE, all_posterior_plot_nowts}
+plts <- plot_marg_posteriors(out_s = out_all_s_nowts, out_c = out_all_c_nowts)
+grid.arrange(plts$b, plts$q, ncol=2)
+```
+
+Without the weights, the posterior distributions are much more peaked and farther from the priors. They also show a much clearer difference between the two data sets. The $z$-score comparing the shared model to the causal model for data set C is `r round(with(out_all_c_nowts$waic, waic[1,2]/se[1,2]), digits=2)`. For data set S it is `r round(with(out_all_s_nowts$waic, waic[1,2]/se[1,2]), digits=2)` with negative $z$-scores favoring the causal model. The evidence in favor of the causal model from data set C is now weaker because the posterior is more similar to the causal model. 
+
+
+## Posterior using oracle SNPs and no wetghts
+
+Both data sets have 72 SNPs that causally effect trait 1. We assume that, for the most part, these SNPs are not in LD with each other (they are chosen randomly from the 10,000 SNPs in the data) and therefore don't include the weights when we calculate the oracle posterior. For the distribution of direct effects, we start with the distribution estimated using all SNPs and condition on the effect for trait 1 not being zero. 
+
+```{r, cache=TRUE, fig.show='hold', fig.width=11, echo=FALSE, oracle_posterior}
+s_oracle_ix <- with(draw_s$dat, which(b1!=0))
+c_oracle_ix <- with(draw_c$dat, which(b1!=0))
+
+c_grid_oracle <- subset(out_all_c_wts$mix_grid, S1!=0)
+c_grid_oracle$pi <- with(c_grid_oracle, pi/sum(pi))
+out_oracle_c <- cause_grid_approx(dat = draw_c$dat[c_oracle_ix,],
+                                       mix_grid = c_grid_oracle, rho=0, waic_samps = -1)
+  
+s_grid_oracle <- subset(out_all_s_wts$mix_grid, S1!=0)
+s_grid_oracle$pi <- with(s_grid_oracle, pi/sum(pi))
+out_oracle_s <- cause_grid_approx(dat = draw_s$dat[s_oracle_ix,],
+                                       mix_grid = s_grid_oracle, rho=0, waic_samps = -1)
+plts <- plot_marg_posteriors(out_s = out_oracle_s, out_c = out_oracle_c)
+grid.arrange(plts$b, plts$q, ncol=2)
+```
+
+The posterior using only the true effect SNPs is not as peaked as the posterior using all SNPs and no weights. This makes sense because, with LD, there is additional noise. The effect estimates aren't estimating the true effect sizes but the LD transformed effect sizes. 
+
+
+## Posterior distribution using top SNPs in weak LD, no weights
+
+If we can conduct the analysis using only top trait 1 SNPs that are in weak LD we can make a better case for ignoring LD in the analysis. As before, we will use the distribution of direct effects estimated from all SNPs. 
+
+```{r, fig.show='hold', fig.width=11, echo=FALSE, top_snps}
+ld <- readRDS("../data/subset_snps_ld/ld_sims.RDS")
+lens <- sapply(ld, function(x){nrow(x)})
+snp_info <- data.frame("block" = rep(1:length(ld), lens))
+
+pvals_b1_c <- with(draw_c$dat, pnorm(abs(beta_hat_1/seb1), lower.tail = F)*2)
+top_c_ix <- top_snps_pval_ld(pvals=pvals_b1_c, snp_info=snp_info, ld=ld, ld_thresh=0.1, pval_thresh=Inf)
+
+pvals_b1_s <- with(draw_s$dat, pnorm(abs(beta_hat_1/seb1), lower.tail = F)*2)
+top_s_ix <- top_snps_pval_ld(pvals=pvals_b1_s, snp_info=snp_info, ld=ld, ld_thresh=0.1, pval_thresh=Inf)
+```
+
+If we prune for LD so that all SNPs have pairwise correlation of less than 0.1 ($r^2 < 0.01$) preferentially choosing SNPs with the lowest trait 1 $p$-values, we retain `r length(top_c_ix)` SNPs in data set C and `r length(top_s_ix)` in data set S.  
+
+
+```{r,cache=TRUE, echo=FALSE, top_snps_posterior}
+dat_c <- draw_c$dat[top_c_ix,]
+dat_c$wts <- 1
+out_top_c_nowts <- cause_grid_approx(dat = dat_c,
+                                       mix_grid = out_all_c_nowts$mix_grid, 
+                                       rho=out_all_c_nowts$rho, waic_samps=1000)
+dat_s <- draw_s$dat[top_s_ix,]
+dat_s$wts <- 1
+out_top_s_nowts <- cause_grid_approx(dat = dat_s,
+                                       mix_grid = out_all_s_nowts$mix_grid, 
+                                       rho=out_all_s_nowts$rho, waic_samps=1000)
+plts <- plot_marg_posteriors(out_s = out_top_s_nowts, out_c = out_top_c_nowts)
+grid.arrange(plts$b, plts$q, ncol=2)
+```
+These posteriors are more peaked than the oracle posterior and farther from the prior but less than the posteriors using all SNPs and no weights. 
+
+## Simulation results
+
+I compared three methods in simulations: 
+
++ Estimate posterior and calculate $z$-score using all SNPs and LD weights
++ Estimate posterior and calculate $z$-score using all SNPs and no LD weights
++ Estimate posterior and calculate $z$-score using LD pruned subset of SNPs
+
+I ran 20 simulations for each of seven values of $q$. Below, I show the number of simulations for which $z < \Phi(\alpha)$ with $\alpha$ equal to 0.9, 0.95 and 0.975. The method using LD pruning has the best type 1 error across values of $\alpha$ for small values of $q$ but the worst power when $q = 1$. For $\alpha = 0.95$, the method using all snps and no weights has the same power as the method using LD pruned SNPs. However, when $\alpha=0.975$, the method using LD pruned SNPs detects only 15 of the 20 true positives while the method using all SNPs and no weights detects 18. 
+
+<img src="num_pos_2017-11-26.png" width="700">
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```

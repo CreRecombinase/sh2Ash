@@ -461,13 +461,15 @@ I repeated the above experiments in simulations. In the results shown below, dat
 + Top/All: The posterior is calculted using the top 1\% of SNPs, the $z$-score is calculated using all SNPs. 
 + All/Top: The posterior is calculted using all SNPs, the $z$-score is calculated using the top 1\% of SNPs. 
 
-The Top/Top method is the least computationally costly. Points in the scatter plot are colored according to the value of $q$. 
+Points in the scatter plot are colored according to the value of $q$. 
 
-<img src="z_score_subsetpairs_2017-11-17.png" width="400">
+The $z$-scores in these plots differ from those calculated above in an important way. In the experiments we just described, we assumed that we knew the bivariate distribution of direct effects on traits 1 and 2. In the simulations results presented, this distribution is estimated from the data. In all cases, we estimate $\rho$ and the distribution of direct effects using all SNPs. 
+
+<img src="z_score_subsetpairs_2017-11-17.png" width="700">
 
 We find that the All/All $z$-scores and Top/Top $z$-scores are highly correlated. They both do a good job of distinguishing the simulations with $q=1$ from the other simulations. Below I show ROC curves for the same set of simulations. Each point on the curve for a particular method corresponds to a $z$-score cutoff. The true positive rate is the proportion of the 20 simulations with $q=1$ that have $z$-scores falling below the cutoff. The false positive rate is the proportion of the 120 simulations with $q < 1$ that have $z$-scores below the cutoff. Colored points show the results that would be obtained with a cutoff of $\Phi(0.95)$. 
 
-<img src="roc_subsets_2017-11-17.png" width="400">
+<img src="roc_subsets_2017-11-17.png" width="700">
 
 
 ## Session information

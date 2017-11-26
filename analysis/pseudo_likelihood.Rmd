@@ -25,7 +25,7 @@ knitr::read_chunk("chunks.R")
 
 ## Introduction
 
-Our goal is to explore how good the weighted likelihood is at approximating the true likelihood for correlated data. 
+Our goal is to explore how good the weighted pseudo-likelihood is at approximating the true likelihood for correlated data. We would also like to know how well we can approximate posterior distributions using a weighted pseudo-likelihood.
 
 ## One trait
 

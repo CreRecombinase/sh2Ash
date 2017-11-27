@@ -249,14 +249,12 @@ If we can conduct the analysis using only top trait 1 SNPs that are in weak LD w
 
 ```{r, fig.show='hold', fig.width=11, echo=FALSE, top_snps}
 ld <- readRDS("../data/subset_snps_ld/ld_sims.RDS")
-lens <- sapply(ld, function(x){nrow(x)})
-snp_info <- data.frame("block" = rep(1:length(ld), lens))
 
 pvals_b1_c <- with(draw_c$dat, pnorm(abs(beta_hat_1/seb1), lower.tail = F)*2)
-top_c_ix <- top_snps_pval_ld(pvals=pvals_b1_c, snp_info=snp_info, ld=ld, ld_thresh=0.1, pval_thresh=Inf)
+top_c_ix <- top_snps_pval_ld(ld=ld, pvals=pvals_b1_c, ld_thresh=0.1)
 
 pvals_b1_s <- with(draw_s$dat, pnorm(abs(beta_hat_1/seb1), lower.tail = F)*2)
-top_s_ix <- top_snps_pval_ld(pvals=pvals_b1_s, snp_info=snp_info, ld=ld, ld_thresh=0.1, pval_thresh=Inf)
+top_s_ix <- top_snps_pval_ld(ld= ld, pvals=pvals_b1_s, ld_thresh=0.1)
 ```
 
 If we prune for LD so that all SNPs have pairwise correlation of less than 0.1 ($r^2 < 0.01$) preferentially choosing SNPs with the lowest trait 1 $p$-values, we retain `r length(top_c_ix)` SNPs in data set C and `r length(top_s_ix)` in data set S.  
@@ -276,7 +274,27 @@ out_top_s_nowts <- cause_grid_approx(dat = dat_s,
 plts <- plot_marg_posteriors(out_s = out_top_s_nowts, out_c = out_top_c_nowts)
 grid.arrange(plts$b, plts$q, ncol=2)
 ```
-These posteriors are more peaked than the oracle posterior and farther from the prior but less than the posteriors using all SNPs and no weights. 
+These posteriors are more peaked than the oracle posterior and farther from the prior but less than the posteriors using all SNPs and no weights. From this analysis $z$-score comparing the shared model to the causal model for data set C is `r round(with(out_top_c_nowts$waic, waic[1,2]/se[1,2]), digits=2)`. For data set S it is `r round(with(out_top_s_nowts$waic, waic[1,2]/se[1,2]), digits=2)`.
+
+We might wonder if it is important to select the LD pruned SNP set favoring SNPs with low trait 1 p-values. We could try instead, choosing random LD pruned SNP sets.
+
+```{r, cache=TRUE, fig.show='hold', fig.width=11, echo=FALSE, random_snps}
+
+rand_ix <- top_snps_pval_ld(ld=ld, ld_thresh=0.1)
+dat_c <- draw_c$dat[rand_ix,]
+dat_c$wts <- 1
+out_rand_c_nowts <- cause_grid_approx(dat = dat_c,
+                                       mix_grid = out_all_c_nowts$mix_grid, 
+                                       rho=out_all_c_nowts$rho, waic_samps=1000)
+dat_s <- draw_s$dat[rand_ix,]
+dat_s$wts <- 1
+out_rand_s_nowts <- cause_grid_approx(dat = dat_s,
+                                       mix_grid = out_all_s_nowts$mix_grid, 
+                                       rho=out_all_s_nowts$rho, waic_samps=1000)
+plts <- plot_marg_posteriors(out_s = out_rand_s_nowts, out_c = out_rand_c_nowts)
+grid.arrange(plts$b, plts$q, ncol=2)
+```
+Using a random set of SNPs, the posterior distribution of $q$ is much farther from the truth. The $z$-score comparing the shared model to the causal model for data set C is `r round(with(out_rand_c_nowts$waic, waic[1,2]/se[1,2]), digits=2)`. For data set S it is `r round(with(out_rand_s_nowts$waic, waic[1,2]/se[1,2]), digits=2)`. 
 
 ## Simulation results
 
@@ -284,12 +302,14 @@ I compared three methods in simulations:
 
 + Estimate posterior and calculate $z$-score using all SNPs and LD weights
 + Estimate posterior and calculate $z$-score using all SNPs and no LD weights
-+ Estimate posterior and calculate $z$-score using LD pruned subset of SNPs
++ Estimate posterior and calculate $z$-score using LD pruned subset of SNPs (pruning favors low trait 1 p-values)(usually keeps about 10\% of SNPS)
++ Estimate posterior and calculate $z$-score using top 1000 (1% of total) LD pruned SNPs based on trait 1 p-values.
 
-I ran 20 simulations for each of seven values of $q$. Below, I show the number of simulations for which $z < \Phi(\alpha)$ with $\alpha$ equal to 0.9, 0.95 and 0.975. The method using LD pruning has the best type 1 error across values of $\alpha$ for small values of $q$ but the worst power when $q = 1$. For $\alpha = 0.95$, the method using all snps and no weights has the same power as the method using LD pruned SNPs. However, when $\alpha=0.975$, the method using LD pruned SNPs detects only 15 of the 20 true positives while the method using all SNPs and no weights detects 18. 
+I ran 20 simulations for each of seven values of $q$. Below, I show the number of simulations for which $z < \Phi(\alpha)$ with $\alpha$ equal to 0.9, 0.95 and 0.975. 
 
-<img src="num_pos_2017-11-26.png" width="700">
+<img src="num_pos_2017-11-27.png" width="700">
 
+The method using all SNPs and weights has more false postives than the other methods for small values of $q$. The LD pruning methods have better type 1 error than the method using all SNPs for most values of $q$ values of $\alpha$.  These methods also have slightly worse power when $q = 1$. For $\alpha = 0.9$, both LD pruning methods and the method using all snps and no weights have the same power. At $\alpha=0.95$ the LD pruning method using more SNPs and the method using all SNPs have the same power (18/20) while the top 1\% method detects 16 of the 20 true positives. When $\alpha=0.975$, both LD pruning methods detect only 15 of the 20 true positives while the method using all SNPs and no weights detects 18. 
 
 ## Session information
 

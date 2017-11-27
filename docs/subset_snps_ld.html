@@ -388,7 +388,15 @@ Model 3.</code></pre>
 <pre><code>seed:  748994525 
 Model 2.
 Model 3.</code></pre>
-<p><img src="figure/subset_snps_ld.Rmd/top_snps_posterior-1.png" width="672" style="display: block; margin: auto;" /> These posteriors are more peaked than the oracle posterior and farther from the prior but less than the posteriors using all SNPs and no weights.</p>
+<p><img src="figure/subset_snps_ld.Rmd/top_snps_posterior-1.png" width="672" style="display: block; margin: auto;" /> These posteriors are more peaked than the oracle posterior and farther from the prior but less than the posteriors using all SNPs and no weights. From this analysis <span class="math inline">\(z\)</span>-score comparing the shared model to the causal model for data set C is -0.29. For data set S it is -0.22.</p>
+<p>We might wonder if it is important to select the LD pruned SNP set favoring SNPs with low trait 1 p-values. We could try instead, choosing random LD pruned SNP sets.</p>
+<pre><code>seed:  7302518 
+Model 2.
+Model 3.</code></pre>
+<pre><code>seed:  579237478 
+Model 2.
+Model 3.</code></pre>
+<p><img src="figure/subset_snps_ld.Rmd/random_snps-1.png" width="1056" style="display: block; margin: auto;" /> Using a random set of SNPs, the posterior distribution of <span class="math inline">\(q\)</span> is much farther from the truth. The <span class="math inline">\(z\)</span>-score comparing the shared model to the causal model for data set C is -0.22. For data set S it is -0.77.</p>
 </div>
 <div id="simulation-results" class="section level2">
 <h2>Simulation results</h2>
@@ -396,10 +404,12 @@ Model 3.</code></pre>
 <ul>
 <li>Estimate posterior and calculate <span class="math inline">\(z\)</span>-score using all SNPs and LD weights</li>
 <li>Estimate posterior and calculate <span class="math inline">\(z\)</span>-score using all SNPs and no LD weights</li>
-<li>Estimate posterior and calculate <span class="math inline">\(z\)</span>-score using LD pruned subset of SNPs</li>
+<li>Estimate posterior and calculate <span class="math inline">\(z\)</span>-score using LD pruned subset of SNPs (pruning favors low trait 1 p-values)(usually keeps about 10% of SNPS)</li>
+<li>Estimate posterior and calculate <span class="math inline">\(z\)</span>-score using top 1000 (1% of total) LD pruned SNPs based on trait 1 p-values.</li>
 </ul>
-<p>I ran 20 simulations for each of seven values of <span class="math inline">\(q\)</span>. Below, I show the number of simulations for which <span class="math inline">\(z &lt; \Phi(\alpha)\)</span> with <span class="math inline">\(\alpha\)</span> equal to 0.9, 0.95 and 0.975. The method using LD pruning has the best type 1 error across values of <span class="math inline">\(\alpha\)</span> for small values of <span class="math inline">\(q\)</span> but the worst power when <span class="math inline">\(q = 1\)</span>. For <span class="math inline">\(\alpha = 0.95\)</span>, the method using all snps and no weights has the same power as the method using LD pruned SNPs. However, when <span class="math inline">\(\alpha=0.975\)</span>, the method using LD pruned SNPs detects only 15 of the 20 true positives while the method using all SNPs and no weights detects 18.</p>
-<p><img src="num_pos_2017-11-26.png" width="700"></p>
+<p>I ran 20 simulations for each of seven values of <span class="math inline">\(q\)</span>. Below, I show the number of simulations for which <span class="math inline">\(z &lt; \Phi(\alpha)\)</span> with <span class="math inline">\(\alpha\)</span> equal to 0.9, 0.95 and 0.975.</p>
+<p><img src="num_pos_2017-11-27.png" width="700"></p>
+<p>The method using all SNPs and weights has more false postives than the other methods for small values of <span class="math inline">\(q\)</span>. The LD pruning methods have better type 1 error than the method using all SNPs for most values of <span class="math inline">\(q\)</span> values of <span class="math inline">\(\alpha\)</span>. These methods also have slightly worse power when <span class="math inline">\(q = 1\)</span>. For <span class="math inline">\(\alpha = 0.9\)</span>, both LD pruning methods and the method using all snps and no weights have the same power. At <span class="math inline">\(\alpha=0.95\)</span> the LD pruning method using more SNPs and the method using all SNPs have the same power (18/20) while the top 1% method detects 16 of the 20 true positives. When <span class="math inline">\(\alpha=0.975\)</span>, both LD pruning methods detect only 15 of the 20 true positives while the method using all SNPs and no weights detects 18.</p>
 </div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>

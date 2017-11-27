@@ -13,7 +13,7 @@ Research website for Sherlock2 project with Jean Morrison, Xin He, and Matthew S
 + 11-13-17 Investigation of using LD weights to approximate likelihoods and posteriors. [Summary](pseudo_likelihood.html).
 + Working on write-up of method. Link to document in progress coming.
 + 10-23-17 Added grid approximation for posterior distributions. Summary coming.
-+ 10-12-17 Compared different priors in original "b-q" model. Moved away from "non-local" priors. [Summary](mh_priors2.htlml)
++ 10-12-17 Compared different priors in original "b-q" model. Moved away from "non-local" priors. [Summary](mh_priors2.html)
 + 10-5-17 (detour) Looked at estimating distributions of angles. [Summary](polar_intro.html)
 + 9-25-17 (detour) Explored the possibility of a "more symmetric" model. [Summary](mh_new_dist.html)
 + 7-22 to 9-17-17 Implemented sampling based method for fitting models which samples posteriors of b and q using MH and then compairs models using WAIC. [This summary](mh_test.html) includes method description and simulation results.

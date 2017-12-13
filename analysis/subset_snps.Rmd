@@ -287,7 +287,7 @@ These posteriors differ from the posteriors calculated using only the true trait
 + The posteriors of $q$ for both data sets are somewhat lower. The MAP for data set $S$ is around `r with(out_all_s$marge_q, round(q[which.max(m3)], digits=2))` using all SNPs while it was around `r with(out_oracle_s$marge_q, round(q[which.max(m3)], digits=2))` using only the oracle SNPs.
 + The posteriors for $b$ under both models for data set C are similar to those estimated with only the oracle SNPs.
 
-Using these priors to calculate $\Delta$ ELPD $z$-scores gives the following results:
+Using these posteriors to calculate $\Delta$ ELPD $z$-scores gives the following results:
 
 ```{r, cache=TRUE, echo=FALSE, ll_all_posterior}
 ll_c_causal <- with(draw_c, samp_from_grid_ll(post_grid = out_all_c$post[[1]], rho = 0, 

@@ -271,9 +271,11 @@ dat_s$wts <- 1
 out_top_s_nowts <- cause_grid_approx(dat = dat_s,
                                        mix_grid = out_all_s_nowts$mix_grid, 
                                        rho=out_all_s_nowts$rho, waic_samps=1000)
+
 plts <- plot_marg_posteriors(out_s = out_top_s_nowts, out_c = out_top_c_nowts)
 grid.arrange(plts$b, plts$q, ncol=2)
 ```
+
 These posteriors are more peaked than the oracle posterior and farther from the prior but less than the posteriors using all SNPs and no weights. From this analysis $z$-score comparing the shared model to the causal model for data set C is `r round(with(out_top_c_nowts$waic, waic[1,2]/se[1,2]), digits=2)`. For data set S it is `r round(with(out_top_s_nowts$waic, waic[1,2]/se[1,2]), digits=2)`.
 
 We might wonder if it is important to select the LD pruned SNP set favoring SNPs with low trait 1 p-values. We could try instead, choosing random LD pruned SNP sets.
@@ -307,7 +309,7 @@ I compared three methods in simulations:
 
 I ran 20 simulations for each of seven values of $q$. Below, I show the number of simulations for which $z < \Phi(\alpha)$ with $\alpha$ equal to 0.9, 0.95 and 0.975. 
 
-<img src="num_pos_2017-11-27.png" width="700">
+<img src="num_pos_2017-11-28.png" width="700">
 
 The method using all SNPs and weights has more false postives than the other methods for small values of $q$. The LD pruning methods have better type 1 error than the method using all SNPs for most values of $q$ values of $\alpha$.  These methods also have slightly worse power when $q = 1$. For $\alpha = 0.9$, both LD pruning methods and the method using all snps and no weights have the same power. At $\alpha=0.95$ the LD pruning method using more SNPs and the method using all SNPs have the same power (18/20) while the top 1\% method detects 16 of the 20 true positives. When $\alpha=0.975$, both LD pruning methods detect only 15 of the 20 true positives while the method using all SNPs and no weights detects 18. 
 

@@ -388,7 +388,8 @@ Model 3.</code></pre>
 <pre><code>seed:  748994525 
 Model 2.
 Model 3.</code></pre>
-<p><img src="figure/subset_snps_ld.Rmd/top_snps_posterior-1.png" width="672" style="display: block; margin: auto;" /> These posteriors are more peaked than the oracle posterior and farther from the prior but less than the posteriors using all SNPs and no weights. From this analysis <span class="math inline">\(z\)</span>-score comparing the shared model to the causal model for data set C is -0.29. For data set S it is -0.22.</p>
+<p><img src="figure/subset_snps_ld.Rmd/top_snps_posterior-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>These posteriors are more peaked than the oracle posterior and farther from the prior but less than the posteriors using all SNPs and no weights. From this analysis <span class="math inline">\(z\)</span>-score comparing the shared model to the causal model for data set C is -0.29. For data set S it is -0.22.</p>
 <p>We might wonder if it is important to select the LD pruned SNP set favoring SNPs with low trait 1 p-values. We could try instead, choosing random LD pruned SNP sets.</p>
 <pre><code>seed:  7302518 
 Model 2.
@@ -408,7 +409,7 @@ Model 3.</code></pre>
 <li>Estimate posterior and calculate <span class="math inline">\(z\)</span>-score using top 1000 (1% of total) LD pruned SNPs based on trait 1 p-values.</li>
 </ul>
 <p>I ran 20 simulations for each of seven values of <span class="math inline">\(q\)</span>. Below, I show the number of simulations for which <span class="math inline">\(z &lt; \Phi(\alpha)\)</span> with <span class="math inline">\(\alpha\)</span> equal to 0.9, 0.95 and 0.975.</p>
-<p><img src="num_pos_2017-11-27.png" width="700"></p>
+<p><img src="num_pos_2017-11-28.png" width="700"></p>
 <p>The method using all SNPs and weights has more false postives than the other methods for small values of <span class="math inline">\(q\)</span>. The LD pruning methods have better type 1 error than the method using all SNPs for most values of <span class="math inline">\(q\)</span> values of <span class="math inline">\(\alpha\)</span>. These methods also have slightly worse power when <span class="math inline">\(q = 1\)</span>. For <span class="math inline">\(\alpha = 0.9\)</span>, both LD pruning methods and the method using all snps and no weights have the same power. At <span class="math inline">\(\alpha=0.95\)</span> the LD pruning method using more SNPs and the method using all SNPs have the same power (18/20) while the top 1% method detects 16 of the 20 true positives. When <span class="math inline">\(\alpha=0.975\)</span>, both LD pruning methods detect only 15 of the 20 true positives while the method using all SNPs and no weights detects 18.</p>
 </div>
 <div id="session-information" class="section level2">
@@ -435,25 +436,26 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] knitr_1.17        cumstats_1.0      gridExtra_2.2.1   sherlockAsh_0.1.0
-[5] ggplot2_2.2.1     tidyr_0.6.3      
+[1] ashr_2.1-27       knitr_1.17        cumstats_1.0      gridExtra_2.2.1  
+[5] sherlockAsh_0.1.0 ggplot2_2.2.1     tidyr_0.6.3      
 
 loaded via a namespace (and not attached):
- [1] Rcpp_0.12.13        compiler_3.4.1      plyr_1.8.4         
- [4] iterators_1.0.8     tools_3.4.1         digest_0.6.12      
- [7] MHadaptive_1.1-8    evaluate_0.10.1     tibble_1.3.1       
-[10] gtable_0.2.0        lattice_0.20-35     rlang_0.1.1        
-[13] Matrix_1.2-10       foreach_1.4.3       DBI_0.6-1          
-[16] yaml_2.1.14         parallel_3.4.1      loo_1.1.0          
-[19] dplyr_0.5.0         stringr_1.2.0       stats4_3.4.1       
-[22] rprojroot_1.2       grid_3.4.1          R6_2.2.1           
-[25] rmarkdown_1.7       ashr_2.1-27         magrittr_1.5       
-[28] backports_1.1.0     scales_0.4.1        codetools_0.2-15   
-[31] htmltools_0.3.6     matrixStats_0.52.2  MASS_7.3-47        
-[34] assertthat_0.2.0    colorspace_1.3-2    numDeriv_2016.8-1  
-[37] labeling_0.3        stringi_1.1.5       RcppParallel_4.3.20
-[40] lazyeval_0.2.0      munsell_0.4.3       doParallel_1.0.11  
-[43] pscl_1.5.1          truncnorm_1.0-7     SQUAREM_2016.8-2   </code></pre>
+ [1] Rcpp_0.12.13        bindr_0.1           compiler_3.4.1     
+ [4] plyr_1.8.4          iterators_1.0.8     tools_3.4.1        
+ [7] digest_0.6.12       MHadaptive_1.1-8    evaluate_0.10.1    
+[10] tibble_1.3.1        gtable_0.2.0        lattice_0.20-35    
+[13] pkgconfig_2.0.1     rlang_0.1.4         Matrix_1.2-10      
+[16] foreach_1.4.3       yaml_2.1.14         parallel_3.4.1     
+[19] loo_1.1.0           bindrcpp_0.2        dplyr_0.7.4        
+[22] stringr_1.2.0       stats4_3.4.1        rprojroot_1.2      
+[25] grid_3.4.1          glue_1.2.0          R6_2.2.1           
+[28] rmarkdown_1.7       magrittr_1.5        backports_1.1.0    
+[31] scales_0.4.1        codetools_0.2-15    htmltools_0.3.6    
+[34] matrixStats_0.52.2  MASS_7.3-47         assertthat_0.2.0   
+[37] colorspace_1.3-2    numDeriv_2016.8-1   labeling_0.3       
+[40] stringi_1.1.5       RcppParallel_4.3.20 lazyeval_0.2.0     
+[43] munsell_0.4.3       doParallel_1.0.11   pscl_1.5.1         
+[46] truncnorm_1.0-7     SQUAREM_2016.8-2   </code></pre>
 </div>
 
 <hr>

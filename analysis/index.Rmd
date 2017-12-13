@@ -9,6 +9,8 @@ Research website for Sherlock2 project with Jean Morrison, Xin He, and Matthew S
 
 ## Project updates (most recent to older)
 
++ 12-12-17 Started running CAUSE on GWAS traits. Results coming soon!
++ 12-12-17 Added more simulation results with LD [Summary](more_ld_sims.html). Conclusions: we have better power when we threshold SNPs more aggressively based on trait 1 significance estimates. 
 + 11-15-17 to 11-26-17 Working on understanding the effects of LD, possibilities of subsetting SNPS [without LD](subset_snps.html), [with LD](subset_snps_ld.html).
 + 11-13-17 Investigation of using LD weights to approximate likelihoods and posteriors. [Summary](pseudo_likelihood.html).
 + Working on write-up of method. Link to document in progress coming.

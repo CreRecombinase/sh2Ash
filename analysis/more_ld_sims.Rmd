@@ -56,7 +56,7 @@ First I compare two methods that don't rely on pruning SNPs:
 
 The oracle block method shows the power we would expect in a similar problem with no LD. Ignoring LD in the "All-nowts" method results in somewhate higher type 1 error for some values of $q$.
 ```{r,echo=FALSE, plot1}
-res_wide <- readRDS("../data/res_wide_171213.RDS")
+res_wide <- readRDS("../data/res_wide_2017-12-18.RDS")
 
 pos_curves <- function(res_wide, methods, level=0.95){
     pos_tab <- data.frame("q"=unique(res_wide$q))

@@ -1,7 +1,7 @@
 ---
 title: "More LD Simulations"
 author: "Jean Morrison"
-date: 2017-12-12
+date: 2017-12-18
 output: html_document
 ---
 
@@ -107,7 +107,7 @@ plt
 
 ```
 
-The "oracle/oracle" method should be the best. It includes only trait 1 effect SNPs and has a good set of SNPs to estimate the grid with. There shouldn't be bias introduced by selection. This method is the most powerful but also has more type 1 errors. Disturbingly, we have more type 1 errors at $q=0$. 
+The "oracle/oracle" method should be the best. It includes only trait 1 effect SNPs and has a good set of SNPs to estimate the grid with. There shouldn't be bias introduced by selection. This method is the most powerful but also has more type 1 errors for larger values of $q$. 
 
 "best block/oracle" is very similar to the "oracle/oracle" method. This shows that the loss of power can't be explained by choosing the wrong SNP in effect blocks. The "best block" method has lower power. This must be a result of including SNPs that aren't in trait 1 effect blocks but have higher trait 1 effect estimates as a result of selection bias. 
 

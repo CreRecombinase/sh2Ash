@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Jean Morrison" />
+
+<meta name="date" content="2017-12-22" />
+
+<title>Pairs of GWAS traits</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlightingOnLoad(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Sherlock2 model using Ash</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Pairs of GWAS traits</h1>
+<h4 class="author"><em>Jean Morrison</em></h4>
+<h4 class="date"><em>2017-12-22</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>We ran CAUSE on pairs of 16 GWAS traits. For each pair, we looked at effects going in both directions. The 16 traits along with the consortia supplying the summary statistics and the abreviation used in plots below are:</p>
+<ul>
+<li>Coronary artery disease; CARDIOGRAM; cad</li>
+<li>Lumbar spine bone denisty; GEFOS; ls</li>
+<li>Femoral neck bone denisty; GEFOS; fn</li>
+<li>HDL cholesterol; GLS; hdl</li>
+<li>LDL cholesterol; GLS; ldl</li>
+<li>Total cholesterol; GLS; tc</li>
+<li>Triglycerides; GLS, tg<br />
+</li>
+<li>Alzheimers disease; IGAP; ad</li>
+<li>Age at menarche; Reprogen, aam</li>
+<li>Type 2 diabetes, DIAGRAM; t2d</li>
+<li>Body mass index; GIANT; bmi</li>
+<li>Height; GIANT; height</li>
+<li>Crohns disease; IBDgenetics; cd</li>
+<li>Ulcerative colitis; IBDgenetics; uc</li>
+<li>Fasting glucose; MAGIC; fg</li>
+<li>Schizophrenia; PGC; scz</li>
+</ul>
+<p>Our analysis pipeline consists of the following steps:</p>
+<ol style="list-style-type: decimal">
+<li>Identify a set of SNPs available in all studies. Limiting ourselves to this set is mostly for convenience later.</li>
+<li>From the set identified in 1, choose a set of SNPs with pairwise <span class="math inline">\(r^2 &lt; 0.1\)</span>. Using this set to estimate joint distributions of direct effects is substantially faster than using all SNPs.</li>
+<li>For each trait, fit ASH using the set of SNPs in step 2.</li>
+<li>For each pair of traits, estimate the joint distribution of direct effects and <span class="math inline">\(\rho\)</span> assuming <span class="math inline">\(b = q = 0\)</span>. This step also uses the LD pruned set of SNPs from step 2. The joint dsitribution is estimated as a mixture of bivariate normal distributions. The pairs of variances considered are taken from the ASH fits in step 3.</li>
+<li>For each pair, run CAUSE using the estimates from step 4.</li>
+</ol>
+</div>
+<div id="results" class="section level2">
+<h2>Results</h2>
+<p>The figure below shows posterior medians and 90% credible intervals for <span class="math inline">\(b\)</span> and <span class="math inline">\(q\)</span>. <span class="math inline">\(q\)</span> is shown on the <span class="math inline">\(x\)</span>-axis and <span class="math inline">\(b\)</span> is shown on the <span class="math inline">\(y\)</span>-axis. For improved clarity, the traits are divided into four categories based on the posterior median of <span class="math inline">\(q\)</span>. The range of the median of <span class="math inline">\(q\)</span> is given in the grey header. Note that the range/scale of the axes differs between plots.</p>
+<p><img src="gwas_results/gwas_medians.png" width="700"></p>
+<p>Points are colored based on <span class="math inline">\(-log10(p-value)\)</span> for the test compairing the ELPD of the shared model to the ELPD of the causal model. The credible intervals shown are for the shared model. The negative log <span class="math inline">\(p\)</span>-value was capped at 6 to preserve the scale. However, the true <span class="math inline">\(p\)</span>-values for tc -&gt; ldl (total cholesterol causally associated with ldl cholesterol) and ldl -&gt; tc (ldl cholesterol causally associated with total cholesterol) are <span class="math inline">\(9.7\cdot 10^{-27}\)</span> and <span class="math inline">\(2.8\cdot 10^{-53}\)</span> respectively.</p>
+<p>The matrix below is another way of visualizing these results. This plot uses the same categories for the posterior median of <span class="math inline">\(q\)</span> as used above. Here the categories are indicated by color. Each point is an upward pointing triangle if the posterior median of <span class="math inline">\(b\)</span> is positive and a downward pointing triangle if the posterior median of <span class="math inline">\(b\)</span> is negative. For pairs with larger posterior values of <span class="math inline">\(q\)</span>, the points contain two numbers. The top number is the posterior median of <span class="math inline">\(q\)</span>. The bottom number is the <span class="math inline">\(p\)</span>-value associated with the <span class="math inline">\(z\)</span>-score comparing the causal and shared models.</p>
+<p><img src="gwas_results/gwas_matrix2.png" width="700"></p>
+<p>I will discuss these results in more detail below.</p>
+</div>
+<div id="mutual-pairs" class="section level2">
+<h2>Mutual pairs</h2>
+<p>There are some pairs of traits where relationships in both directsions show strong evidence for a causal relationship or a very high degree of sharing. These pairs are</p>
+<ul>
+<li>ldl and tc</li>
+<li>fn and ls</li>
+<li>t2d and fg</li>
+<li>cd and uc</li>
+<li>tc and tg</li>
+<li>hdl and tg</li>
+</ul>
+</div>
+<div id="hdl-ldl-tc-and-tg" class="section level2">
+<h2>HDL, LDL, TC, and TG</h2>
+<p>Our results show that these four traits are highly interconnected. This is expected, but this analysis still provides some interesting information. These results also highlight an interesting case for our method. In particular, they show that it can be hard to disentangle causal relationships from very tight co-regulation.</p>
+<p>Our results indicate that there is almost complete overlap between the variants that influence LDL cholesterol and the variants that influence total cholesterol. This can be seen in the posterior paramter distributions for ldl-&gt;tc and tc-&gt;ldl below.</p>
+<p><img src="gwas_results/gls_ldl__gls_tc_posteriors.png" width="700"> <img src="gwas_results/gls_tc__gls_ldl_posteriors.png" width="700"></p>
+<p>In both directions, the posterior estimate of <span class="math inline">\(q\)</span> is close to 1 and the causal model gives a much better ELPD, providing evidence that <span class="math inline">\(q=1\)</span> is a better fitting model than <span class="math inline">\(q\)</span> close to 1. Since total cholesterol is the sum of LDL and HDL, we expect to see the ldl -&gt; tc effect. Finding also a tc-&gt;ldl effect is interesting.</p>
+<p>Looking further at the results for hdl-&gt;ldl and ldl-&gt;hdl we find little evidence of an hdl-&gt;ldl effect (<span class="math inline">\(q\)</span>-median: 7e-3, 90%CI 7e-4 to 0.39) but some evidence that many LDL variants effect HDL in a consistant manner (<span class="math inline">\(q\)</span>-median: 0.53, 90%CI 2e-3 to 0.96).</p>
+<p><img src="gwas_results/gls_ldl__gls_hdl_posteriors.png" width="700"></p>
+<p><img src="gwas_results/gls_hdl__gls_ldl_posteriors.png" width="700"></p>
+<p>The wide posterior distribution for <span class="math inline">\(q\)</span> for the ldl-&gt;hdl effect and a moderately significant <span class="math inline">\(z\)</span>-score suggest that the data are consistant with a range of models. The data are fit about as well by a model in which increases in LDL causally lower HDL and a model in which there is a shared regulatory pathway raising LDL and lowering HDL that accounts for a significant proportion of LDL effect SNPs.</p>
+<p>We can imagine dividng variants into three groups: those that directly effect HDL, those that directly effect LDL, and those that influence total cholesterol. One interpretation of our results is that most SNPs that effect total cholesterol act through effects on LDL cholesterol. Some of these may simultaneously increase LDL and decrease HDL. However, there are many SNPs that influence HDL but not LDL. One slight inconsistancy is that we find evidence that all of the SNPs influencing HDL also influence total cholesterol and that most of the SNPs influencing total cholsesterol influence LDL. However, we don’t see that most of the HDL snps infulence LDL. This could be explained by more complicated regulation of LDL and HDL involving unmeasured factors or if there are not very many HDL effect SNPs.</p>
+<p>We find strong mutual relationships between all three of LDL, HDL, and TC with triglycerides. Our results suggests that the data is consistant with a model in which increased triglycerides causally lower HDL, increase LDL and increacease TC. We also have evidence for strong effects in the other direction of TC and HDL on triglycerides. The relationship between LDL and triglycerides is somewhat weaker. We estimate that there could be many LDL SNPs that do not effect triglycerides.</p>
+<p>These conclustions are based mostly on high posterior medians for <span class="math inline">\(q\)</span> in all six comparisons, however the <span class="math inline">\(z\)</span>-score comparing the “nearly causal” posteriors with the causal model is only significant in the tg-&gt;hdl case atnd tc-&gt;tg case. One interesting question is whether we ever expect to find a pair of traits that share nearly all of their genetic variants but are not causally linked. This could be the case for tightly co-regulated biomarkers but may be less expected for a gene expression - disease outcome pair.</p>
+<p>Posteriors for cholseterol traits acting on triglcerides:</p>
+<p><img src="gwas_results/gls_ldl__gls_tg_posteriors.png" width="700"></p>
+<p><img src="gwas_results/gls_hdl__gls_tg_posteriors.png" width="700"></p>
+<p><img src="gwas_results/gls_tc__gls_tg_posteriors.png" width="700"></p>
+<p>Posteriors for triglycerides acting on cholseterol:</p>
+<p><img src="gwas_results/gls_tg__gls_ldl_posteriors.png" width="700"></p>
+<p><img src="gwas_results/gls_tg__gls_hdl_posteriors.png" width="700"></p>
+<p><img src="gwas_results/gls_tg__gls_tc_posteriors.png" width="700"></p>
+<p>All four of these traits (LDL, HDL, TC, and TG) have evidence of sharing or co-regulation with CAD risk. Our results are consistant with a causal model for TG, LDL, and TC on CAD but suggests that co-regulation is a better explanation for the sharing between HDL and CAD.</p>
+</div>
+<div id="influences-on-cad" class="section level2">
+<h2>Influences on CAD</h2>
+<p>There are three traits with posterior median for <span class="math inline">\(q\)</span> above 0.9 for CAD. These are triglycerides, total cholesterol, LDL. As discussed above, these theree traits all appear to have a high degree of mutual sharing of genetic factors so it is difficult to determine if we are observing one or multiple causal relationships. Posterior distributions for these three effects are show below.</p>
+<p><img src="gwas_results/gls_tg__cardiogram_cad_posteriors.png" width="700"></p>
+<p><img src="gwas_results/gls_tc__cardiogram_cad_posteriors.png" width="700"></p>
+<p><img src="gwas_results/gls_ldl__cardiogram_cad_posteriors.png" width="700"></p>
+<p>In addition, height, HDL cholesterol, and BMI have posterior medians for <span class="math inline">\(q\)</span> between 0.5 and 0.9.</p>
+<p><img src="gwas_results/giant_height__cardiogram_cad_posteriors.png" width="700"></p>
+<p><img src="gwas_results/gls_hdl__cardiogram_cad_posteriors.png" width="700"></p>
+<p><img src="gwas_results/giant_bmi__cardiogram_cad_posteriors.png" width="700"></p>
+<p>These results suggest that there may be a protective effect of height on CAD. However, broad posteriors and inconclusive <span class="math inline">\(z\)</span>-scores for height-&gt;cad and hdl-&gt;cad mean that these trait pairs are consistant with a wide range of models. The effects with HDL and BMI are more consistant with co-regulation or the sharing model. These suggest that many SNPs that raise HDL may be protective for CAD and that some SNPs that increase BMI may also increase risk of CAD.</p>
+</div>
+<div id="traits-with-partial-sharing-with-bmi" class="section level2">
+<h2>Traits with partial sharing with BMI</h2>
+<p>We found no strongly causal associations wtih BMI but there are several traits with evidence for shared genetic factors.</p>
+<p>Many of the genetic factors that influence BMI appear to also influence CAD, fasting glucose, HDL cholesterol and triglycerides. Plots of posteriors for these analyses are shown below</p>
+<p><img src="gwas_results/giant_bmi__cardiogram_cad_posteriors.png" width="700"></p>
+<p><img src="gwas_results/giant_bmi__magic_fg_posteriors.png" width="700"></p>
+<p><img src="gwas_results/giant_bmi__gls_hdl_posteriors.png" width="700"></p>
+<p><img src="gwas_results/giant_bmi__gls_cad_posteriors.png" width="700"></p>
+<p>In all of these cases, the <span class="math inline">\(z\)</span>-score indicates that the parital sharing model is better than the causal model.</p>
+<p>Interestingly, we don’t see any evidence of an effect of BMI on LDL or total cholesterol.</p>
+<p>There are five traits, triglycerides, total cholesterol, LDL cholesterol, height and schizophrenia, with higher posteriors for <span class="math inline">\(q\)</span> when we look at their effects on BMI. We estimate that a significant proportion of the variants influencing these traits also influence BMI. Posterior estimates are shown below.</p>
+<p><img src="gwas_results/gls_tg__giant_bmi_posteriors.png" width="700"></p>
+<p><img src="gwas_results/gls_tc__giant_bmi_posteriors.png" width="700"></p>
+<p><img src="gwas_results/gls_ldl__giant_bmi_posteriors.png" width="700"></p>
+<p><img src="gwas_results/giant_height__giant_bmi_posteriors.png" width="700"></p>
+<p><img src="gwas_results/pgc_scz__giant_bmi_posteriors.png" width="700"></p>
+<p>The results for height and for schizophrenia on BMI are particularly interesting. These results suggest that about half of height associated variants also decrease BMI (<span class="math inline">\(q\)</span>-mdeian: 0.48, 90%CI: 0.34 to 0.72). They also suggest that some variants that increase risk of schizophrenia act through a shared mechanism that lowers BMI (<span class="math inline">\(q\)</span>-median: 0.22; 90% CI 3e-3 to 0.90).</p>
+</div>
+<div id="traits-with-partial-sharing-with-schizophrenia" class="section level2">
+<h2>Traits with partial sharing with Schizophrenia</h2>
+<p>In addition to the effects with BMI described above, our results suggest that some schizophrenia associated SNPs may be involved in shared pathways that increase risk of ulcerative colitis and Crohns disease and increasing HDL. The relationship between schizophrenia and and ulcerative colitis is strong enough that we might consider it consistant with a causal relationship. We don’t see evidence for a causal relationship of UC on schizophrenia. A (brief) literature search revealed literature indicating a causal relationship between SCZ and UC. I did find <a href="https://www.ncbi.nlm.nih.gov/pubmed/16393282">this</a> study which ascertained individuals with coeliac disease, UC and Crohn’s disease and found no association with schizophrenia.</p>
+<p><img src="gwas_results/pgc_scz__ibdgenetics_uc_posteriors.png" width="700"></p>
+<p><img src="gwas_results/pgc_scz__ibdgenetics_cd_posteriors.png" width="700"></p>
+<p><img src="gwas_results/pgc_scz__gls_hdl_posteriors.png" width="700"></p>
+</div>
+<div id="traits-with-partial-sharing-with-height" class="section level2">
+<h2>Traits with partial sharing with height</h2>
+<p>SNPs effecting height appear to be involved in pathways with effects on many other traits including HDL, LDL, TC, TG, CAD and BMI. The posterior median for <span class="math inline">\(q\)</span> in the height-&gt;CAD analysis is 0.89 and the <span class="math inline">\(p\)</span>-value comparing this model with the causal model is 0.018 suggesting there may be causal relationship between height and decreased CAD risk.</p>
+<p><img src="gwas_results/giant_height__cardiogram_cad_posteriors.png" width="700"></p>
+<p><a href="http://www.nejm.org/doi/full/10.1056/NEJMoa1404881#t=article">This article from NEJM</a> indicates that an association between the two is well established. This paper also looks for genetic evidence of a height-&gt;CAD relationiship usign two methods. 1) They ascertain the top 180 height SNPs from the GIANT consortium using a threshold of <span class="math inline">\(p &lt; 5\cdot 10^{-8}\)</span>. For each SNP they estimate <span class="math inline">\(\beta_3\)</span>, the ratio of SNP effect on height and SNP effect on CAD. They then use inverse-variance–weighted random-effects meta-analysis to combine the <span class="math inline">\(\beta_3\)</span> estimates. 2) Using individual level CAD data, they estimate the association between height genetic risk score and CAD. Height genetic risk scores are calculated by multiplying allele dosage estimates by effect sizes and summing over SNPs. Association between risk score and CAD uses quartiles of risk score rather than continuous risk score. The first analysis yielded a significant result. The seond analysis showed a reduced risk of CAD for individuals in the highest quartile of genetic height score. Because this study uses (in part) the same data we have used, it is not exactly a replication but it uses different methods to draw similar conclusions.</p>
+<p>Posteriors for the relationship of height with LDL, HDL, TC and TG are below:</p>
+<p><img src="gwas_results/giant_height__gls_ldl_posteriors.png" width="700"></p>
+<p><img src="gwas_results/giant_height__gls_hdl_posteriors.png" width="700"></p>
+<p><img src="gwas_results/giant_height__gls_tc_posteriors.png" width="700"></p>
+<p><img src="gwas_results/giant_height__gls_tg_posteriors.png" width="700"></p>
+</div>
+<div id="aam-and-ad" class="section level2">
+<h2>AAM and AD</h2>
+<p>Interstingly, the posterior median for <span class="math inline">\(q\)</span> looking at the ad-&gt;aam relationship (proportion of Alzheimers variants that act on age at menarche) is 0.26 (90% CI: 2e-3 to 0.73). While this relationship is not causal it may indicate an interesting pathway underlying Alzheimers risk.</p>
+<p><img src="gwas_results/igap_ad__reprogen_aam_posteriors.png" width="700"></p>
+<p>A literature search yielded <a href="https://www.ncbi.nlm.nih.gov/pubmed/12319855">thist article</a> which describes an association between late age at menarche and increased risk of Alzheimers. However, our results suggest that a subset of Alzheimer’s risk SNPs lower age at menarche. We do not find that a substantial proportion of AAM SNPs influence AD risk.</p>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.4.1 (2017-06-30)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 17.04
+
+Matrix products: default
+BLAS: /usr/lib/libblas/libblas.so.3.7.0
+LAPACK: /usr/lib/lapack/liblapack.so.3.7.0
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+ [1] compiler_3.4.1  backports_1.1.0 magrittr_1.5    rprojroot_1.2  
+ [5] tools_3.4.1     htmltools_0.3.6 yaml_2.1.14     Rcpp_0.12.13   
+ [9] stringi_1.1.5   rmarkdown_1.7   knitr_1.17      stringr_1.2.0  
+[13] digest_0.6.12   evaluate_0.10.1</code></pre>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

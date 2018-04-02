@@ -109,4 +109,5 @@ Although the two sets of weights appear fairly similar, they give different post
 <img src="height_hdl_ml.png" width="500">
 
 and using the alternative 2 weights:
+
 <img src="height_hdl_alt2.png" width="500">

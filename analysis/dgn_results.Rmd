@@ -55,6 +55,7 @@ x <- seq(0, 1, length.out=100)
 y <- sapply(x, function(xx){sum(res$q_median >= xx)})
 plot(x, y, type="l", ylim=c(0, 200), ylab="Number of genes with median(q) > x")
 ```
+
 There are 30 genes with posterior medians above 0.5. 
 
 
@@ -63,6 +64,7 @@ Below I show a histogram of $z$-scores comparing the causal and shared model.
 with(res, hist(zscore, breaks=100, probability = TRUE))
 curve(dnorm(x, 0, 1), from=-4, to = 4, add=TRUE, lty=2)
 ```
+
 These $z$-scores don't appear to be normally distributed which suggests they may not actually behave as $z$-scores. I will check their distribution in simulations. 
 
 Below I show 90\% credible intervals and posterior medians for q for all genes with a posterior median greater than 0.5.

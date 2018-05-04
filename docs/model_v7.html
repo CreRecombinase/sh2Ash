@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Jean Morrison" />
+
+
+<title>MR Accounting for Confounding</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Sherlock2 model using Ash</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">MR Accounting for Confounding</h1>
+<h4 class="author"><em>Jean Morrison</em></h4>
+<h4 class="date"><em>May 3, 2018</em></h4>
+
+</div>
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>This page describes a modification to the three factor model we have worked with so far that will hopefully</p>
+<ul>
+<li>Make the model easier to understand</li>
+<li>Make the results easier to interpret</li>
+<li>Position our approach more solidly inside the MR framework making it easier to draw comparisons with other methods</li>
+</ul>
+<p>So far we have used a model illustrated by the figure below:</p>
+<p><img src="cause_model.png" width="500"></p>
+<p>There are three “factors”, trait 1, trait 2 and the “shared factor” (SF). Variants acting on trait 1 either act through the SF or directly on trait 1. One confusing element of this model is that the interpretation of the shared factor changes depending on the value of <span class="math inline">\(q\)</span> which is the proportion of trait 1 variants acting through the SF. If <span class="math inline">\(q\)</span> is small then we interpret the SF as a confounder and conculde that the causal effect of trait 1 on thrait 2 is 0. If <span class="math inline">\(q =1\)</span> then we interpret the SF as equivalent to trait 1 and say that the data are consistant with a causal effect.</p>
+<p>Discussions of Mendelian randomization approaches typically use diagrams like the one below:</p>
+<p><img src="draw_causal_diagram.png" width="500"></p>
+<p>In this figure, <span class="math inline">\(M\)</span>, the possible mediator is the same as what we have called trait 1 and <span class="math inline">\(Y\)</span> is equivalent to our trait 2. <span class="math inline">\(G_i\)</span> is the genotype of variant <span class="math inline">\(i\)</span>. The simplest MR methods assume that <span class="math inline">\(\theta_i= 0\)</span> for all <span class="math inline">\(i\)</span> and that there is no association between <span class="math inline">\(G_i\)</span> and any confounder. Egger regression allows for non-zero <span class="math inline">\(\theta_i\)</span> as long as <span class="math inline">\(Cov(\theta, \beta_M) = 0\)</span>. Our goal is to also allow for some confounding. Currently our model and the MR model above are not exactly the same. Our parameter <span class="math inline">\(b\)</span> is equivalent to <span class="math inline">\(\gamma\)</span> only when <span class="math inline">\(q=1\)</span>. Otherwise our model implicitly assumes that <span class="math inline">\(\gamma=0\)</span> and <span class="math inline">\(b\)</span> is an estiate of the effect of <span class="math inline">\(U\)</span> on <span class="math inline">\(Y\)</span>. By adding a single parameter, we can both make our model more flexible and bring it into the MR framework.</p>
+<p><img src="draw_causal_diagram2.png" width="500"></p>
+<p>In the model pictured above, <span class="math inline">\(U\)</span> has taken the place of the shared factor. We make the following assumptions which are very similar to the assumptions made previously:</p>
+<ul>
+<li>Each variant <span class="math inline">\(i \in 1, \dots, p\)</span> acts either on <span class="math inline">\(M\)</span> or on <span class="math inline">\(U\)</span>. Note that we have made the effect of <span class="math inline">\(U\)</span> on <span class="math inline">\(M\)</span> equal to 1 (just as the effect of the SF on trait 1 was equal to 1) so that variant effects on <span class="math inline">\(U\)</span> are on the same scale as variant effects on <span class="math inline">\(M\)</span>. The proportion of variants acting on <span class="math inline">\(U\)</span> is <span class="math inline">\(q\)</span>.</li>
+<li>The true efects of variants on <span class="math inline">\(M\)</span>, <span class="math inline">\(\beta_{M,i}\)</span>, follow a unimodal distribution centered at 0 which we model as a mixture of normals.</li>
+<li>The pleiotropic effects of variants on <span class="math inline">\(Y\)</span>, <span class="math inline">\(\theta_i\)</span> also follow a unimodal distribution centered at 0 modeled by a mixture of normals.</li>
+</ul>
+<p>Thus, this model allows for two forms of confounding: mean 0 effects of <span class="math inline">\(G_i\)</span> on <span class="math inline">\(Y\)</span> through <span class="math inline">\(\theta_i\)</span> and non-mean 0 effects through <span class="math inline">\(U\)</span>. Our goal is to determine wheter <span class="math inline">\(\gamma=0\)</span> (or possibly whether <span class="math inline">\(\gamma\)</span> is large enough that we can expect to have gotten its sign right using our data).</p>
+</div>
+<div id="likelihood-for-summary-statistics" class="section level2">
+<h2>Likelihood for summary statistics</h2>
+<div id="likelihood" class="section level3">
+<h3>Likelihood</h3>
+<p>The likelihood for this model is very similar to the likelihood for the previous model. In this description I will use notation consistent with the diagrams above (i.e. <span class="math inline">\(\beta_{M,i}\)</span> instead of <span class="math inline">\(\beta_{1,i}\)</span> and <span class="math inline">\(\beta_{Y,i}\)</span> instead of <span class="math inline">\(\beta_{2,i}\)</span>). There are a few nuisance parameters that, at first we will assume are known. In fact, these will be estimated from the data and then fixed. These are:</p>
+<ul>
+<li><span class="math inline">\(\rho\)</span>: The correlation between <span class="math inline">\(\hat{\beta}_{M,i}\)</span> and <span class="math inline">\(\hat{\beta}_{Y,i}\)</span> conditional on <span class="math inline">\(\beta_{M,i}\)</span> and <span class="math inline">\(\beta_{Y,i}\)</span>. This arises from overlapping samples in the two studies or from population structure.</li>
+<li>The joint distribution of <span class="math inline">\(\beta_{M,i}\)</span> and <span class="math inline">\(\theta_{i}\)</span> is modeled as <span class="math display">\[
+\begin{pmatrix} \beta_{M,i}\\\theta_i\end{pmatrix} \sim \sum_{k=0}^{K}\pi_k N\left(
+\begin{pmatrix} 0 \\ 0 \end{pmatrix}, \begin{pmatrix} \sigma_{k,1} &amp; 0 \\ 0 &amp; \sigma_{k,2} \end{pmatrix}
+\right)
+\]</span> We assume that we know both the mixing parameters <span class="math inline">\(\pi_0, \dots, \pi_K\)</span> and the grid of variances <span class="math inline">\((\sigma_{0,1}, \sigma_{0,2}), \dots, (\sigma_{K,1}, \sigma_{K,2})\)</span>. For convenience we define <span class="math inline">\(\Sigma_k= \begin{pmatrix} \sigma_{k,1} &amp; 0 \\ 0 &amp; \sigma_{k,2} \end{pmatrix}\)</span>.</li>
+<li>GWAS summary statistics include estimates of the variance of <span class="math inline">\(\hat{\beta}_{M,i}\)</span> and <span class="math inline">\(\hat{\beta}_{Y,i}\)</span> which we refer to as <span class="math inline">\(s_{M,i}^2\)</span> and <span class="math inline">\(s_{Y,i}^2\)</span> respectively. We assume that these estiamtes are very close to the true variance of effect size estimates and ignore any variability in them.</li>
+</ul>
+<p>We will also assume that all SNPs are independent of each other (not in LD). We will discuss the effects of LD later. For one variant, we assume that <span class="math inline">\(\hat{\beta}_{M,i}\)</span> and <span class="math inline">\(\hat{\beta}_{Y,i}\)</span> are jointly normally distributed with mean <span class="math inline">\(\beta_{M,i}\)</span> and <span class="math inline">\(\beta{Y,i}\)</span> <span class="math display">\[
+\begin{pmatrix} \hat{\beta}_{M,i}\\\hat{\beta}_{Y,i}\end{pmatrix} \sim N\left(
+\begin{pmatrix} \beta_{M,i} \\ \beta_{Y,i} \end{pmatrix}, \begin{pmatrix} s_{M,i}^2 &amp; \rho s_{M,i} s_{Y,i} \\ \rho s_{M,i} s_{Y,i} &amp; s_{Y,i}^2 \end{pmatrix}
+\right)
+\]</span> We define <span class="math inline">\(S(\rho)_i = \begin{pmatrix} s_{M,i}^2 &amp; \rho s_{M,i} s_{Y,i} \\ \rho s_{M,i} s_{Y,i} &amp; s_{Y,i}^2 \end{pmatrix}\)</span>. <span class="math inline">\(\beta_{M,i}\)</span> is simply the effect of variant <span class="math inline">\(i\)</span> on <span class="math inline">\(M\)</span>. <span class="math inline">\(\beta_{Y,i}\)</span> is the total effect of variant <span class="math inline">\(i\)</span> on <span class="math inline">\(Y\)</span> so <span class="math display">\[ \beta_{Y,i} = \theta_i + (\gamma + Z_i \gamma^\prime)\beta_{M,i}\]</span> where <span class="math inline">\(Z_i\)</span> is an indicator variable indicating that variant <span class="math inline">\(i\)</span> acts on the confounder <span class="math inline">\(U\)</span>. We assume that <span class="math display">\[
+Z_i \sim Bern(q)
+\]</span></p>
+<p>Integrating out <span class="math inline">\(Z_i\)</span>, <span class="math inline">\(\theta_i\)</span> and <span class="math inline">\(\beta_{M,i}\)</span> we obtain</p>
+<p><span class="math display">\[
+\begin{pmatrix} \beta_{M,i}\\\theta_i\end{pmatrix} \sim 
+q \sum_{k=0}^{K}\pi_k N\left(
+\begin{pmatrix} 0 \\ 0 \end{pmatrix}, A(\gamma + \gamma^\prime)^\top \Sigma_k A(\gamma + \gamma^\prime) + S(\rho)_i \right) +\\
+(1-q) \sum_{k=0}^{K}\pi_k N\left(
+\begin{pmatrix} 0 \\ 0 \end{pmatrix}, A(\gamma )^\top \Sigma_k A(\gamma) + S(\rho)_i \right)
+\]</span> where <span class="math inline">\(A(x) = \begin{pmatrix} 1 &amp; 0 \\x &amp; 1 \end{pmatrix}\)</span></p>
+</div>
+<div id="estimating-nuisance-parameters" class="section level3">
+<h3>Estimating Nuisance Parameters</h3>
+<p>We estimate <span class="math inline">\(\rho\)</span>, <span class="math inline">\(\pi_0, \dots, \pi_K\)</span> and <span class="math inline">\(\Sigma_0, \dots, \Sigma_K\)</span> by maiximizing the likelihood with <span class="math inline">\(\gamma\)</span> and <span class="math inline">\(\gamma^\prime\)</span> set to 0 (making the value of <span class="math inline">\(q\)</span> irrelevant). Since these are estimated in the same way as we have done before, I will skip the details here. One description is <a href="link%20is%20coming">here</a>.</p>
+</div>
+<div id="priors-for-q-gamma-and-gammaprime" class="section level3">
+<h3>Priors for <span class="math inline">\(q\)</span>, <span class="math inline">\(\gamma\)</span> and <span class="math inline">\(\gamma^{\prime}\)</span></h3>
+<p>Below I will show simulation results for several different priors for <span class="math inline">\(q\)</span>, <span class="math inline">\(\gamma\)</span> and <span class="math inline">\(\gamma^\prime\)</span>. In general I consider priors of the form <span class="math display">\[
+\gamma \sim N(0, \sigma_g)\\
+\gamma^\prime \sim N(0, \sigma_g)\\
+q \sim Beta(a, b)
+\]</span> The priors for all parameters are independent.</p>
+<p>In the two parameter model we used previously I have generally used <span class="math inline">\(a = 0.1\)</span>, <span class="math inline">\(b=1\)</span> and <span class="math inline">\(\sigma_g = 0.6\)</span>. For the prior on <span class="math inline">\(q\)</span> in the new model, we have the following considerations:</p>
+<ul>
+<li>If the prior on <span class="math inline">\(q\)</span> strongly restricts <span class="math inline">\(q\)</span> to be close to 0, we could obtain false positives (the posterior of <span class="math inline">\(\gamma\)</span> will be pushed away from 0 rather than pushing <span class="math inline">\(q\)</span> away from 0)</li>
+<li>If the prior on <span class="math inline">\(q\)</span> has lots of weight on values close to 1, the method may have many false negatives (the posterior of <span class="math inline">\(\gamma\)</span> will stay close to 0 but <span class="math inline">\(q\)</span> will be very close to 1).</li>
+</ul>
+<p>For the priors on <span class="math inline">\(\gamma\)</span> and <span class="math inline">\(\gamma^\prime\)</span> we have the following considerations:</p>
+<ul>
+<li><p>Why give them the same prior? We are interested in partitioning the directional effect of trait <span class="math inline">\(M\)</span> variants on trait <span class="math inline">\(Y\)</span> into two parts, a portion that is shared by all variants (<span class="math inline">\(\gamma\)</span>) and a portion that is shared only by a few variants (<span class="math inline">\(\gamma^\prime\)</span>). Suppose that <span class="math inline">\(\gamma^\prime\)</span> is 0 and <span class="math inline">\(\gamma\)</span> is large. If we have a small prior variance on <span class="math inline">\(\gamma\)</span> and a large prior variance on <span class="math inline">\(\gamma^\prime\)</span> then we will tend to have false negatives where we push the posterior of <span class="math inline">\(q\)</span> close to 1 and <span class="math inline">\(\gamma^\prime\)</span> away from 0. We could also obtain false postives in the opposite scenario. We would like the probability that a SNP acts on through <span class="math inline">\(U\)</span> or <span class="math inline">\(M\)</span> to depend only on the global trends in effect sizes, not the size of the effect size. Therefore, the prior on the two parameters should be the same.</p></li>
+<li><p>How big should <span class="math inline">\(\sigma_g\)</span> be? One way to think about this is to write <span class="math inline">\(\gamma\)</span> in terms of the total proportion of trait <span class="math inline">\(Y\)</span> genetic variance explained by the causal effect. Let <span class="math inline">\(\tau\)</span> reperesent this parameter. Then <span class="math display">\[
+\tau = \gamma^{2}\frac{\sum_{i=1}^{p}\beta_{M,i}Var(G_i)}{\sum_{i=1}^{p}\beta_{Y,i}^2 Var(G_i)}\\
+= \gamma^{2} \frac{h^2_M V(M)}{h^2_Y V(Y)}
+\]</span> where <span class="math inline">\(V(M)\)</span> and <span class="math inline">\(V(Y)\)</span> are the total variance of traits <span class="math inline">\(M\)</span> and <span class="math inline">\(Y\)</span> respectively and <span class="math inline">\(h^{2}_M\)</span> and <span class="math inline">\(h^2_Y\)</span> are the narrow sense heritabilities of the two raits. If all of these values are known then we can choose a reasonable value for our expectation of <span class="math inline">\(\tau\)</span> (e.g. 5%) and set <span class="math inline">\(\sigma_g^2 = \frac{\tau^* h^2_Y V(Y)}{h^2_M V(M)}\)</span> where <span class="math inline">\(\tau^*\)</span> represents our guess about the value of <span class="math inline">\(\tau\)</span>. A major difficulty with this approach is that <span class="math inline">\(V(M)\)</span> and <span class="math inline">\(V(Y)\)</span> are often unknown. In some cases, the traits are standardized but in many cases they are not. If the summary statistics are obtained through simple linear regression then we have <span class="math inline">\(s_{Y, i}^2 \approx \frac{V(Y)}{2 N_{Y,i} p_i (1-p_i}\)</span> where <span class="math inline">\(p_i\)</span> is the allele frequence of SNP <span class="math inline">\(i\)</span> and <span class="math inline">\(N_{Y,i}\)</span> is the sample size at that variant. The equivalent expression holds for trait <span class="math inline">\(M\)</span>. This means that if sample size is known, we can estimate <span class="math inline">\(V(Y)\)</span> and <span class="math inline">\(V(M)\)</span> from the standard errors of the effect estimates. However, in most cases, none of these conditions hold so choosing <span class="math inline">\(\sigma_g\)</span> is still an outstanding problem.</p></li>
+</ul>
+</div>
+<div id="estimating-posteriors-for-q-gamma-and-gammaprime" class="section level3">
+<h3>Estimating Posteriors for <span class="math inline">\(q\)</span>, <span class="math inline">\(\gamma\)</span> and <span class="math inline">\(\gamma^\prime\)</span></h3>
+<p>I have investigated several alternatives for estimating posteriors.</p>
+<p>When we only had two parameters, I found that we could get good estimates using a grid approximation. In this method we divide the domain of the parameters into rectangular bins. Let <span class="math inline">\(\Omega\)</span> be the vector of model parameters (in this new model <span class="math inline">\(\Omega = (q, \gamma, \gamma^\prime)\)</span>). Then the posterior probability of <span class="math inline">\(\Omega\)</span> falling into bin <span class="math inline">\(j\)</span> is <span class="math display">\[
+P(\Omega \in B_j \vert \text{Data}) = \frac{\int_{\Omega \in B_j}P(\Omega)P(\text{Data}\vert \Omega)d\Omega}{\sum_{j}\int_{\Omega \in B_j}P(\Omega)P(\text{Data}\vert \Omega)d\Omega }
+\]</span> If the bins are small enough, we can assume that <span class="math inline">\(P(\text{Data} \vert \Omega)\)</span> is constant over the bin and approximate it by its value at the center of the bin. This makes it simple to calculate both the numerator and the normalizing constant.</p>
+<p>With only two parameters, I got good results by restricting the range of <span class="math inline">\(b\)</span> (now <span class="math inline">\(\gamma^\prime\)</span> in the new model) to <span class="math inline">\((-1, 1)\)</span> and dividng both the range of <span class="math inline">\(b\)</span> and of <span class="math inline">\(q\)</span> into 100 equal sized segments (10,000 total calculations of the likelihood). For a few hundred or a thousand SNPs, this calculation took a few minutes using 8 cores. Clearly, we cannot directly extend this strategy to three parameters as the time would increase to several hours per calculation. Therefore, I looked at a few alternative strategies:</p>
+<ol style="list-style-type: decimal">
+<li><p>Adaptive grid approximation. In this strategy the boundaries of the bins are chosen adaptively so that each bin contains no more than a pre-sent proportion of the posterior probability. This strategy massively reduces the number of bins needed and thus the computational time.</p></li>
+<li><p>Metropolis hastings approximation</p></li>
+</ol>
+<p>After comparing both strategies to a denser grid approximation that takes longer, I determined that the adaptive grid approximation is the most reliable and requires less tweaking and quality monitoring. One major caveat with this strategy is that if the starting grid is not dense enough, it can completely miss narrow peaks leading to very bad posterior estimates.</p>
+</div>
+<div id="inference" class="section level3">
+<h3>Inference</h3>
+<p>Ultimately we would like not just to estimate posteriors but to a) prioritize possible mediators by their evidence for causality and b) perform hypothesis tests. I considered two possibly complimentary approaches to this problem</p>
+<ol style="list-style-type: decimal">
+<li><p>Calculate the local false sign rate for <span class="math inline">\(\gamma\)</span> – i.e. <span class="math inline">\(LFSR_\gama = min(P(\gamma &lt; 0), P(\gamma &gt; 0))\)</span></p></li>
+<li><p>Use the elpd to compare the full model with a model with <span class="math inline">\(\gamma=0\)</span>. This “null” model is the same as our previous two parameter model.</p></li>
+</ol>
+<p>In a first set of simulations, I found that the second method did a better job at separating null from non-null simulations. The performance of both methods depends on the priors used.</p>
+</div>
+</div>
+<div id="example" class="section level2">
+<h2>Example</h2>
+<p>Here I show the method applied to an example we have looked at a lot – LDL cholesterol as the mediator (trait <span class="math inline">\(M\)</span>) and coronary artery disease as trait <span class="math inline">\(Y\)</span>. These data contain 936 SNPs that have been pruned for LD and selected because they have a <span class="math inline">\(p\)</span>-value less than <span class="math inline">\(0.001\)</span> for their association with LDL cholesterol. The dsitribution of <span class="math inline">\(\beta_M\)</span> and <span class="math inline">\(\theta\)</span> were obtained using a genome-wide set of SNPs.</p>
+<p>Below, I estimate the posteriors using each of three methods described above: Adaptive grid approximation, dense grid approximation and metropolis hastings algorithm.</p>
+<pre class="r"><code>dat &lt;- readRDS(&quot;../data/test_data/gls_ldl__cardiogram_cad_data.RDS&quot;)
+grid &lt;- readRDS(&quot;../data/test_data/gls_ldl__cardiogram_cad_grid.RDS&quot;)
+
+system.time( res_grid_adaptive &lt;- cause_grid_adapt_v7(dat, grid$grid, grid$rho, 
+                                                           max_post_per_bin = 0.001)) </code></pre>
+<pre><code>##    user  system elapsed 
+## 348.102   2.307  48.255</code></pre>
+<pre class="r"><code>system.time( res_grid_dense &lt;- cause_grid_approx_v7(dat, grid$grid, grid$rho, 
+                                                      n_gamma=80, n_q=80, n_gamma_prime = 80))</code></pre>
+<pre><code>##     user   system  elapsed 
+## 8239.368   54.048 1048.018</code></pre>
+<pre class="r"><code>system.time(res_mh &lt;- cause_mh_v7(dat, grid$grid, grid$rho, nchain = 5, niter_perchain = 5000, thin = 5))</code></pre>
+<pre><code>## [1] &quot;updating: 10%&quot;
+## [1] &quot;updating: 20%&quot;
+## [1] &quot;updating: 30%&quot;
+## [1] &quot;updating: 40%&quot;
+## [1] &quot;updating: 50%&quot;
+## [1] &quot;updating: 60%&quot;
+## [1] &quot;updating: 70%&quot;
+## [1] &quot;updating: 80%&quot;
+## [1] &quot;updating: 90%&quot;
+## [1] &quot;updating: 100%&quot;
+## [1] &quot;updating: 10%&quot;
+## [1] &quot;updating: 20%&quot;
+## [1] &quot;updating: 30%&quot;
+## [1] &quot;updating: 40%&quot;
+## [1] &quot;updating: 50%&quot;
+## [1] &quot;updating: 60%&quot;
+## [1] &quot;updating: 70%&quot;
+## [1] &quot;updating: 80%&quot;
+## [1] &quot;updating: 90%&quot;
+## [1] &quot;updating: 100%&quot;
+## [1] &quot;updating: 10%&quot;
+## [1] &quot;updating: 20%&quot;
+## [1] &quot;updating: 30%&quot;
+## [1] &quot;updating: 40%&quot;
+## [1] &quot;updating: 50%&quot;
+## [1] &quot;updating: 60%&quot;
+## [1] &quot;updating: 70%&quot;
+## [1] &quot;updating: 80%&quot;
+## [1] &quot;updating: 90%&quot;
+## [1] &quot;updating: 100%&quot;
+## [1] &quot;updating: 10%&quot;
+## [1] &quot;updating: 20%&quot;
+## [1] &quot;updating: 30%&quot;
+## [1] &quot;updating: 40%&quot;
+## [1] &quot;updating: 50%&quot;
+## [1] &quot;updating: 60%&quot;
+## [1] &quot;updating: 70%&quot;
+## [1] &quot;updating: 80%&quot;
+## [1] &quot;updating: 90%&quot;
+## [1] &quot;updating: 100%&quot;
+## [1] &quot;updating: 10%&quot;
+## [1] &quot;updating: 20%&quot;
+## [1] &quot;updating: 30%&quot;
+## [1] &quot;updating: 40%&quot;
+## [1] &quot;updating: 50%&quot;
+## [1] &quot;updating: 60%&quot;
+## [1] &quot;updating: 70%&quot;
+## [1] &quot;updating: 80%&quot;
+## [1] &quot;updating: 90%&quot;
+## [1] &quot;updating: 100%&quot;</code></pre>
+<pre><code>##    user  system elapsed 
+## 462.782   5.836  60.827</code></pre>
+<p>Below, I compare the marginal posterior for the three parameters. The density of samples from the MH algorithm is shown in blue.</p>
+<p><img src="model_v7_files/figure-html/plot_post-1.png" width="672" /><img src="model_v7_files/figure-html/plot_post-2.png" width="672" /><img src="model_v7_files/figure-html/plot_post-3.png" width="672" /></p>
+<p>From the estimate using the adaptive grid, the lfsr is 0.0011. To use the ELPD to estimate a <span class="math inline">\(z\)</span>-score comparing to the model with <span class="math inline">\(\gamma=0\)</span>, we use the adaptive grid method to estimate posteriors with <span class="math inline">\(\gamma=0\)</span></p>
+<pre class="r"><code>res_grid_adaptive_gamma_0 &lt;- cause_grid_adapt_v7(dat, grid$grid, grid$rho, 
+                                              max_post_per_bin = 0.001, fix_gamma_0 = TRUE)
+w1 &lt;- waic_v7(res_grid_adaptive_gamma_0$post, res_grid_adaptive$post, dat, grid$grid, grid$rho)
+
+res_grid_adaptive_gamma_0_q_1 &lt;- cause_grid_adapt_v7(dat, grid$grid, grid$rho, 
+                                              max_post_per_bin = 0.001, fix_gamma_0_and_q_1 = TRUE)
+w2 &lt;- waic_v7(res_grid_adaptive_gamma_0$post, res_grid_adaptive_gamma_0_q_1$post, dat, grid$grid, grid$rho)
+w3 &lt;- waic_v7(res_grid_adaptive$post, res_grid_adaptive_gamma_0_q_1$post, dat, grid$grid, grid$rho)
+# a positive value in cell waic[i,j] indicates evidence in favor of model j.
+#A negative value indicates evidence in favor of model i</code></pre>
+<p>Above, I fit three progressively more reduced models using the adaptive grid estimation strategy:</p>
+<p>A. Full model with both confounding and a causal effect B. Reduced model with <span class="math inline">\(\gamma=0\)</span>: Confounding only. This is the same as the two parameter model we were using previously. C. Purely causal model with <span class="math inline">\(\gamma=0\)</span> and <span class="math inline">\(q =1\)</span> or equivalently with <span class="math inline">\(\gamma^\prime=0\)</span>.</p>
+<p>Using the elpd to compare model A to model B gives a <span class="math inline">\(z\)</span>-score of 3.23 with a positive <span class="math inline">\(z\)</span>-score indicating that model A is preferable. Previosuly we had relied on <span class="math inline">\(z\)</span>-scores comparing model C to model B. In this case, that comparison would give a <span class="math inline">\(z\)</span>-score of 3.96 where postive <span class="math inline">\(z\)</span>-scores indicate evidence in favor of purely causal model C. So in this case, the previous approach gives stronger evidence in favor of the causal model. This is likely because, in this case there is very little evidence of counfounding. Comparing the purely causal model C to the full three parameter model A gives a <span class="math inline">\(z\)</span>-score of 1.59 in favor of the purely causal model.</p>
+<p>All of these fits use the original priors set for the two parameter model (<span class="math inline">\(a = 0.1\)</span>, <span class="math inline">\(b=1\)</span>, <span class="math inline">\(\sigma_g = 0.6\)</span>).</p>
+</div>
+<div id="simulation-results" class="section level2">
+<h2>Simulation Results</h2>
+<p>This set of simulations is similar to simulations I’ve used for the two parameter model. My goals are to</p>
+<ul>
+<li>Compare different priors</li>
+<li>Compare the lfsr and waic methods of drawing inference about <span class="math inline">\(\gamma\)</span></li>
+</ul>
+<div id="data-generation" class="section level3">
+<h3>Data Generation</h3>
+<p>I generate summary statistics from the model described above. In all cases <span class="math inline">\(\gamma = 0\)</span> and <span class="math inline">\(\gamma^\prime = 0.25\)</span>. I consider values of <span class="math inline">\(q\)</span> between 0 and 1. For values of <span class="math inline">\(q &lt; 1\)</span>, we hope to be able to detect that correlation in the summary statistics is due to confounding rather than a causal effect. At <span class="math inline">\(q=1\)</span>, the scenario is equivalent to a causal scenario with <span class="math inline">\(q=0\)</span>, <span class="math inline">\(\gamma=0.25\)</span> and <span class="math inline">\(\gamma^\prime=0\)</span>.</p>
+<p>For each simulation, we generate 10,000 independent summary statistics for each trait. We use sample sizes of 1,000 and 5,000 for <span class="math inline">\(M\)</span> and <span class="math inline">\(Y\)</span> respectively and draw allele frequencies for each simulated variant from a <span class="math inline">\(Beta(1,5)\)</span> distribution. On average, there are 100 effect variants for <span class="math inline">\(M\)</span> and 300 effect variants for <span class="math inline">\(Y\)</span>. The average heritability of <span class="math inline">\(M\)</span> is 0.7 and the average heritability of <span class="math inline">\(Y\)</span> is 0.4.</p>
+<p>I considered three prior variances for <span class="math inline">\(\gamma\)</span> and <span class="math inline">\(\gamma^\prime\)</span>: <span class="math inline">\(0.05^2\)</span>, <span class="math inline">\(0.25^2\)</span> and 1. I considered two different priors for <span class="math inline">\(q\)</span>: A <span class="math inline">\(Beta(0.1,1)\)</span> distribution and a <span class="math inline">\(Beta(1, 2)\)</span> distribution which puts more of its weight farther from 0.</p>
+</div>
+<div id="lfsr" class="section level3">
+<h3>LFSR</h3>
+<p>The plot below shows, for each of the six combinations of priors, the the number of simulations with lfsr below a threshold ranging from 0 to 0.5. The total number of simulations run under each condition is 20. On each panel, the top bar shows the prior for <span class="math inline">\(q\)</span>, the bottom panel shows the value of <span class="math inline">\(\sigma_g\)</span>.</p>
+<p><img src="model_v7_files/figure-html/plotlfsr-1.png" width="672" /></p>
+<p>For all combinations of priors, almost all of the simulations with <span class="math inline">\(q=1\)</span> have very low lfsr. Unfortunately, many simulations with <span class="math inline">\(q=0.7\)</span> or <span class="math inline">\(q=0.5\)</span> also have low lfsr. Below I show the number of simulations with lfsr below 0.05 or below 0.01 as a function of <span class="math inline">\(q\)</span>.</p>
+<p><img src="model_v7_files/figure-html/unnamed-chunk-2-1.png" width="672" /><img src="model_v7_files/figure-html/unnamed-chunk-2-2.png" width="672" /></p>
+<p>It appears that the lfsr is not the effective at distinguishing between simulations with high values of <span class="math inline">\(q\)</span> and simulatinos with a causal effect. This indicates that the poterior distribution of <span class="math inline">\(\gamma\)</span> is often away from 0 when <span class="math inline">\(q\)</span> is large. Using the <span class="math inline">\(Beta(1, 2)\)</span> prior on <span class="math inline">\(q\)</span> results in somewhat better separation of the causal and non-causal simulations but also has reduced power at a threshold of 0.01. All combinations of priors are less effective at separating causal an non-causal simulations than the <span class="math inline">\(z\)</span>-score comparing models C and B that we used previously (results shown further down).</p>
+</div>
+<div id="waic-z-scores" class="section level3">
+<h3>WAIC <span class="math inline">\(z\)</span>-scores</h3>
+<p>Below I look at the <span class="math inline">\(z\)</span>-score comparing model A (full model with causal effect and confounding) to model B (no causal effect, has confounding). Large <span class="math inline">\(z\)</span>-scores indicate more evidence in favor of model A and thus more evidence for a causal effect.</p>
+<p><img src="model_v7_files/figure-html/plotzAB-1.png" width="672" /></p>
+<p><img src="model_v7_files/figure-html/unnamed-chunk-3-1.png" width="672" /><img src="model_v7_files/figure-html/unnamed-chunk-3-2.png" width="672" /></p>
+<p>This score appears to be more effective at separating causal from non-causal simulations settings, especially using the <span class="math inline">\(Beta(1, 2)\)</span> prior for <span class="math inline">\(q\)</span> and one of the two larger values for <span class="math inline">\(\sigma_g\)</span>.</p>
+<p>For comparison, below I show the same plots but using the <span class="math inline">\(z\)</span>-score comparing models C and B which was our strategy using the only the two parameter model. Here, higher <span class="math inline">\(z\)</span>-scores indicate more evidence for model C, the purely causal model.</p>
+<p><img src="model_v7_files/figure-html/plotzCB-1.png" width="672" /></p>
+<p><img src="model_v7_files/figure-html/unnamed-chunk-4-1.png" width="672" /><img src="model_v7_files/figure-html/unnamed-chunk-4-2.png" width="672" /></p>
+<p>Using the <span class="math inline">\(z\)</span> score comparing models A and B seems to give a slightly lower false postive rate for high values of <span class="math inline">\(q\)</span> but also slightly reduced power.</p>
+</div>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

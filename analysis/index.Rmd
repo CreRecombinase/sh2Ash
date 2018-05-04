@@ -8,6 +8,8 @@ output:
 Research website for Sherlock2 project with Jean Morrison, Xin He, and Matthew Stephens. 
 
 ## Project updates (most recent to older)
++ 5-4-18 New model using three parameters instead of two! Hopefully less confusing. [Summary](model_v7.html)
++ 4-11-18 DGN results! [Summary](dgn_results.html) [Explore the results](https://jean-loves-stats.shinyapps.io/results_ap/)
 + 3-30-18 [A puzzle about mixing parameter estimation](grid_estimation.html)
 + 12-12-17 Started running CAUSE on GWAS traits. [Results!](gwas_results.html)
 + 12-12-17 Added more simulation results with LD [Summary](more_ld_sims.html). Conclusions: we have better power when we threshold SNPs more aggressively based on trait 1 significance estimates. 

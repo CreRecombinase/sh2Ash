@@ -356,7 +356,7 @@ Z_i \sim Bern(q)
 \]</span></p>
 <p>Integrating out <span class="math inline">\(Z_i\)</span>, <span class="math inline">\(\theta_i\)</span> and <span class="math inline">\(\beta_{M,i}\)</span> we obtain</p>
 <p><span class="math display">\[
-\begin{pmatrix} \beta_{M,i}\\\theta_i\end{pmatrix} \sim 
+\begin{pmatrix} \hat{\beta}_{M,i}\\\hat{\beta}_{Y,i}\end{pmatrix} \sim 
 q \sum_{k=0}^{K}\pi_k N\left(
 \begin{pmatrix} 0 \\ 0 \end{pmatrix}, A(\gamma + \gamma^\prime)^\top \Sigma_k A(\gamma + \gamma^\prime) + S(\rho)_i \right) +\\
 (1-q) \sum_{k=0}^{K}\pi_k N\left(
@@ -421,11 +421,11 @@ grid &lt;- readRDS(&quot;../data/test_data/gls_ldl__cardiogram_cad_grid.RDS&quot
 system.time( res_grid_adaptive &lt;- cause_grid_adapt_v7(dat, grid$grid, grid$rho, 
                                                            max_post_per_bin = 0.001)) </code></pre>
 <pre><code>##    user  system elapsed 
-## 348.102   2.307  48.255</code></pre>
+## 349.794   2.478  48.537</code></pre>
 <pre class="r"><code>system.time( res_grid_dense &lt;- cause_grid_approx_v7(dat, grid$grid, grid$rho, 
                                                       n_gamma=80, n_q=80, n_gamma_prime = 80))</code></pre>
 <pre><code>##     user   system  elapsed 
-## 8239.368   54.048 1048.018</code></pre>
+## 8275.055   57.698 1072.901</code></pre>
 <pre class="r"><code>system.time(res_mh &lt;- cause_mh_v7(dat, grid$grid, grid$rho, nchain = 5, niter_perchain = 5000, thin = 5))</code></pre>
 <pre><code>## [1] &quot;updating: 10%&quot;
 ## [1] &quot;updating: 20%&quot;
@@ -478,7 +478,7 @@ system.time( res_grid_adaptive &lt;- cause_grid_adapt_v7(dat, grid$grid, grid$rh
 ## [1] &quot;updating: 90%&quot;
 ## [1] &quot;updating: 100%&quot;</code></pre>
 <pre><code>##    user  system elapsed 
-## 462.782   5.836  60.827</code></pre>
+## 463.881   6.075  61.840</code></pre>
 <p>Below, I compare the marginal posterior for the three parameters. The density of samples from the MH algorithm is shown in blue.</p>
 <p><img src="model_v7_files/figure-html/plot_post-1.png" width="672" /><img src="model_v7_files/figure-html/plot_post-2.png" width="672" /><img src="model_v7_files/figure-html/plot_post-3.png" width="672" /></p>
 <p>From the estimate using the adaptive grid, the lfsr is 0.0011. To use the ELPD to estimate a <span class="math inline">\(z\)</span>-score comparing to the model with <span class="math inline">\(\gamma=0\)</span>, we use the adaptive grid method to estimate posteriors with <span class="math inline">\(\gamma=0\)</span></p>

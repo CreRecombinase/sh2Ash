@@ -72,7 +72,7 @@ $$
 Integrating out $Z_i$, $\theta_i$ and $\beta_{M,i}$ we obtain 
 
 $$
-\begin{pmatrix} \beta_{M,i}\\\theta_i\end{pmatrix} \sim 
+\begin{pmatrix} \hat{\beta}_{M,i}\\\hat{\beta}_{Y,i}\end{pmatrix} \sim 
 q \sum_{k=0}^{K}\pi_k N\left(
 \begin{pmatrix} 0 \\ 0 \end{pmatrix}, A(\gamma + \gamma^\prime)^\top \Sigma_k A(\gamma + \gamma^\prime) + S(\rho)_i \right) +\\
 (1-q) \sum_{k=0}^{K}\pi_k N\left(

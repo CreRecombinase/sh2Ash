@@ -248,14 +248,26 @@ I generate summary statistics from the model described above. In all cases $\gam
 
 For each simulation, we generate 10,000 independent summary statistics for each trait. We use sample sizes of 1,000 and 5,000 for $M$ and $Y$ respectively and draw allele frequencies for each simulated variant from a $Beta(1,5)$ distribution. On average, there are 100 effect variants for $M$ and 300 effect variants for $Y$. The average heritability of $M$ is 0.7 and the average heritability of $Y$ is 0.4. 
 
-I considered three prior variances for $\gamma$ and $\gamma^\prime$: $0.05^2$, $0.25^2$ and 1. I considered two different priors for $q$: A $Beta(0.1,1)$ distribution and a $Beta(1, 2)$ distribution which puts more of its weight farther from 0. 
+I considered three prior variances for $\gamma$ and $\gamma^\prime$: $0.05^2$, $0.25^2$ and 1. I considered four different priors for $q$: $Beta(0.1,1)$, $Beta(1, 2)$, $Beta(1, 1)$ (uniform), and $Beta(2, 4)$.
+
+```{r, echo=FALSE, messag=FALSE}
+qa <- c(0.1, 1, 1, 2)
+qb <- c(1, 2, 1, 4)
+names <- paste0("Beta(", qa, ", ", qb, ")")
+dat <- data.frame(x = seq(0,1,length.out=1000))
+for(i in seq_along(qa)){
+  dat[,names[i]] <- dbeta(dat$x, qa[i], qb[i])
+}
+gather(dat, "Distribution", "p(x)", -x) %>% ggplot(.) + geom_line(aes(x = x, y=`p(x)`, color=Distribution)) + 
+  scale_y_continuous(limits=c(0, 3)) + theme_bw()
+```
 
 ### LFSR
 
-The plot below shows, for each of the six combinations of priors, the the number of simulations with lfsr below a threshold ranging from 0 to 0.5. The total number of simulations run under each condition is 20. On each panel, the top bar shows the prior for $q$, the bottom panel shows the value of $\sigma_g$.
+The plot below shows, for each of the twelve combinations of priors, the the number of simulations with lfsr below a threshold ranging from 0 to 0.5. The total number of simulations run under each condition is 20. On each panel, the top bar shows the prior for $q$, the bottom panel shows the value of $\sigma_g$.
 
 ```{r, echo=FALSE, plotlfsr}
-X <- readRDS("../data/sim_results_Apr-04-2018.RDS")
+X <- readRDS("../data/sim_results_Apr-08-2018.RDS")
 
 gprior <- unique(X$g_prior)
 qprior <- unique(X$q_prior)
@@ -282,7 +294,7 @@ for(i in seq(nrow(priors))){
 plt <- ggplot(R)  + geom_line(aes(x=thresh, y=num_lfsr_under_thresh, group=q, color=q)) +
                  ylab("Number of sims with lfsr < threshold") + 
                  xlab("Threshold") +
-                 theme_bw() + facet_wrap(~qprior + gprior)
+                 theme_bw() + facet_wrap(~qprior + gprior, ncol = 3)
 plt
 
 ```
@@ -293,19 +305,19 @@ For all combinations of priors, almost all of the simulations with $q=1$ have ve
 R2 <- X %>% group_by(q, g_prior, q_prior) %>%
     summarize(p1  = sum(lfsr < 0.01),  p5 = sum(lfsr < 0.05))
 
-plt5 <- ggplot(R2)  + geom_line(aes(x=q, y=p5, lty=q_prior, color=g_prior)) +
+plt5 <- ggplot(R2)  + geom_line(aes(x=q, y=p5, lty=g_prior, color=q_prior)) +
                  ylab("Rate of sims with lfsr < 0.05") +
                  xlab("q") +
                  theme_bw()
 plt5
-plt1 <- ggplot(R2)  + geom_line(aes(x=q, y=p1, lty=q_prior, color=g_prior)) +
+plt1 <- ggplot(R2)  + geom_line(aes(x=q, y=p1, lty=g_prior, color=q_prior)) +
                  ylab("Rate of sims with lfsr < 0.01") +
                  xlab("q") +
                  theme_bw()
 plt1
 ```
 
-It appears that the lfsr is not the effective at distinguishing between simulations with high values of $q$ and simulatinos with a causal effect. This indicates that the poterior distribution of $\gamma$ is often away from 0 when $q$ is large. Using the $Beta(1, 2)$ prior on $q$ results in somewhat better separation of the causal and non-causal simulations but also has reduced power at a threshold of 0.01. All combinations of priors are less effective at separating causal an non-causal simulations than the $z$-score comparing models C and B that we used previously (results shown further down).
+With the possible exception of the $Beta(2, 4)$ prior, the lfsr is not that effective at distinguishing between simulations with high values of $q$ and simulatinos with a causal effect. This indicates that the poterior distribution of $\gamma$ is often away from 0 when $q$ is large. Using the $Beta(1, 2)$ prior on $q$ results in somewhat better separation of the causal and non-causal simulations but also has reduced power at a threshold of 0.01. All combinations of priors are less effective at separating causal an non-causal simulations than the $z$-score comparing models C and B that we used previously (results shown further down).
 
 ### WAIC $z$-scores
 
@@ -332,7 +344,7 @@ for(i in seq(nrow(priors))){
 plt <- ggplot(R)  + geom_line(aes(x=thresh, y=num_zAB_above_thresh, group=q, color=q)) +
                  ylab("Number of sims with z (A-B) > threshold") + 
                  xlab("Threshold") +
-                 theme_bw() + facet_wrap(~qprior + gprior)
+                 theme_bw() + facet_wrap(~qprior + gprior, ncol=3)
 plt
 
 ```
@@ -342,12 +354,12 @@ plt
 R2 <- X %>% group_by(q, g_prior, q_prior) %>%
     summarize(p1  = sum(zAB > qnorm(0.99)),  p5 = sum(zAB > qnorm(0.95)))
 
-plt5 <- ggplot(R2)  + geom_line(aes(x=q, y=p5, lty=q_prior, color=g_prior)) +
+plt5 <- ggplot(R2)  + geom_line(aes(x=q, y=p5, lty=g_prior, color=q_prior)) +
                  ylab("Rate of sims with z (AB) > qnorm(0.95)") +
                  xlab("q") +
                  theme_bw()
 plt5
-plt1 <- ggplot(R2)  + geom_line(aes(x=q, y=p1, lty=q_prior, color=g_prior)) +
+plt1 <- ggplot(R2)  + geom_line(aes(x=q, y=p1, lty=g_prior, color=q_prior)) +
                  ylab("Rate of sims with z (AB) > qnorm(0.99)") +
                  xlab("q") +
                  theme_bw()
@@ -355,7 +367,7 @@ plt1
 ```
 
 
-This score appears to be more effective at separating causal from non-causal simulations settings, especially using the $Beta(1, 2)$ prior for $q$ and one of the two larger values for $\sigma_g$. 
+This score appears to be more effective at separating causal from non-causal simulations settings. The smallest value of $\sigma_g$ tends to result in more false positives and the uniform prior has substantially lower power than the other priors for $q$. 
 
 
 For comparison, below I show the same plots but using the $z$-score comparing models C and B which was our strategy using the only the two parameter model. Here, higher $z$-scores indicate more evidence for model C, the purely causal model. 
@@ -390,12 +402,12 @@ plt
 R2 <- X %>% group_by(q, g_prior, q_prior) %>%
     summarize(p1  = sum(zCB > qnorm(0.99)),  p5 = sum(zCB > qnorm(0.95)))
 
-plt5 <- ggplot(R2)  + geom_line(aes(x=q, y=p5, lty=q_prior, color=g_prior)) +
+plt5 <- ggplot(R2)  + geom_line(aes(x=q, y=p5, lty=g_prior, color=q_prior)) +
                  ylab("Rate of sims with z (CB) > qnorm(0.95)") +
                  xlab("q") +
                  theme_bw()
 plt5
-plt1 <- ggplot(R2)  + geom_line(aes(x=q, y=p1, lty=q_prior, color=g_prior)) +
+plt1 <- ggplot(R2)  + geom_line(aes(x=q, y=p1, lty=g_prior, color=q_prior)) +
                  ylab("Rate of sims with z (CB) > qnorm(0.99)") +
                  xlab("q") +
                  theme_bw()

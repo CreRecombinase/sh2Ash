@@ -421,11 +421,11 @@ grid &lt;- readRDS(&quot;../data/test_data/gls_ldl__cardiogram_cad_grid.RDS&quot
 system.time( res_grid_adaptive &lt;- cause_grid_adapt_v7(dat, grid$grid, grid$rho, 
                                                            max_post_per_bin = 0.001)) </code></pre>
 <pre><code>##    user  system elapsed 
-## 349.794   2.478  48.537</code></pre>
+## 348.482   2.675  48.514</code></pre>
 <pre class="r"><code>system.time( res_grid_dense &lt;- cause_grid_approx_v7(dat, grid$grid, grid$rho, 
                                                       n_gamma=80, n_q=80, n_gamma_prime = 80))</code></pre>
 <pre><code>##     user   system  elapsed 
-## 8275.055   57.698 1072.901</code></pre>
+## 8256.597   60.223 1088.005</code></pre>
 <pre class="r"><code>system.time(res_mh &lt;- cause_mh_v7(dat, grid$grid, grid$rho, nchain = 5, niter_perchain = 5000, thin = 5))</code></pre>
 <pre><code>## [1] &quot;updating: 10%&quot;
 ## [1] &quot;updating: 20%&quot;
@@ -478,7 +478,7 @@ system.time( res_grid_adaptive &lt;- cause_grid_adapt_v7(dat, grid$grid, grid$rh
 ## [1] &quot;updating: 90%&quot;
 ## [1] &quot;updating: 100%&quot;</code></pre>
 <pre><code>##    user  system elapsed 
-## 463.881   6.075  61.840</code></pre>
+## 464.268   6.135  64.189</code></pre>
 <p>Below, I compare the marginal posterior for the three parameters. The density of samples from the MH algorithm is shown in blue.</p>
 <p><img src="model_v7_files/figure-html/plot_post-1.png" width="672" /><img src="model_v7_files/figure-html/plot_post-2.png" width="672" /><img src="model_v7_files/figure-html/plot_post-3.png" width="672" /></p>
 <p>From the estimate using the adaptive grid, the lfsr is 0.0011. To use the ELPD to estimate a <span class="math inline">\(z\)</span>-score comparing to the model with <span class="math inline">\(\gamma=0\)</span>, we use the adaptive grid method to estimate posteriors with <span class="math inline">\(\gamma=0\)</span></p>
@@ -508,25 +508,26 @@ w3 &lt;- waic_v7(res_grid_adaptive$post, res_grid_adaptive_gamma_0_q_1$post, dat
 <h3>Data Generation</h3>
 <p>I generate summary statistics from the model described above. In all cases <span class="math inline">\(\gamma = 0\)</span> and <span class="math inline">\(\gamma^\prime = 0.25\)</span>. I consider values of <span class="math inline">\(q\)</span> between 0 and 1. For values of <span class="math inline">\(q &lt; 1\)</span>, we hope to be able to detect that correlation in the summary statistics is due to confounding rather than a causal effect. At <span class="math inline">\(q=1\)</span>, the scenario is equivalent to a causal scenario with <span class="math inline">\(q=0\)</span>, <span class="math inline">\(\gamma=0.25\)</span> and <span class="math inline">\(\gamma^\prime=0\)</span>.</p>
 <p>For each simulation, we generate 10,000 independent summary statistics for each trait. We use sample sizes of 1,000 and 5,000 for <span class="math inline">\(M\)</span> and <span class="math inline">\(Y\)</span> respectively and draw allele frequencies for each simulated variant from a <span class="math inline">\(Beta(1,5)\)</span> distribution. On average, there are 100 effect variants for <span class="math inline">\(M\)</span> and 300 effect variants for <span class="math inline">\(Y\)</span>. The average heritability of <span class="math inline">\(M\)</span> is 0.7 and the average heritability of <span class="math inline">\(Y\)</span> is 0.4.</p>
-<p>I considered three prior variances for <span class="math inline">\(\gamma\)</span> and <span class="math inline">\(\gamma^\prime\)</span>: <span class="math inline">\(0.05^2\)</span>, <span class="math inline">\(0.25^2\)</span> and 1. I considered two different priors for <span class="math inline">\(q\)</span>: A <span class="math inline">\(Beta(0.1,1)\)</span> distribution and a <span class="math inline">\(Beta(1, 2)\)</span> distribution which puts more of its weight farther from 0.</p>
+<p>I considered three prior variances for <span class="math inline">\(\gamma\)</span> and <span class="math inline">\(\gamma^\prime\)</span>: <span class="math inline">\(0.05^2\)</span>, <span class="math inline">\(0.25^2\)</span> and 1. I considered four different priors for <span class="math inline">\(q\)</span>: <span class="math inline">\(Beta(0.1,1)\)</span>, <span class="math inline">\(Beta(1, 2)\)</span>, <span class="math inline">\(Beta(1, 1)\)</span> (uniform), and <span class="math inline">\(Beta(2, 4)\)</span>.</p>
+<p><img src="model_v7_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
 </div>
 <div id="lfsr" class="section level3">
 <h3>LFSR</h3>
-<p>The plot below shows, for each of the six combinations of priors, the the number of simulations with lfsr below a threshold ranging from 0 to 0.5. The total number of simulations run under each condition is 20. On each panel, the top bar shows the prior for <span class="math inline">\(q\)</span>, the bottom panel shows the value of <span class="math inline">\(\sigma_g\)</span>.</p>
+<p>The plot below shows, for each of the twelve combinations of priors, the the number of simulations with lfsr below a threshold ranging from 0 to 0.5. The total number of simulations run under each condition is 20. On each panel, the top bar shows the prior for <span class="math inline">\(q\)</span>, the bottom panel shows the value of <span class="math inline">\(\sigma_g\)</span>.</p>
 <p><img src="model_v7_files/figure-html/plotlfsr-1.png" width="672" /></p>
 <p>For all combinations of priors, almost all of the simulations with <span class="math inline">\(q=1\)</span> have very low lfsr. Unfortunately, many simulations with <span class="math inline">\(q=0.7\)</span> or <span class="math inline">\(q=0.5\)</span> also have low lfsr. Below I show the number of simulations with lfsr below 0.05 or below 0.01 as a function of <span class="math inline">\(q\)</span>.</p>
-<p><img src="model_v7_files/figure-html/unnamed-chunk-2-1.png" width="672" /><img src="model_v7_files/figure-html/unnamed-chunk-2-2.png" width="672" /></p>
-<p>It appears that the lfsr is not the effective at distinguishing between simulations with high values of <span class="math inline">\(q\)</span> and simulatinos with a causal effect. This indicates that the poterior distribution of <span class="math inline">\(\gamma\)</span> is often away from 0 when <span class="math inline">\(q\)</span> is large. Using the <span class="math inline">\(Beta(1, 2)\)</span> prior on <span class="math inline">\(q\)</span> results in somewhat better separation of the causal and non-causal simulations but also has reduced power at a threshold of 0.01. All combinations of priors are less effective at separating causal an non-causal simulations than the <span class="math inline">\(z\)</span>-score comparing models C and B that we used previously (results shown further down).</p>
+<p><img src="model_v7_files/figure-html/unnamed-chunk-3-1.png" width="672" /><img src="model_v7_files/figure-html/unnamed-chunk-3-2.png" width="672" /></p>
+<p>With the possible exception of the <span class="math inline">\(Beta(2, 4)\)</span> prior, the lfsr is not that effective at distinguishing between simulations with high values of <span class="math inline">\(q\)</span> and simulatinos with a causal effect. This indicates that the poterior distribution of <span class="math inline">\(\gamma\)</span> is often away from 0 when <span class="math inline">\(q\)</span> is large. Using the <span class="math inline">\(Beta(1, 2)\)</span> prior on <span class="math inline">\(q\)</span> results in somewhat better separation of the causal and non-causal simulations but also has reduced power at a threshold of 0.01. All combinations of priors are less effective at separating causal an non-causal simulations than the <span class="math inline">\(z\)</span>-score comparing models C and B that we used previously (results shown further down).</p>
 </div>
 <div id="waic-z-scores" class="section level3">
 <h3>WAIC <span class="math inline">\(z\)</span>-scores</h3>
 <p>Below I look at the <span class="math inline">\(z\)</span>-score comparing model A (full model with causal effect and confounding) to model B (no causal effect, has confounding). Large <span class="math inline">\(z\)</span>-scores indicate more evidence in favor of model A and thus more evidence for a causal effect.</p>
 <p><img src="model_v7_files/figure-html/plotzAB-1.png" width="672" /></p>
-<p><img src="model_v7_files/figure-html/unnamed-chunk-3-1.png" width="672" /><img src="model_v7_files/figure-html/unnamed-chunk-3-2.png" width="672" /></p>
-<p>This score appears to be more effective at separating causal from non-causal simulations settings, especially using the <span class="math inline">\(Beta(1, 2)\)</span> prior for <span class="math inline">\(q\)</span> and one of the two larger values for <span class="math inline">\(\sigma_g\)</span>.</p>
+<p><img src="model_v7_files/figure-html/unnamed-chunk-4-1.png" width="672" /><img src="model_v7_files/figure-html/unnamed-chunk-4-2.png" width="672" /></p>
+<p>This score appears to be more effective at separating causal from non-causal simulations settings. The smallest value of <span class="math inline">\(\sigma_g\)</span> tends to result in more false positives and the uniform prior has substantially lower power than the other priors for <span class="math inline">\(q\)</span>.</p>
 <p>For comparison, below I show the same plots but using the <span class="math inline">\(z\)</span>-score comparing models C and B which was our strategy using the only the two parameter model. Here, higher <span class="math inline">\(z\)</span>-scores indicate more evidence for model C, the purely causal model.</p>
 <p><img src="model_v7_files/figure-html/plotzCB-1.png" width="672" /></p>
-<p><img src="model_v7_files/figure-html/unnamed-chunk-4-1.png" width="672" /><img src="model_v7_files/figure-html/unnamed-chunk-4-2.png" width="672" /></p>
+<p><img src="model_v7_files/figure-html/unnamed-chunk-5-1.png" width="672" /><img src="model_v7_files/figure-html/unnamed-chunk-5-2.png" width="672" /></p>
 <p>Using the <span class="math inline">\(z\)</span> score comparing models A and B seems to give a slightly lower false postive rate for high values of <span class="math inline">\(q\)</span> but also slightly reduced power.</p>
 </div>
 </div>

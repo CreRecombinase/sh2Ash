@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Nicholas Knoblauch" />
+
+<meta name="date" content="2018-09-05" />
+
+<title>Shared SNP Analysis</title>
+
+<script src="site_libs/jquery-1.12.4/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<script src="site_libs/htmlwidgets-1.2.1/htmlwidgets.js"></script>
+<link href="site_libs/datatables-css-0.0.0/datatables-crosstalk.css" rel="stylesheet" />
+<script src="site_libs/datatables-binding-0.4.17/datatables.js"></script>
+<link href="site_libs/dt-core-1.10.16/css/jquery.dataTables.min.css" rel="stylesheet" />
+<link href="site_libs/dt-core-1.10.16/css/jquery.dataTables.extra.css" rel="stylesheet" />
+<script src="site_libs/dt-core-1.10.16/js/jquery.dataTables.min.js"></script>
+<link href="site_libs/crosstalk-1.0.0/css/crosstalk.css" rel="stylesheet" />
+<script src="site_libs/crosstalk-1.0.0/js/crosstalk.min.js"></script>
+<link href="site_libs/font-awesome-5.0.13/css/fa-svg-with-js.css" rel="stylesheet" />
+<script src="site_libs/font-awesome-5.0.13/js/fontawesome-all.min.js"></script>
+<script src="site_libs/font-awesome-5.0.13/js/fa-v4-shims.min.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Sherlock2 model using Ash</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Shared SNP Analysis</h1>
+<h4 class="author"><em>Nicholas Knoblauch</em></h4>
+<h4 class="date"><em>September 05, 2018</em></h4>
+
+</div>
+
+
+<div id="packages-youll-need" class="section level1">
+<h1>Packages you’ll need</h1>
+<ol style="list-style-type: decimal">
+<li><code>tidyverse</code></li>
+<li><code>biomaRt</code>from Bioconductor (don’t actually load it using <code>library</code> because it overrides <code>dplyr</code>’s <code>select</code> etc.)</li>
+<li><code>dbplyr</code> &amp; <code>RMariaDB</code> (for connecting to UCSC genome browser)</li>
+<li><code>DT</code></li>
+<li><code>ReactomePA</code> from Bioconductor for pathway enrichment (may have to <code>sudo apt-get install libudunits2-dev</code>)</li>
+<li><code>clusterProfiler</code> for GO and reactome pathway enrichment</li>
+<li><code>org.Hs.eg.db</code></li>
+</ol>
+</div>
+<div id="outline" class="section level1">
+<h1>Outline</h1>
+<p>Briefly, the workflow is:</p>
+<ol style="list-style-type: decimal">
+<li>read in data</li>
+<li>map SNPs to coordinates using the UCSC genome browser (also obtain functional consequence of variants)</li>
+<li>map SNPs to genes using <code>biomaRt</code></li>
+<li>summarise evidence per-gene</li>
+<li>apply cutoffs and check for gene enrichment</li>
+</ol>
+<div id="functional-annotation-of-variants" class="section level2">
+<h2>Functional annotation of Variants</h2>
+<p><img src="SharedSNPAnalysis_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p><img src="SharedSNPAnalysis_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+</div>
+<div id="enrichmentpathway-analysis" class="section level2">
+<h2>Enrichment/Pathway analysis</h2>
+<p>We’ll summarise the evidence for each gene by its max <span class="math inline">\(P(Z_i=1)\)</span></p>
+<div id="go-molecular-function-enrichment" class="section level3">
+<h3>GO Molecular Function Enrichment</h3>
+<p>Let’s start with the full set of <code>HDL-&gt;CAD</code> genes and check for GO term enrichment (among the <code>GO-MF</code> terms) using a <code>0.05</code> p value cutoff and Benjamini-Hochberg p-value adjustment.</p>
+<div id="htmlwidget-b8e0c2e2742a5382bafd" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-b8e0c2e2742a5382bafd">{"x":{"filter":"none","data":[["GO:0030169","GO:0071813","GO:0071814","GO:0034185"],["GO:0030169","GO:0071813","GO:0071814","GO:0034185"],["low-density lipoprotein particle binding","lipoprotein particle binding","protein-lipid complex binding","apolipoprotein binding"],["5/322","5/322","5/322","4/322"],["17/17548","27/17548","27/17548","16/17548"],[1.04108737913214e-05,0.00011681948740024,0.00011681948740024,0.000170109436384047],[0.00661090485748906,0.0247267914997175,0.0247267914997175,0.0270048730259675],[0.00600543035541485,0.0224621330159059,0.0224621330159059,0.0245315713522258],["SCARB1/LIPC/STAB1/CDH13/COLEC12","SCARB1/LIPC/STAB1/CDH13/COLEC12","SCARB1/LIPC/STAB1/CDH13/COLEC12","SCARB1/LIPC/ABCA1/LPA"],[5,5,5,4]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>ID<\/th>\n      <th>Description<\/th>\n      <th>GeneRatio<\/th>\n      <th>BgRatio<\/th>\n      <th>pvalue<\/th>\n      <th>p.adjust<\/th>\n      <th>qvalue<\/th>\n      <th>geneID<\/th>\n      <th>Count<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-right","targets":[5,6,7,9]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false},"selection":{"mode":"none","selected":null,"target":"row"}},"evals":[],"jsHooks":[]}</script>
+<p>Now let’s restrict ourselves to genes where the max(<code>prob_z1</code> is greater than 0.5) <div id="htmlwidget-0827bc00647663672df3" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-0827bc00647663672df3">{"x":{"filter":"none","data":[["GO:0005545","GO:0034185","GO:0030169","GO:0004806","GO:1901681","GO:0071813","GO:0071814"],["GO:0005545","GO:0034185","GO:0030169","GO:0004806","GO:1901681","GO:0071813","GO:0071814"],["1-phosphatidylinositol binding","apolipoprotein binding","low-density lipoprotein particle binding","triglyceride lipase activity","sulfur compound binding","lipoprotein particle binding","protein-lipid complex binding"],["2/36","2/36","2/36","2/36","4/36","2/36","2/36"],["15/17548","16/17548","17/17548","26/17548","235/17548","27/17548","27/17548"],[0.000422509356965046,0.000482245015601282,0.000545839482393699,0.00128934240274233,0.00131912790534158,0.00139069608916119,0.00139069608916119],[0.0283836530844723,0.0283836530844723,0.0283836530844723,0.0309926557013066,0.0309926557013066,0.0309926557013066,0.0309926557013066],[0.0218335792957479,0.0218335792957479,0.0218335792957479,0.0238405043856204,0.0238405043856204,0.0238405043856204,0.0238405043856204],["SCARB1/SNX10","SCARB1/LIPC","SCARB1/LIPC","LIPC/LIPG","LIPC/LIPG/APOB/FST","SCARB1/LIPC","SCARB1/LIPC"],[2,2,2,2,4,2,2]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>ID<\/th>\n      <th>Description<\/th>\n      <th>GeneRatio<\/th>\n      <th>BgRatio<\/th>\n      <th>pvalue<\/th>\n      <th>p.adjust<\/th>\n      <th>qvalue<\/th>\n      <th>geneID<\/th>\n      <th>Count<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-right","targets":[5,6,7,9]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false},"selection":{"mode":"none","selected":null,"target":"row"}},"evals":[],"jsHooks":[]}</script></p>
+<!-- ### Height-> CAD -->
+<!-- Looking at `Height->CAD` -->
+<!-- ```{r,message=F} -->
+<!-- ego <- clusterProfiler::enrichGO(gene= height_cad_pz$entrezgene, -->
+<!--                 OrgDb         = org.Hs.eg.db, -->
+<!--                 pAdjustMethod = "BH", -->
+<!--                 pvalueCutoff  = 0.05, -->
+<!--                 readable      = TRUE) -->
+<!-- as_data_frame(ego) %>% DT::datatable() -->
+<!-- ``` -->
+<!-- Now let's restrict ourselves to genes where the max(`prob_z1` is greater than 0.5) -->
+<!-- ```{r,message=F} -->
+<!-- filter(height_cad_pz,max_z1>0.5) %>% -->
+<!--   pull(entrezgene) %>% -->
+<!--   clusterProfiler::enrichGO( -->
+<!--                 OrgDb         = org.Hs.eg.db, -->
+<!--                 pAdjustMethod = "BH", -->
+<!--                 pvalueCutoff  = 0.05, -->
+<!--         readable      = TRUE) %>% -->
+<!--   as_data_frame() %>% -->
+<!--   DT::datatable() -->
+<!-- ``` -->
+</div>
+<div id="reactomedb-pathway-enrichment" class="section level3">
+<h3>ReactomeDB Pathway Enrichment</h3>
+<p>Again, starting with the full set of genes:</p>
+<div id="htmlwidget-7453f7b5a563b28b397c" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-7453f7b5a563b28b397c">{"x":{"filter":"none","data":[["R-HSA-174824","R-HSA-8963899"],["R-HSA-174824","R-HSA-8963899"],["Plasma lipoprotein assembly, remodeling, and clearance","Plasma lipoprotein remodeling"],["11/204","7/204"],["69/10561","30/10561"],[7.30709625405696e-08,1.26396125265689e-06],[4.74230546888297e-05,0.000410155426487162],[4.67654160259646e-05,0.000404467600850206],["SCARB1/LIPC/LIPG/APOB/ANGPTL4/CETP/ABCA1/LMF1/APOC4/HDLBP/PCSK5","LIPC/LIPG/APOB/ANGPTL4/CETP/LMF1/PCSK5"],[11,7]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>ID<\/th>\n      <th>Description<\/th>\n      <th>GeneRatio<\/th>\n      <th>BgRatio<\/th>\n      <th>pvalue<\/th>\n      <th>p.adjust<\/th>\n      <th>qvalue<\/th>\n      <th>geneID<\/th>\n      <th>Count<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-right","targets":[5,6,7,9]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false},"selection":{"mode":"none","selected":null,"target":"row"}},"evals":[],"jsHooks":[]}</script>
+<p>Restricting to genes where the max(<code>prob_z1</code> is greater than 0.5)</p>
+<div id="htmlwidget-cb0130ae5e5cdee79e22" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-cb0130ae5e5cdee79e22">{"x":{"filter":"none","data":[["R-HSA-174824","R-HSA-8963899","R-HSA-8964043","R-HSA-8963889","R-HSA-418990","R-HSA-2173782"],["R-HSA-174824","R-HSA-8963899","R-HSA-8964043","R-HSA-8963889","R-HSA-418990","R-HSA-2173782"],["Plasma lipoprotein assembly, remodeling, and clearance","Plasma lipoprotein remodeling","Plasma lipoprotein clearance","Assembly of active LPL and LIPC lipase complexes","Adherens junctions interactions","Binding and Uptake of Ligands by Scavenger Receptors"],["5/21","4/21","3/21","2/21","2/21","2/21"],["69/10561","30/10561","33/10561","18/10561","33/10561","42/10561"],[1.92814468233785e-07,3.06176215929563e-07,3.55809821189384e-05,0.000565244048648332,0.00191590268867442,0.00309075249800872],[1.13285199893938e-05,1.13285199893938e-05,0.00087766422560048,0.0104570148999942,0.0283553597923815,0.0381192808087742],[8.54070497066676e-06,8.54070497066676e-06,0.000661681421860959,0.00788366699430569,0.021377440526262,0.0287385758586776],["SCARB1/LIPC/LIPG/APOB/ANGPTL4","LIPC/LIPG/APOB/ANGPTL4","SCARB1/LIPC/APOB","LIPC/ANGPTL4","NECTIN2/CDH18","SCARB1/APOB"],[5,4,3,2,2,2]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>ID<\/th>\n      <th>Description<\/th>\n      <th>GeneRatio<\/th>\n      <th>BgRatio<\/th>\n      <th>pvalue<\/th>\n      <th>p.adjust<\/th>\n      <th>qvalue<\/th>\n      <th>geneID<\/th>\n      <th>Count<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-right","targets":[5,6,7,9]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false},"selection":{"mode":"none","selected":null,"target":"row"}},"evals":[],"jsHooks":[]}</script>
+<p>Restricting to genes where the min(<code>prob_z1</code>) is greater than 0.5 gives us 1 result</p>
+<div id="htmlwidget-c86dedc542520f0b0ea0" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-c86dedc542520f0b0ea0">{"x":{"filter":"none","data":[["R-HSA-8963899"],["R-HSA-8963899"],["Plasma lipoprotein remodeling"],["2/13"],["30/10561"],[0.000596758187461737],[0.036402249435166],[0.0276393265771752],["APOB/ANGPTL4"],[2]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>ID<\/th>\n      <th>Description<\/th>\n      <th>GeneRatio<\/th>\n      <th>BgRatio<\/th>\n      <th>pvalue<\/th>\n      <th>p.adjust<\/th>\n      <th>qvalue<\/th>\n      <th>geneID<\/th>\n      <th>Count<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-right","targets":[5,6,7,9]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false},"selection":{"mode":"none","selected":null,"target":"row"}},"evals":[],"jsHooks":[]}</script>
+</div>
+</div>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

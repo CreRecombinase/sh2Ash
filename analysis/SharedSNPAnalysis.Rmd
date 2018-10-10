@@ -34,7 +34,7 @@ Briefly, the workflow is:
 5. apply cutoffs and check for gene enrichment
 
 
-```{r}
+```{r, echo=FALSE}
 cause_filename <- "../data/gls_hdl__cardiogram_cad_data.tsv"
 data_df <- read_delim(cause_filename,delim="\t") %>% rename(name=snp)
 ```
@@ -44,10 +44,7 @@ data_df <- read_delim(cause_filename,delim="\t") %>% rename(name=snp)
 
 
 
-```{r rsid2loc}
-
-
-
+```{r functions}
 
 annotate_snp_loc <- function(rsid_df,...){
   
@@ -67,26 +64,19 @@ annotate_snp_loc <- function(rsid_df,...){
     dplyr::mutate(chrom=str_replace(chrom,pattern = "chr([0-9]+)",replacement = "\\1")) %>% 
     dplyr::filter(!str_detect(chrom,"_")) %>%
     tidyr::separate(observed,into=c("ref","alt"),sep="/",extra="drop")
-    
+  
   RMariaDB::dbDisconnect(con)
   functional_categories <- c("nonsense","missense","ncRNA")
-
+  
   anno_df <- mutate(anno_df, has_func=map_lgl(str_split(func,","), ~any(.x %in% functional_categories)))
   
-
+  
   return(anno_df)
   
 }
 
 
-
-
-```
-
-```{r db2gene}
-
-
-retrieve_genes <- function(...){
+retrieve_genes <- function(getSymbol=F){
   
   con <- RMariaDB::dbConnect(RMariaDB::MariaDB(),
                              host="genome-euro-mysql.soe.ucsc.edu",
@@ -103,44 +93,42 @@ retrieve_genes <- function(...){
     inner_join(entrez_genelink_df)
   kgene <- tbl(con,"knownGene")
   
-  gene_df <- kgene %>%
+  if(getSymbol){
+    ks <- tbl(con,"kgXref")
+    kgene <- inner_join(kgene,ks,by=c("name"="kgID")) %>%
+      dplyr::select(ucsc_name=name,
+                  chrom,
+                  geneSymbol,
+                  gene_start=txStart,
+                  gene_end=txEnd)
+  }else{
+    kgene <- kgene %>%
     dplyr::select(ucsc_name=name,
                   chrom,
                   gene_start=txStart,
-                  gene_end=txEnd) %>% 
+                  gene_end=txEnd)
+  }
+  
+  gene_df <- kgene %>%
     inner_join(es_genelink_df) %>% 
     dplyr::select(-ucsc_name) %>% 
-    collect() %>%
+    collect() %>%  
     dplyr::filter(chrom %in% paste("chr",1:22,sep="")) %>%
     dplyr::mutate(chrom=str_replace(chrom,pattern = "chr([0-9]+)",replacement = "\\1")) %>% 
-    rename(gene_name=entrez_gene)
+    rename(gene_name=entrez_gene) %>% distinct(gene_name,.keep_all = T)
   RMariaDB::dbDisconnect(con)
   return(gene_df)
 }
 
+retrieve_genes <- memoise::memoise(retrieve_genes)
 
-
-```
-
-
-
-
-## Mapping `rsid` to coordinate
-
-The first step is to take the `rsid` for each SNP we have data for and obtain the genomic coordinates for that variant.
-
-
-```{r}
 
 nearest_gene <- function(anno_df,gene_df){
-  
-
-
   snp_chrom <- distinct(anno_df,chrom)
   gene_chrom <- distinct(gene_df,chrom)
   
   snpgene_chrom <- inner_join(snp_chrom,gene_chrom)
-
+  
   genemap <- map_df(snpgene_chrom$chrom,function(ch){
     dplyr::inner_join(
       filter(anno_df,chrom==ch),
@@ -157,60 +145,33 @@ nearest_gene <- function(anno_df,gene_df){
   return(genemap)
 }
 
-```
 
 
-```{r}
 
-subset_eqtl <- function(anno_df,gene_df,eqtl_filenames){
+subset_eqtl <- function(anno_df,eqtl_fst=fs::path_abs(fs::dir_ls("../data/eqtl/"))){
   # t_tiss_df <- filter(all_tiss_df,size==min(size))
   df <- dplyr::distinct(anno_df,chrom,pos,name)
   # filename <- t_tiss_df$path[1]
-  sub_gene <- dplyr::select(gene_df,ensembl_gene_stable_id,gene_name)
-  parse_f <- function(filename,df){
-    tiss <- gsub(".+eQTL/(.+).v7.signif.+","\\1",filename)
-    read_delim(filename,delim="\t",col_types=cols_only(variant_id=col_character(),
-                                                       gene_id=col_character(),
-                                                       tss_distance=col_integer())) %>%
-      separate(variant_id,c("chrom","pos"),sep="_",convert = T,extra="drop") %>% 
-      inner_join(df) %>%
-      rename(gene_dist=tss_distance) %>% 
-      mutate(func=paste0("eQTL-",tiss),gene_dist=abs(gene_dist)) %>% 
-      separate(gene_id,into=c("ensembl_gene_stable_id","sid"),sep="\\.") %>%
-      mutate() %>%
-      dplyr::inner_join(sub_gene)
+  #sub_gene <- retrieve_genes() %>% dplyr::select(ensembl_gene_stable_id,gene_name)
+  #tissues <- ls_h5(eqtl_h5)
+  parse_f <- function(eqtlf,df){
+    tiss <- fs::path_ext_remove(fs::path_file(eqtlf))
+    # gsub(".+eQTL/(.+).v7.signif.+","\\1",filename)
+    ret_df <- fst::read_fst(path=eqtlf) %>% 
+      inner_join(df,by=c("chrom","pos")) %>%
+      mutate(func=paste0("eQTL-",tiss))
+    return(ret_df)
   }
-  all_eqtl <- map_df(eqtl_filenames,parse_f,df=df)
+  all_eqtl <- map_df(eqtl_fst,parse_f,df=df)
   return(all_eqtl)
 }
 
-```
-
-
-```{r,message=FALSE,warning=FALSE}
-gene_df <- retrieve_genes()
-snp_df <- distinct(data_df,name)
-anno_df <- annotate_snp_loc(snp_df)
-all_eqtl <- subset_eqtl(anno_df = anno_df,gene_df,fs::dir_ls("~/Downloads/GTEx_Analysis_v7_eQTL/",glob = "*gene_pairs*"))
-
-eqtl_genes <- distinct(all_eqtl,ensembl_gene_stable_id,gene_name)
-```
-
-
-
-## Ordering evidence for genes
-
-For each variant, I will map it to the gene with the strongest evidence linking the gene to the variant. The order in which annotations will be ranked for mapping variants to genes (from strongest to weakest):
-
-1) Missense/nonsense variant for a gene (or a variant that's in a noncoding RNA)
-2) Number of (GTEx) tissues with significant eQTL
-
-
-```{r}
-annotate_genes <- function(snp_df,eqtl_df,gene_df){
+annotate_genes <- function(snp_df,eqtl_df){
+  
+  gene_df <- retrieve_genes()
   
   functional_categories <- c("nonsense","missense","ncRNA")
-
+  
   #pull out SNP-Gene maps where the variant has "function" and
   #is as close as possible to the gene
   anno_df <- annotate_snp_loc(snp_df)
@@ -230,43 +191,116 @@ annotate_genes <- function(snp_df,eqtl_df,gene_df){
     group_by(name,gene_name) %>% summarise(n_func=n())
   
   full_anno_df <- bind_rows(gene_dist_df,func_df,sum_eqtl_df)
-
+  
   
   anno_result <-group_by(full_anno_df,name,gene_name) %>% 
     summarise(n_func=sum(n_func)) %>% ungroup() %>% 
     group_by(name) %>% filter(n_func==max(n_func)) %>% slice(1) %>% ungroup()
-
-
-  # 
-  # anno_df <- select(eqtl_df,name,func,entrez_gene,gene_dist) %>% 
-  #   group_by(name,entrez_gene) %>% 
-  #   summarise(num_eQTL=n_distinct(func),gene_dist=abs(gene_dist[1])) %>% 
-  #   ungroup() %>% group_by(name) %>% mutate(is_best_eQTL=num_eQTL==max(num_eQTL)) %>% ungroup() %>% 
-  #   select(-num_eQTL) %>% 
-  #   mutate(coding_func=FALSE) %>% 
-  #   bind_rows(anno_df)
-  # 
-  # 
-  # func_df <- filter(anno_df,coding_func) %>% distinct(name,entrez_gene)
-  # func_df <- anti_join(anno_df,distinct(func_df,name)) %>% 
-  #   filter(is_best_eQTL) %>% group_by(name) %>% filter(gene_dist==min(gene_dist)) %>%
-  #   slice(1) %>%
-  #   ungroup() %>% 
-  #   distinct(name,entrez_gene) %>%
-  #   bind_rows(func_df)
-  # 
-  # func_df <- anti_join(anno_df,distinct(func_df,name)) %>%
-  #   group_by(name) %>% 
-  #   filter(gene_dist==min(gene_dist)) %>%
-  #   slice(1) %>%
-  #   ungroup() %>% 
-  #   distinct(name,entrez_gene) %>%
-  #   bind_rows(func_df)
+  
   return(anno_result)
 }
 
-anno_df <- annotate_genes(snp_df,all_eqtl,gene_df)
+
+complete_left <- function(gene_df,go_df){
+  split(go_df,go_df$GO) %>% map_df(function(sgo_df){
+    left_join(gene_df,sgo_df,by=c("gene_name")) %>% mutate(GO=if_else(is.na(GO),GO[!is.na(GO)][1],GO),
+                                                           isTerm=if_else(is.na(isTerm),FALSE,isTerm))
+  })
+}
+
+
+go_enrichment <- function(data_df,anno_df,ont="MF",pvalueCutoff=0.1,prob_Z_cutoff=0.37){
+  
+  
+  total_gene_data_df <- mutate(data_df) %>%
+    dplyr::inner_join(anno_df) %>%
+    dplyr::distinct(name,.keep_all=T) %>% 
+    distinct(gene_name,prob_z1) %>% 
+    group_by(gene_name) %>% summarise(
+      max_z1 = max(prob_z1),
+      n_snps=n()) %>%
+    ungroup() %>%
+    arrange(desc(max_z1)) %>%
+    mutate(is_z1=max_z1>prob_Z_cutoff) %>% 
+    filter(!is.na(gene_name)) %>% inner_join(retrieve_genes(getSymbol=T)) %>% select(-chrom,-gene_start,-gene_end,-ensembl_gene_stable_id)
+  gene_data_df <- select(total_gene_data_df,-max_z1,-n_snps,-geneSymbol)
+  
+  
+  
+  enrich_obj <- clusterProfiler::enrichGO(gene          = gene_data_df$gene_name,
+                                          ont=ont,
+                                          OrgDb         = org.Hs.eg.db::org.Hs.eg.db,
+                                          pAdjustMethod = "BH",
+                                          pvalueCutoff  = pvalueCutoff,
+                                          readable      = TRUE)
+  
+  
+  
+  
+  
+  enrich_df <- as_data_frame(enrich_obj) %>% 
+    select(GO=ID,Description,pvalue_global=pvalue,p.adjust_global=p.adjust)
+  
+  go_df <- enframe(enrich_obj@geneSets,name="GO",value="gene_name") %>% 
+    unnest(gene_name) %>% mutate(isTerm=TRUE) %>% semi_join(enrich_df)
+  
+  
+  
+  all_genes <- distinct(go_df,gene_name)
+  
+  all_gene_data_df <- left_join(all_genes,gene_data_df) %>% mutate(is_z1=if_else(is.na(is_z1),FALSE,is_z1))
+  
+  go_data_df <- all_gene_data_df %>% 
+    complete_left(go_df)
+  sub_enrich_df <- group_by(go_data_df,GO) %>%
+    do(broom::tidy(fisher.test(.$is_z1,.$isTerm,alternative="greater"))) %>% 
+    ungroup() %>%
+    mutate(adj_p_z1=p.adjust(p.value,method="fdr")) %>% rename(pvalue_z1=p.value) %>% 
+    inner_join(enrich_df) %>% 
+    select(GO,pvalue_z1,adj_p_z1,Description,pvalue_global,p.adjust_global)
+  
+  
+  
+  data_go_df <- filter(go_df,isTerm) %>% select(-isTerm) %>% inner_join(total_gene_data_df)
+  nest_enrich_df <- left_join(sub_enrich_df,data_go_df) %>% nest(gene_name,max_z1,n_snps,is_z1,geneSymbol)
+  return(nest_enrich_df)
+}
+
+total_pipeline <- function(cause_filename){
+  data_df <- read_delim(cause_filename,delim="\t") %>% rename(name=snp)
+  prob_Z_cutoff <- median(data_df$prob_z1)
+  snp_df <- distinct(data_df,name)
+  anno_df <- annotate_snp_loc(snp_df)
+  all_eqtl <- subset_eqtl(anno_df = anno_df)
+  anno_df <- annotate_genes(snp_df,all_eqtl)
+  result <- go_enrichment(data_df = data_df,anno_df = anno_df,prob_Z_cutoff = prob_Z_cutoff)
+  return(result)
+}
+
 ```
+
+
+
+
+
+## Mapping `rsid` to coordinate
+
+The first step is to take the `rsid` for each SNP we have data for and obtain the genomic coordinates for that variant.
+
+
+
+
+
+
+
+## Ordering evidence for genes
+
+For each variant, I will map it to the gene with the strongest evidence linking the gene to the variant. The order in which annotations will be ranked for mapping variants to genes (from strongest to weakest):
+
+1) Missense/nonsense variant for a gene (or a variant that's in a noncoding RNA)
+2) Number of (GTEx) tissues with significant eQTL
+
+
 
 
 ## Enrichment/Pathway analysis
@@ -280,179 +314,65 @@ We'll summarise the evidence for each gene by its max $P(Z_i=1)$, then apply a c
 Let's start with the full set of `HDL->CAD` genes and check for GO term enrichment (among the `GO-MF` terms) using a `0.05` p value cutoff and Benjamini-Hochberg p-value adjustment. 
 
 
-```{r}
-complete_left <- function(gene_df,go_df){
-  split(go_df,go_df$GO) %>% map_df(function(sgo_df){
-    left_join(gene_df,sgo_df,by=c("gene_name")) %>% mutate(GO=if_else(is.na(GO),GO[!is.na(GO)][1],GO),
-                                         isTerm=if_else(is.na(isTerm),FALSE,isTerm))
-  })
-}
 
+
+```{r, echo=FALSE,message=F,warning=F}
+
+result_hdl_cad <- total_pipeline("~/Dropbox/Repos/sh2Ash/data/gls_hdl__cardiogram_cad_data.tsv")
+result_height_cad <- total_pipeline("~/Dropbox/Repos/sh2Ash/data/giant_height__cardiogram_cad_data.tsv")
 ```
 
 
 
-
-```{r,message=F}
-
-go_enrichment <- function(data_df,anno_df,gene_df,ont="MF",pvalueCutoff=0.1,prob_Z_cutoff=0.37){
-  
-  
-  
-  
-  gene_data_df <- mutate(data_df) %>%
-  dplyr::inner_join(anno_df) %>%
-  dplyr::distinct(name,.keep_all=T) %>% 
-    distinct(gene_name,prob_z1) %>% 
-    group_by(gene_name) %>% summarise(
-      max_z1 = max(prob_z1)) %>%
-    ungroup() %>%
-    arrange(desc(max_z1)) %>%
-    mutate(is_z1=max_z1>prob_Z_cutoff) %>% 
-    filter(!is.na(gene_name)) %>% select(-max_z1)
-  
-  
-
-  enrich_obj <- clusterProfiler::enrichGO(gene          = gene_data_df$gene_name,
-                                          ont=ont,
-                                          OrgDb         = org.Hs.eg.db::org.Hs.eg.db,
-                                          pAdjustMethod = "BH",
-                                          pvalueCutoff  = pvalueCutoff,
-                                          readable      = TRUE)
-  
-  
-  
-
-  
-  enrich_df <- as_data_frame(enrich_obj) %>% 
-    select(GO=ID,Description,pvalue_global=pvalue,p.adjust_global=p.adjust)
-  
-  go_df <- enframe(enrich_obj@geneSets,name="GO",value="gene_name") %>% 
-    unnest(gene_name) %>% mutate(isTerm=TRUE) %>% semi_join(enrich_df)
-  
-  all_genes <- distinct(go_df,gene_name)
-  
-  all_gene_data_df <- left_join(all_genes,gene_data_df) %>% mutate(is_z1=if_else(is.na(is_z1),FALSE,is_z1))
-  
-  go_data_df <- all_gene_data_df %>% 
-    complete_left(go_df)
-  sub_enrich_df <- group_by(go_data_df,GO) %>%
-    do(broom::tidy(fisher.test(.$is_z1,.$isTerm,alternative="greater"))) %>% 
-    ungroup() %>%
-    mutate(adj_p_z1=p.adjust(p.value,method="fdr")) %>% rename(pvalue_z1=p.value) %>% 
-     inner_join(enrich_df) %>% 
-    select(GO,pvalue_z1,adj_p_z1,Description,pvalue_global,p.adjust_global)
-  
-  return(sub_enrich_df)
-}
-
-```
-
-
-
-
-#### Enrichment within significant HDL pathways/ontologies
-
-
-If we consider the universe of pathways to be those enriched for HDL gwas hits, are any of these enriched for HDL CAD shared-cause genes?
-
+## HDL_CAD results
 
 
 ```{r}
- ngo_results %>% DT::datatable(caption="HDL_CAD  max_z1>0.5 (universe=all genes)")
-```
-
-Now let's restrict ourselves to genes where the max(`prob_z1` is greater than the median 0.5)
-```{r,message=F}
-topres <- filter(hdl_cad_pz,max_z1>0.5) %>% pull(entrezgene) %>% clusterProfiler::enrichGO(
-                OrgDb         = org.Hs.eg.db::org.Hs.eg.db,
-                ont="MF",
-                pAdjustMethod = "BH",
-                pvalueCutoff  = 0.1,
-        readable      = TRUE)  
-topres %>%  as_data_frame() %>% DT::datatable(caption="HDL_CAD  max_z1>0.5 (universe=all genes)")
+unnest(result_hdl_cad) %>% DT::datatable()
 ```
 
 
 
-## Changing the Universe
-
-What if we stick with the genes where the max `prob_z1` is greater than 0.5, but limit the universe to only genes in the input list (the HDL gwas hits)
-
-```{r}
-a_g <- as.character(hdl_cad_pz$entrezgene)
-topres <- filter(hdl_cad_pz,max_z1>0.4) %>% pull(entrezgene) %>% clusterProfiler::enrichGO(
-                OrgDb         = org.Hs.eg.db::org.Hs.eg.db,universe = a_g,
-                pAdjustMethod = "fdr",
-                pvalueCutoff  = 0.05,
-                minGSSize = 3,
-                readable      = TRUE)  
-topres@result %>%  DT::datatable(caption="HDL_CAD max_z1>0.7 (universe=HDL hits)")
-```
-
-We can do the same thing for height
-```{r}
-a_g <- as.character(height_cad_pz$entrezgene)
-topres <- filter(height_cad_pz,max_z1>0.5) %>% pull(entrezgene) %>% clusterProfiler::enrichGO(
-                OrgDb         = org.Hs.eg.db,universe = a_g,
-                pAdjustMethod = "BH",
-                pvalueCutoff  = 0.05,
-                minGSSize = 3,
-                readable      = TRUE)  
-topres@result %>%  DT::datatable(caption = "Height_CAD max_z1>0.5 (universe=Height hits)")
-```
 
 
-
-### ReactomeDB Pathway Enrichment
-
-Again, starting with the full set of genes:
-
-```{r,message=F}
-library(ReactomePA)
-hdl_cad_genes <- as.character(unique(a_hdl_cad$entrezgene))
-x <- ReactomePA::enrichPathway(gene=hdl_cad_genes,
-                               pvalueCutoff=0.05,
-                               readable=T,
-                               pAdjustMethod = "fdr")
-x_df <- as_data_frame(x)
-x_df %>% DT::datatable(caption="ReactomeDB enrichment all HDL hits")
-```
-
-Restricting to genes where the max(`prob_z1` is greater than 0.5)
-
-```{r,message=F}
-a_g <- as.character(hdl_cad_pz$entrezgene)
-x <- filter(hdl_cad_pz,max_z1>0.5) %>% 
-  pull(entrezgene) %>%
-  ReactomePA::enrichPathway(
-    pvalueCutoff=0.01,universe = a_g,
-    readable=T,
-    pAdjustMethod = "fdr",
-    minGSSize = 3)
-
-as_data_frame(x) %>% DT::datatable()
-
-```
-
-Restricting to genes where the min(`prob_z1`) is greater than 0.5 gives us 1 result
-
-```{r,message=F}
-x <- filter(hdl_cad_pz,min_z1>0.5) %>% pull(entrezgene) %>% ReactomePA::enrichPathway(pvalueCutoff=0.05, readable=T,pAdjustMethod = "fdr")
-as_data_frame(x) %>% DT::datatable()
-```
-
-
-
+## Height_CAD results
 
 
 ```{r}
-
-
-
+unnest(result_height_cad) %>% DT::datatable()
 ```
 
 
+
+<!-- # ```{r} -->
+<!-- # library(EigenH5) -->
+<!-- # eqtl_hf <- "~/Dropbox/Repos/sh2Ash/data/GTEx_eqtl.h5" -->
+<!-- # fstf <- "~/Dropbox/Repos/sh2Ash/data/GTEx_eqtl.fst" -->
+<!-- #  -->
+<!-- # library(fst) -->
+<!-- # sub_gene <- retrieve_genes() %>% dplyr::select(ensembl_gene_stable_id,gene_name) -->
+<!-- # eqtlf <- fs::dir_ls("~/Downloads/GTEx_Analysis_v7_eQTL/",glob = "*gene_pairs*") -->
+<!-- # fstf <- fs::path("~/Dropbox/Repos/sh2Ash/data/eqtl",gsub(".+eQTL/(.+).v7.signif.+","\\1",eqtlf),ext="fst") -->
+<!-- #  -->
+<!-- # pb <- progress::progress_bar$new(total=length(eqtlf)) -->
+<!-- #  -->
+<!-- # #pr_delim <- qui -->
+<!-- # walk2(eqtlf,fstf,function(filename,output_filename){ -->
+<!-- #   tiss <- gsub(".+eQTL/(.+).v7.signif.+","\\1",filename) -->
+<!-- #   teqtl_df <- read_delim(filename,delim="\t",col_types=cols_only(variant_id=col_character(), -->
+<!-- #                                                                  gene_id=col_character(), -->
+<!-- #                                                                  tss_distance=col_integer()),progress = F) %>% -->
+<!-- #     separate(variant_id,c("chrom","pos"),sep="_",convert = T,extra="drop") %>% -->
+<!-- #     rename(gene_dist=tss_distance) %>% -->
+<!-- #     mutate(gene_dist=abs(gene_dist)) %>% -->
+<!-- #     separate(gene_id,into=c("ensembl_gene_stable_id","sid"),sep="\\.") %>% -->
+<!-- #     mutate() %>% -->
+<!-- #     dplyr::inner_join(sub_gene,by="ensembl_gene_stable_id") -->
+<!-- #   write_fst(teqtl_df,path = output_filename) -->
+<!-- #   pb$tick() -->
+<!-- #   # dbWriteTable(conn=mcon,name="eQTL",value=teqtl_df,append=T,overwrite=F) -->
+<!-- # }) -->
+<!-- # ``` -->
 
 
 

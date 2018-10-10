@@ -327,6 +327,7 @@ result_height_cad <- total_pipeline("~/Dropbox/Repos/sh2Ash/data/giant_height__c
 # HDL_CAD results
 
 ##Pathway Level Results
+
 ```{r}
 select(result_hdl_cad,-data) %>% DT::datatable()
 
@@ -335,6 +336,7 @@ select(result_hdl_cad,-data) %>% DT::datatable()
 
 
 ## Gene Level Results
+
 ```{r}
 unnest(result_hdl_cad) %>% DT::datatable()
 ```
@@ -343,9 +345,10 @@ unnest(result_hdl_cad) %>% DT::datatable()
 
 
 
-## Height_CAD results
+# Height_CAD results
 
-##Pathway Level Results
+## Pathway Level Results
+
 ```{r}
 select(result_height_cad,-data) %>% DT::datatable()
 

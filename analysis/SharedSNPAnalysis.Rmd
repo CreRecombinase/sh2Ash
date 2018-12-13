@@ -266,14 +266,14 @@ go_enrichment <- function(data_df,anno_df,ont="MF",pvalueCutoff=0.1,prob_Z_cutof
   return(nest_enrich_df)
 }
 
-total_pipeline <- function(cause_filename){
+total_pipeline <- function(cause_filename,ont="MF"){
   data_df <- read_delim(cause_filename,delim="\t") %>% rename(name=snp)
   prob_Z_cutoff <- median(data_df$prob_z1)
   snp_df <- distinct(data_df,name)
   anno_df <- annotate_snp_loc(snp_df)
   all_eqtl <- subset_eqtl(anno_df = anno_df)
   anno_df <- annotate_genes(snp_df,all_eqtl)
-  result <- go_enrichment(data_df = data_df,anno_df = anno_df,prob_Z_cutoff = prob_Z_cutoff)
+  result <- go_enrichment(data_df = data_df,anno_df = anno_df,prob_Z_cutoff = prob_Z_cutoff,ont=ont)
   return(result)
 }
 
@@ -319,7 +319,9 @@ Let's start with the full set of `HDL->CAD` genes and check for GO term enrichme
 ```{r, echo=FALSE,message=F,warning=F}
 
 result_hdl_cad <- total_pipeline("~/Dropbox/Repos/sh2Ash/data/gls_hdl__cardiogram_cad_data.tsv")
-result_height_cad <- total_pipeline("~/Dropbox/Repos/sh2Ash/data/giant_height__cardiogram_cad_data.tsv")
+bresult_hdl_cad <- total_pipeline("~/Dropbox/Repos/sh2Ash/data/gls_hdl__cardiogram_cad_data.tsv",ont="BP")
+
+# result_height_cad <- total_pipeline("~/Dropbox/Repos/sh2Ash/data/giant_height__cardiogram_cad_data.tsv")
 ```
 
 

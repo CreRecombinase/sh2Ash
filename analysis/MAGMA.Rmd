@@ -10,7 +10,7 @@ output: html_document
 
 Below is a summary of the output of MAGMA run on the GWAS summary statistics from `egg_bw_summary_statistics.tsv.gz` (with the sex-chromosome SNPs removed). MAGMA was run using the online `FUMA` server, specifically the `SNP2GENE` service ([link here](http://fuma.ctglab.nl))  The results can be found here: http://fuma.ctglab.nl/browse/48 (some of the plots are quite dense and might slow down your browser).
 
-The table below is (by default) sorted by `prob_Z1_conf`.  The gene assignment was performed by `MAGMA`, and the p-value indicates the enrichment of the pathway in the birthweight GWAS.
+The table below is (by default) sorted by `prob_Z1_conf`.  The gene assignment was performed by `MAGMA`, and the p-value indicates the (bonferroni-adjusted) significance of the enrichment of the pathway in the birthweight GWAS. 
 
 ```{r,echo=F,message=F,warning=FALSE}
 library(tidyverse)
@@ -42,7 +42,6 @@ cause_df <- readRDS(cause_file)[["data"]] %>% arrange(desc(prob_Z1_conf))
 annov_df <- select(full_snp_df,uniqID,snp) %>% inner_join(mutate(annov_df,uniqID=as.character(uniqID)))
 
 cause_annov_df <- select(annov_df,snp,gene,symbol) %>% inner_join(select(cause_df,-seb1,-seb2,-A1,-A2,-delta_elpd)) %>% arrange(desc(prob_Z1_conf))
-magma_gene_df <- read_tsv("~/Downloads/data/FUMA/magma.genes.out") %>% arrange(P)
 ```
 
 
@@ -76,10 +75,12 @@ snp_cause_df <- mutate(gene_df,IndSigSNP=str_split(IndSigSNPs,pattern=";")) %>%
   arrange(desc(prob_Z1_conf))
 ```
 ```{r,echo=F,message=F,warning=FALSE}
+snp_cause_df<- distinct(snp_cause_df,setname,P_SET) %>% mutate(set_adj_p=p.adjust(P_SET,method ="bonferroni",n= 10894)) %>% select(-P_SET) %>% inner_join(snp_cause_df)
+
 select(snp_cause_df,
        gene=symbol,
-       gene_set_magma_p=P_SET,
        snp,beta_hat_BW=beta_hat_1,
+       gene_set_adj_p=set_adj_p,
        beta_hat_t2d=beta_hat_2,
        prob_Z1_conf,
        gene_set=setname) %>%  DT::datatable()

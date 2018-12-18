@@ -1,0 +1,95 @@
+---
+title: "MAGMA"
+author: "Nicholas Knoblauch"
+date: "2018-12-13"
+output: html_document
+---
+
+
+## MAGMA Results
+
+Below is a summary of the output of MAGMA run on the GWAS summary statistics from `egg_bw_summary_statistics.tsv.gz` (with the sex-chromosome SNPs removed). MAGMA was run using the online `FUMA` server, specifically the `SNP2GENE` service ([link here](http://fuma.ctglab.nl))  The results can be found here: http://fuma.ctglab.nl/browse/48 (some of the plots are quite dense and might slow down your browser).
+
+The table below is (by default) sorted by `prob_Z1_conf`.  The gene assignment was performed by `MAGMA`, and the p-value indicates the (bonferroni-adjusted) significance of the enrichment of the pathway in the birthweight GWAS. 
+
+```{r,echo=F,message=F,warning=FALSE}
+library(tidyverse)
+library(fs)
+# fs::dir_delete("../data/FUMA/")
+# unzip("../data/FUMA_job31088.zip",exdir="../data/FUMA/")
+
+snp_annovf <- "~/Downloads/data/FUMA/annov.txt"
+
+fuma_files <- path_abs(dir_ls("~/Downloads/data/FUMA"))
+cause_file <- "/project/compbio/cause_results/gwas_pairs2/egg_bw__diagram_t2d_learn_cause.RDS"
+```
+
+
+```{r,echo=F,message=F,warning=FALSE}
+
+annov_df <- read_tsv(snp_annovf) 
+full_snp_df <- read_tsv("/project/mstephens/data/external_public_supp/gwas_summary_statistics/summary_statistics/egg_bw_summary_statistics.tsv.gz",
+                        col_types = cols_only(chrom="c",pos="i",snp="c",ref_allele="c",alt_allele="c")) %>%    mutate(uniqID = glue::glue("{chrom}:{pos}:{ref_allele}:{alt_allele}"))
+
+
+snp_df <- read_tsv("~/Downloads/data/FUMA/snps.txt")
+gene_df <- read_tsv("~/Downloads/data/FUMA/genes.txt")
+
+cause_df <- readRDS(cause_file)[["data"]] %>% arrange(desc(prob_Z1_conf))
+```
+
+```{r,echo=F,message=F,warning=FALSE}
+annov_df <- select(full_snp_df,uniqID,snp) %>% inner_join(mutate(annov_df,uniqID=as.character(uniqID)))
+
+cause_annov_df <- select(annov_df,snp,gene,symbol) %>% inner_join(select(cause_df,-seb1,-seb2,-A1,-A2,-delta_elpd)) %>% arrange(desc(prob_Z1_conf))
+```
+
+
+
+```{r,echo=F,message=F,warning=FALSE}
+
+magma_sets <- scan("~/Downloads/data/FUMA/magma.setgenes.out",what=character(),sep="\n")
+
+magma_headers <- magma_sets[grepl("#",magma_sets)]
+
+magma_data <- magma_sets[!grepl("#",magma_sets)] %>% str_split_fixed(pattern=regex("\\h+"),n = 10)
+magma_cn <- c(magma_data[1,])
+magma_data <- magma_data[magma_data[,2]!="GENE",]
+magma_df <- as_data_frame(magma_data) %>% magrittr::set_colnames(magma_cn) %>% rename(SET=`_SET1_`) %>% select(SET,GENE,NSNPS,NPARAM,N,ZSTAT,P) %>%  mutate_at(c("ZSTAT","P","NSNPS","NPARAM","N"),as.numeric) %>% mutate(SET=as.integer(gsub("_SET([0-9]+)_","\\1",SET))) %>% rename(P_GENE=P,gene=GENE)
+
+magma_header_mat <- t(matrix(magma_headers[-(1:2)],nrow=3))
+magma_header_df <- gsub(".+= ","",magma_header_mat) %>% as_data_frame %>% magrittr::set_colnames(c("setname","ngenes","P")) %>% mutate(ngenes=as.integer(ngenes),P=as.numeric(P)) %>% mutate(SET=1:n()) %>% rename(P_SET=P)
+
+magma_df <- inner_join(magma_df,magma_header_df) %>% arrange(P_GENE)
+```
+
+```{r,echo=F,message=F,warning=FALSE}
+snp_cause_df <- mutate(gene_df,IndSigSNP=str_split(IndSigSNPs,pattern=";")) %>% 
+  unnest() %>%
+  select(gene=ensg,symbol,HUGO,IndSigSNP) %>% 
+  inner_join(select(snp_df,IndSigSNP,snp=rsID),by=c("IndSigSNP")) %>% 
+  select(-IndSigSNP) %>% 
+  inner_join(select(cause_df,-seb1,-seb2,-A1,-A2,-delta_elpd)) %>%  
+  inner_join(magma_df) %>%
+  select(-ngenes,-P_GENE,-ZSTAT,-NSNPS,-SET,-NPARAM,-N) %>% 
+  arrange(desc(prob_Z1_conf))
+```
+```{r,echo=F,message=F,warning=FALSE}
+snp_cause_df<- distinct(snp_cause_df,setname,P_SET) %>% mutate(set_adj_p=p.adjust(P_SET,method ="bonferroni",n= 10894)) %>% select(-P_SET) %>% inner_join(snp_cause_df)
+
+select(snp_cause_df,
+       gene=symbol,
+       snp,beta_hat_BW=beta_hat_1,
+       gene_set_adj_p=set_adj_p,
+       beta_hat_t2d=beta_hat_2,
+       prob_Z1_conf,
+       gene_set=setname) %>%  DT::datatable()
+```
+
+
+
+
+
+
+
+

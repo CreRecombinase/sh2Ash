@@ -1,5 +1,5 @@
 ---
-title: "MAGMA"
+title: "BW_T2D_MAGMA"
 author: "Nicholas Knoblauch"
 date: "2018-12-13"
 output: html_document

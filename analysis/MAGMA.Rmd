@@ -19,9 +19,9 @@ library(tidyverse)
 library(fs)
 
 snp_annovf <- "~/Downloads/data/FUMA/annov.txt"
-ind_snpf <- "~/Downloads/data/FUMA/IndSigSNPs.txt"
 cause_file <- "/project/compbio/cause_results/gwas_pairs2/egg_bw__diagram_t2d_learn_cause.RDS"
-full_gwas_f <- "/project/mstephens/data/external_public_supp/gwas_summary_statistics/summary_statistics/egg_bw_summary_statistics.tsv.gz"
+gene_file <- "~/Downloads/data/FUMA/genes.txt"
+snp_file <- "~/Downloads/data/FUMA/snps.txt"
 ```
 
 
@@ -31,33 +31,21 @@ full_gwas_f <- "/project/mstephens/data/external_public_supp/gwas_summary_statis
 ```{r,echo=F,message=F,warning=FALSE}
 #read in annovar results
 annov_df <- read_tsv(snp_annovf) 
-#read in GWAS input (to get rsid from annov
-annov_df <- read_tsv(full_gwas_f,
-                        col_types = cols_only(chrom="c",pos="i",snp="c",ref_allele="c",alt_allele="c")) %>%    mutate(uniqID = glue::glue("{chrom}:{pos}:{ref_allele}:{alt_allele}")) %>% select(uniqID,snp) %>% inner_join(annov_df)
-
-
 #read in MAGMA significant SNPs
-snp_df <- read_tsv("~/Downloads/data/FUMA/snps.txt")
+snp_df <- read_tsv(snp_file)
+#Assign rsID to annovar results
 annov_df <- select(snp_df,uniqID,rsID) %>% inner_join(annov_df)
 #read in MAGMA genes
-gene_df <- read_tsv("~/Downloads/data/FUMA/genes.txt")
+gene_df <- read_tsv(gene_file)
 #read in cause results
 cause_data <- readRDS(cause_file)
-cause_df <- cause_data[["data"]] %>% arrange(desc(prob_Z1_conf)) 
+cause_df <- cause_data[["data"]] %>% select(-A1,-A2) 
 median_Z <- median(cause_df$prob_Z1_conf)
-n_z <- sum(cause_df$prob_Z1_conf>median_Z)
-```
-
-```{r,echo=F,message=F,warning=FALSE}
-cause_annov_df <- select(annov_df,snp=rsID,gene,symbol) %>% inner_join(select(cause_df,-seb1,-seb2,-A1,-A2,-delta_elpd)) %>% arrange(desc(prob_Z1_conf))
-new_nz <- sum(cause_annov_df$prob_Z1_conf>median_Z)
 ```
 
 
-## 
-```{r}
 
-```
+
 
 
 ```{r,echo=F,message=F,warning=FALSE}
@@ -75,10 +63,10 @@ magma_header_mat <- t(matrix(magma_headers[-(1:2)],nrow=3))
 magma_header_df <- gsub(".+= ","",magma_header_mat) %>% as_data_frame %>% magrittr::set_colnames(c("setname","ngenes","P")) %>% mutate(ngenes=as.integer(ngenes),P=as.numeric(P)) %>% mutate(SET=1:n()) %>% rename(P_SET=P)
 
 magma_df <- inner_join(magma_df,magma_header_df) %>% arrange(P_GENE)
+
+# magma_gene_df <- distinct(magma_df,gene)
+# write_tsv(magma_gene_df,"../data/magma_genes.txt")
 ```
-
-
-
 
 ```{r,echo=F,message=F,warning=FALSE}
 snp_cause_df <- mutate(gene_df,IndSigSNP=str_split(IndSigSNPs,pattern=";")) %>% 
@@ -86,16 +74,18 @@ snp_cause_df <- mutate(gene_df,IndSigSNP=str_split(IndSigSNPs,pattern=";")) %>%
   select(gene=ensg,symbol,HUGO,IndSigSNP) %>% 
   inner_join(select(snp_df,IndSigSNP,snp=rsID),by=c("IndSigSNP")) %>% 
   select(-IndSigSNP) %>% 
-  inner_join(select(cause_df,-seb1,-seb2,-A1,-A2,-delta_elpd)) %>%  
+  inner_join(select(cause_df,-seb1,-seb2,-delta_elpd)) %>%  
   inner_join(magma_df) %>%
   select(-ngenes,-P_GENE,-ZSTAT,-NSNPS,-SET,-NPARAM,-N) %>% 
   arrange(desc(prob_Z1_conf))
 ```
+
+
 ```{r,echo=F,message=F,warning=FALSE}
 snp_cause_df<- distinct(snp_cause_df,setname,P_SET) %>% 
   mutate(set_adj_p=p.adjust(P_SET,method ="bonferroni",n= 10894)) %>% 
   select(-P_SET) %>% 
-  inner_join(snp_cause_df)
+  inner_join(snp_cause_df,by="setname")
 
 select(snp_cause_df,
        gene=symbol,
@@ -107,58 +97,54 @@ select(snp_cause_df,
   DT::datatable()
 ```
 
-```{r,echo=F,message=F,warning=FALSE}
-median_Z <- median(cause_df$prob_Z1_conf)
-# label snps with P(Z=1)>median_Z as "shared""
-sub_cause_df <- mutate(cause_df,is_shared=prob_Z1_conf>median_Z) %>% 
-  select(rsID=snp,is_shared,prob_Z1_conf)
 
-#Merge the CAUSE results with the rest of the annotated GWAS significant results
-magma_snp_df <- inner_join(annov_df,magma_df,by="gene") %>% 
-  left_join(sub_cause_df,by="rsID") %>% #left join will assign NA to is_shared for gwas results that CAUSE didn't look at 
-  mutate(is_shared=if_else(is.na(is_shared),FALSE,is_shared))
-
-# What fraction of GWAS results are shared?
-prob_shared <- distinct(magma_snp_df,rsID,is_shared) %>% 
-  summarise(prob_shared=sum(is_shared)/n()) %>%
-  pull(1)
-```
 
 
 
 ##Enrichment
 
-One way to frame the question of enrichment would be to ask: "Given that the proportion of Birthweight GWAS significant SNPs with $P(Z=1) > \text{Median}(P(Z=1))$ is `r prob_shared`, are there birthweight enriched pathways that have more SNPs with $P(Z=1) > \text{Median}(P(Z=1))$ SNPs than we would expect by chance alone?". Under the null hypothesis (or at least _a_ null hypothesis), the number of SNPs with $P(Z=1) > \text{Median}(P(Z=1))$ for a particular pathway is binomially distributed with the number of trials equal to the number of Birthweight GWAS significant SNPs in genes that are members of that pathway, and the probability of sucess is simply the proportion of _all_ GWAS SNPs for which $P(Z=1) > \text{Median}(P(Z=1))$. One simple test of enrichment would be a one-sided binomial test per pathway, followed by bonferroni correction.
+Below is the code and the results of the enrichment analysis, below that is a (slightly more readable) explanation of how I did it.
 
+```{r,message=F,warning=FALSE}
 
-
-
-```{r}
-#Calculate the median P(Z=1)
 median_Z <- median(cause_df$prob_Z1_conf)
 # label snps with P(Z=1)>median_Z as "shared""
 sub_cause_df <- mutate(cause_df,is_shared=prob_Z1_conf>median_Z) %>% 
-  select(rsID=snp,is_shared,prob_Z1_conf)
+  select(snp,is_shared,prob_Z1_conf)
 
-#Merge the CAUSE results with the rest of the annotated GWAS significant results
-magma_snp_df <- inner_join(annov_df,magma_df,by="gene") %>% 
-  left_join(sub_cause_df,by="rsID") %>% #left join will assign NA to is_shared for gwas results that CAUSE didn't look at 
-  mutate(is_shared=if_else(is.na(is_shared),FALSE,is_shared)) #Assign FALSE to the GWAS results that CAUSE didn't look at 
+magma_snp_df <- mutate(gene_df,IndSigSNP=str_split(IndSigSNPs,pattern=";")) %>% 
+  unnest() %>%
+  select(gene=ensg,symbol,HUGO,IndSigSNP) %>% 
+  inner_join(select(snp_df,IndSigSNP,snp=rsID),by=c("IndSigSNP")) %>% 
+  select(-IndSigSNP) %>% 
+  inner_join(magma_df,by="gene") %>% left_join(sub_cause_df,by="snp") %>% mutate(is_shared=if_else(is.na(is_shared),FALSE,is_shared))
 
+# What fraction of GWAS results are shared?
+prob_shared <- distinct(magma_snp_df,rsID,.keep_all = T) %>% 
+  summarise(prob_shared=sum(is_shared)/n()) %>%
+  pull(1)
 
 
 # For each gene set, count the total number of SNPs, and the number of SNPs above the median
-set_sum <- group_by(magma_snp_df,setname) %>%
-  summarise(n_snp_total=n_distinct(rsID), #total number of SNPs per pathway
+set_sum <- group_by(magma_snp_df,setname) %>% do(distinct(.,snp,.keep_all = T)) %>% 
+  summarise(n_snp_total=n_distinct(snp), #total number of SNPs per pathway
             total_shared=sum(is_shared)) #shared SNPs per pathway
 
 set_sum <- mutate(set_sum,
                   pval=pbinom(total_shared,size=n_snp_total,prob=prob_shared,lower.tail=F),
-                  adj_p=p.adjust(pval,method="bonferroni")) %>% 
-  arrange(adj_p) %>% rename(Pathway=setname,num_snps=n_snp_total)
+                  bonf_adj_p=p.adjust(pval,method="bonferroni"),
+                  BH_adj_p=p.adjust(pval,method="BH")) %>% 
+  arrange(pval) %>% rename(Pathway=setname,num_snps=n_snp_total)
 
 set_sum %>%  DT::datatable()
-
 ```
+
+
+
+
+One way to frame the question of enrichment would be to ask: "Given that the proportion of Birthweight GWAS significant SNPs with $P(Z=1) > \text{Median}(P(Z=1))$ is `r prob_shared`, are there birthweight enriched pathways that have more SNPs with $P(Z=1) > \text{Median}(P(Z=1))$ SNPs than we would expect by chance alone?". Under the null hypothesis (or at least _a_ null hypothesis), the number of SNPs with $P(Z=1) > \text{Median}(P(Z=1))$ for a particular pathway is binomially distributed with the number of trials equal to the number of Birthweight GWAS significant SNPs in genes that are members of that pathway, and the probability of sucess is simply the proportion of _all_ GWAS SNPs for which $P(Z=1) > \text{Median}(P(Z=1))$. One simple test of enrichment would be a one-sided binomial test per pathway, followed by bonferroni correction.
+
+
+
 
 

@@ -13,20 +13,16 @@ Below is a summary of the output of MAGMA run on the GWAS summary statistics fro
 The table below is (by default) sorted by `prob_Z1_conf`.  The gene assignment was performed by `MAGMA`, and the p-value indicates the (bonferroni-adjusted) significance of the enrichment of the pathway in the birthweight GWAS. 
 
 ```{r,echo=F,message=F,warning=FALSE}
-
+library(cause)
 #First load libraries and 
 library(tidyverse)
 library(fs)
 
-snp_annovf <- "~/Downloads/data/FUMA/annov.txt"
+snp_annovf <- "../data/FUMA/annov.txt.gz"
 cause_file <- "/project/compbio/cause_results/gwas_pairs2/egg_bw__diagram_t2d_learn_cause.RDS"
-gene_file <- "~/Downloads/data/FUMA/genes.txt"
-snp_file <- "~/Downloads/data/FUMA/snps.txt"
+gene_file <- "../data/FUMA/genes.txt.gz"
+snp_file <- "../data/FUMA/snps.txt.gz"
 ```
-
-
-
-
 
 ```{r,echo=F,message=F,warning=FALSE}
 #read in annovar results
@@ -48,9 +44,10 @@ median_Z <- median(cause_df$prob_Z1_conf)
 
 
 
-```{r,echo=F,message=F,warning=FALSE}
 
-magma_sets <- scan("~/Downloads/data/FUMA/magma.setgenes.out",what=character(),sep="\n")
+```{r,echo=F,message=F,warning=FALSE}
+# Some funny business to get the MAGMA results formatted nicely
+magma_sets <- scan("../data/FUMA/magma.setgenes.out",what=character(),sep="\n")
 
 magma_headers <- magma_sets[grepl("#",magma_sets)]
 
@@ -63,21 +60,20 @@ magma_header_mat <- t(matrix(magma_headers[-(1:2)],nrow=3))
 magma_header_df <- gsub(".+= ","",magma_header_mat) %>% as_data_frame %>% magrittr::set_colnames(c("setname","ngenes","P")) %>% mutate(ngenes=as.integer(ngenes),P=as.numeric(P)) %>% mutate(SET=1:n()) %>% rename(P_SET=P)
 
 magma_df <- inner_join(magma_df,magma_header_df) %>% arrange(P_GENE)
-
-# magma_gene_df <- distinct(magma_df,gene)
-# write_tsv(magma_gene_df,"../data/magma_genes.txt")
 ```
 
 ```{r,echo=F,message=F,warning=FALSE}
+#Assigning cause snps to genes
+#1) Each gene has several tag snps, get them all with str_split
 snp_cause_df <- mutate(gene_df,IndSigSNP=str_split(IndSigSNPs,pattern=";")) %>% 
-  unnest() %>%
-  select(gene=ensg,symbol,HUGO,IndSigSNP) %>% 
-  inner_join(select(snp_df,IndSigSNP,snp=rsID),by=c("IndSigSNP")) %>% 
-  select(-IndSigSNP) %>% 
-  inner_join(select(cause_df,-seb1,-seb2,-delta_elpd)) %>%  
-  inner_join(magma_df) %>%
-  select(-ngenes,-P_GENE,-ZSTAT,-NSNPS,-SET,-NPARAM,-N) %>% 
-  arrange(desc(prob_Z1_conf))
+  unnest() %>%   #create a row for each tag snp
+  select(gene=ensg,symbol,HUGO,IndSigSNP) %>%   #Just need gene ids and SNP
+  inner_join(select(snp_df,IndSigSNP,snp=rsID),by=c("IndSigSNP")) %>%  #each SNP has a tag SNP, join SNP x gene on tag SNP
+  select(-IndSigSNP) %>% # don't need tag snp any more
+  inner_join(select(cause_df,-seb1,-seb2,-delta_elpd)) %>%   #join with cause data
+  inner_join(magma_df) %>% # join with MAGMA data
+  select(-ngenes,-P_GENE,-ZSTAT,-NSNPS,-SET,-NPARAM,-N) %>% #get rid of crap
+  arrange(desc(prob_Z1_conf)) #sort by p_z1_conf
 ```
 
 
@@ -93,9 +89,23 @@ select(snp_cause_df,
        gene_set_adj_p=set_adj_p,
        beta_hat_t2d=beta_hat_2,
        prob_Z1_conf,
+       gene_set=setname) %>% distinct(gene_set,gene_set_adj_p) %>% 
+  DT::datatable()
+```
+
+## SNP Level MAGMA results
+
+```{r,echo=F,message=F}
+select(snp_cause_df,
+       gene=symbol,
+       snp,beta_hat_BW=beta_hat_1,
+       gene_set_adj_p=set_adj_p,
+       beta_hat_t2d=beta_hat_2,
+       prob_Z1_conf,
        gene_set=setname) %>% 
   DT::datatable()
 ```
+
 
 
 
@@ -106,8 +116,8 @@ select(snp_cause_df,
 Below is the code and the results of the enrichment analysis, below that is a (slightly more readable) explanation of how I did it.
 
 ```{r,message=F,warning=FALSE}
-
-median_Z <- median(cause_df$prob_Z1_conf)
+median_Z <- summary(cause_data)$quants[[1]][1,3]
+#median_Z <- median(cause_df$prob_Z1_conf)
 # label snps with P(Z=1)>median_Z as "shared""
 sub_cause_df <- mutate(cause_df,is_shared=prob_Z1_conf>median_Z) %>% 
   select(snp,is_shared,prob_Z1_conf)
@@ -120,7 +130,7 @@ magma_snp_df <- mutate(gene_df,IndSigSNP=str_split(IndSigSNPs,pattern=";")) %>%
   inner_join(magma_df,by="gene") %>% left_join(sub_cause_df,by="snp") %>% mutate(is_shared=if_else(is.na(is_shared),FALSE,is_shared))
 
 # What fraction of GWAS results are shared?
-prob_shared <- distinct(magma_snp_df,rsID,.keep_all = T) %>% 
+prob_shared <- distinct(magma_snp_df,snp,.keep_all = T) %>% 
   summarise(prob_shared=sum(is_shared)/n()) %>%
   pull(1)
 
@@ -140,6 +150,28 @@ set_sum %>%  DT::datatable()
 ```
 
 
+
+
+```{r}
+magma_snp_df <- mutate(gene_df,IndSigSNP=str_split(IndSigSNPs,pattern=";")) %>% 
+  unnest() %>%
+  select(gene=ensg,symbol,HUGO,IndSigSNP) %>% 
+  inner_join(select(snp_df,IndSigSNP,snp=rsID),by=c("IndSigSNP")) %>% 
+  select(-IndSigSNP) %>% 
+  inner_join(magma_df,by="gene") %>% left_join(sub_cause_df,by="snp") %>% mutate(is_shared=if_else(is.na(is_shared),FALSE,is_shared))
+
+snp_levels <- unique(c(snp_df$rsID,snp_df$IndSigSNP))
+fe_magma_snp_df <- distinct(magma_snp_df,setname,snp,is_shared) %>% mutate(is_pathway=TRUE) %>% 
+  mutate(snp=factor(x = snp,levels = snp_levels)) %>% 
+  complete(nesting(snp,is_shared),setname,fill=list(is_pathway=FALSE))
+
+inner_join(snp_df,cause_df,by=c("rsID"="snp")) %>% ggplot(aes(x=-log10(gwasP),y=prob_Z1_conf))+geom_hex()+geom_smooth(method="lm")
+fe_df <- group_by(fe_magma_snp_df,setname) %>%  do(broom::tidy(fisher.test(.$is_shared,.$is_pathway,alternative="greater"))) %>% 
+    ungroup() %>%
+    mutate(adj_p_BH=p.adjust(p.value,method="BH"),
+           adj_p_bonferroni=p.adjust(p.value,method="bonferroni"))  
+fe_df %>% arrange(p.value) %>% DT::datatable()
+```
 
 
 One way to frame the question of enrichment would be to ask: "Given that the proportion of Birthweight GWAS significant SNPs with $P(Z=1) > \text{Median}(P(Z=1))$ is `r prob_shared`, are there birthweight enriched pathways that have more SNPs with $P(Z=1) > \text{Median}(P(Z=1))$ SNPs than we would expect by chance alone?". Under the null hypothesis (or at least _a_ null hypothesis), the number of SNPs with $P(Z=1) > \text{Median}(P(Z=1))$ for a particular pathway is binomially distributed with the number of trials equal to the number of Birthweight GWAS significant SNPs in genes that are members of that pathway, and the probability of sucess is simply the proportion of _all_ GWAS SNPs for which $P(Z=1) > \text{Median}(P(Z=1))$. One simple test of enrichment would be a one-sided binomial test per pathway, followed by bonferroni correction.

@@ -1,0 +1,31 @@
+---
+title: "Height CAD eQTL enrichment"
+output: html_document
+---
+
+
+```{r,echo=F,message=F}
+library(tidyverse)
+sig_term_snp <- readRDS("../data/eqtl_enrichment.RDS")
+df <- sig_term_snp$glg_ldl__diagram_t2d_cause
+```
+
+
+### Enriched pathways
+```{r,echo=F}
+df%>% 
+  select(go_id,GO_description=name_1006,logit_estimate=estimate,p_logit_BH=p_BH,snp) %>%
+  group_by(go_id,GO_description,logit_estimate,p_logit_BH) %>% summarise(n_snps=n_distinct(snp)) %>% 
+  distinct() %>% 
+  arrange(p_logit_BH) %>% 
+  DT::datatable()
+```
+
+### SNPs in enriched pathways 
+
+
+```{r,echo=F}
+df %>% 
+  select(snp,prob_Z1_conf,beta_hat_1,beta_hat_2,hgnc_symbol,go_id) %>%
+  group_by_at(vars(-go_id,-hgnc_symbol)) %>% summarise(genes=paste(unique(hgnc_symbol),collapse = ","),go_ids=paste(unique(go_id),collapse=",")) %>%  arrange(desc(prob_Z1_conf)) %>% DT::datatable()
+```

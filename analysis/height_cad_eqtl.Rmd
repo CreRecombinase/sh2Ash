@@ -7,7 +7,7 @@ output: html_document
 ```{r,echo=F,message=F}
 library(tidyverse)
 sig_term_snp <- readRDS("../data/eqtl_enrichment.RDS")
-df <- sig_term_snp$glg_ldl__diagram_t2d_cause
+df <- sig_term_snp$giant_height__vanderHarst_cad_learn_cause
 ```
 
 

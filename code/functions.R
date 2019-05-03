@@ -30,6 +30,11 @@ annotate_snp_loc <- function(rsid,...){
 }
 
 
+scause_df <- function(x){
+    dplyr::select(x,snp,prob_Z1_conf)
+}
+
+
 retrieve_genes <- function(getSymbol=T){
 
   con <- RMySQL::dbConnect(RMySQL::MySQL(),
@@ -112,6 +117,7 @@ retrieve_go_ids <- function(all_genes){
 }
 
 
+
 read_eqtl_f <- function(file_name){
 tiss <- fs::path_ext_remove(file_name)
 read_feather(file_name,columns = c("chrom","ensembl_gene_stable_id","pos")) %>%
@@ -124,14 +130,12 @@ subset_eqtl <- function(anno_df,t_eqtl_df){
   # t_tiss_df <- filter(all_tiss_df,size==min(size))
   dplyr::distinct(anno_df,chrom,pos,name) %>%
     dplyr::inner_join(t_eqtl_df,by=c("chrom","pos"))
-
-  return(all_eqtl)
 }
 
 
 finalize_snp_gene <- function(anno_df,eqtl_df,goids){
   gene_dist_df <- dplyr::select(anno_df,name,gene=ensembl_gene_stable_id)
-  s_eqtl_df <- dplyr::select(eqtl_df,gene=ensembl_gene_stable_id,name,func) %>%
+  s_eqtl_df <- dplyr::select(eqtl_df,gene=ensembl_gene_stable_id,name,func=tiss) %>%
     dplyr::group_by(gene,name) %>%
     dplyr::summarise(ct=n_distinct(func)) %>%
     dplyr::ungroup()
@@ -145,51 +149,67 @@ finalize_snp_gene <- function(anno_df,eqtl_df,goids){
     dplyr::filter(go_id!="")
 }
 
-split_slice <- function(.data,num_slices=10){
+snp_gene_mat <- function(sg_df, all_snps,min_snps = 2L ){
+    snp_gene_mat <- dplyr::distinct(snp_gene_df, name, go_id) %>%
+        dplyr::mutate(name = factor(name, levels = all_snps), go_id = factor(go_id))
+    all_go <- levels(snp_gene_mat$go_id)
 
-  spliti <- parallel::splitIndices(nrow(.data),num_slices)
-  map(spliti,~slice(.data,.x))
+   sgm <-  Matrix::sparseMatrix(i = as.integer(snp_gene_mat$name),
+                         j = as.integer(snp_gene_mat$go_id),
+                         dims = c(length(all_snps), length(all_go)),
+                         dimnames = list(all_snps, all_go),
+                         x = rep(TRUE, nrow(snp_gene_mat)), giveCsparse = TRUE)
+    return(sgm[, colSums(sgm) >= min_snps])
+
+
 }
 
 
-three_models <- function(prob_Z1_conf,is_pathway,is_shared){
-  dplyr::bind_rows(dplyr::mutate(broom::tidy(lm(is_pathway~prob_Z1_conf)),method="lm"),
-            dplyr::mutate(broom::tidy(glm(is_pathway~prob_Z1_conf,family="binomial")),method="logit"),
-            dplyr::mutate(broom::tidy(fisher.test(is_shared,is_pathway)),method="fe",term="prob_Z1_conf") %>%
-              dplyr::select(-conf.low,-conf.high,-alternative)
-  )
-}
+calc_enrichment <- function(id, cause_df, sub_z, mz, snp_gene_mat){
 
-enrich_fun <- function(cause_df,mz,snp_gene_df,file,go_id_df=NULL){
-  if(!is.null(go_id_df)){
-    snp_gene_df <- dplyr::semi_join(snp_gene_df,go_id_df)
-  }
-
-  sub_z <- set_names(cause_df$prob_Z1_conf,cause_df$snp)
-  td <-   as_tibble(cause_df) %>%
-    dplyr::select(snp,prob_Z1_conf) %>%
-    dplyr::inner_join(snp_gene_df,by=c("snp"="name")) %>%
-    dplyr::select(snp,gene,prob_Z1_conf,go_id,is_pathway) %>%
-    dplyr::mutate(snp=factor(snp)) %>%
-    dplyr::distinct(snp,prob_Z1_conf,go_id,is_pathway)
-  if(nrow(td)>0){
-
-    ret_df <- td %>% dplyr::group_by(go_id) %>%
-      tidyr::complete(snp,go_id,fill=list(is_pathway=FALSE)) %>%
-      dplyr::mutate(prob_Z1_conf=sub_z[as.character(snp)],is_shared=prob_Z1_conf>mz) %>%
-      dplyr::distinct() %>%
-      dplyr::do(three_models(.$prob_Z1_conf,.$is_pathway,.$is_shared)) %>%
-      dplyr::ungroup() %>% dplyr::group_by(method) %>%
-      dplyr::mutate(p_BH=p.adjust(p.value,method="BH"),p_Bon=p.adjust(p.value,method = "bonferroni")) %>%
-      dplyr::ungroup() %>%
-      dplyr::arrange(p.value) %>% dplyr::mutate(file=file)
-    return(ret_df)
-
-  }
-  else{
-    return(NULL)
-  }
+    three_models <- function(prob_Z1_conf, is_pathway, go_id){
+        dplyr::bind_rows(
+                   dplyr::mutate(broom::tidy(lm(is_pathway ~ prob_Z1_conf)), method = "lm"),
+                   dplyr::mutate(broom::tidy(glm(is_pathway ~ prob_Z1_conf, family = "binomial")), method = "logit")
+               ) %>% dplyr::mutate(go_id = go_id)
+    }
+    cn <- colnames(snp_gene_mat)
+    map_dfr(id, ~three_models(cause_df$prob_Z1_conf, as.integer(snp_gene_mat[, .x]), cn[.x])) %>%
+        dplyr::group_by(method) %>%
+        dplyr::mutate(p_BH = p.adjust(p.value, method = "BH"), p_Bon = p.adjust(p.value, method = "bonferroni")) %>%
+        dplyr::ungroup() %>%
+        dplyr::arrange(p.value)
 }
 
 
 
+enrich_fun <- function(cause_df, mz, snp_gene_mat, file){
+
+#  sub_z <- magrittr::set_names(cause_df$prob_Z1_conf, cause_df$snp)
+   cause_df <-   as_tibble(cause_df)
+    ##   ## dplyr::select(snp, prob_Z1_conf) %>%
+    ##   ## dplyr::inner_join(snp_gene_df, by = c("snp" = "name")) %>%
+    ##   ## dplyr::select(snp, gene, prob_Z1_conf, go_id, is_pathway) %>%
+    ##   ## dplyr::mutate(snp = factor(snp)) %>%
+    ##   ## dplyr::distinct(snp, prob_Z1_conf, go_id, is_pathway)
+    ##   if (nrow(tdf) > 0){
+
+    num_cols <- ncol(snp_gene_mat)
+
+    ret_df  <-
+            furrr::future_map_dfr(parallel::splitIndices(num_cols, 15), ~calc_enrichment(.x, cause_df, mz, snp_gene_mat),
+                                  options = furrr::future_options(
+                                                       globals = F,
+                                                       packages = c(
+                                                           "tidyr",
+                                                           "dplyr",
+                                                           "stats"
+                                                       ))) %>%
+            dplyr::mutate(file = file)
+        return(ret_df)
+
+    ## }
+    ## else{
+    ##     return(NULL)
+    ## }
+}

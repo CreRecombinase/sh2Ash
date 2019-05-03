@@ -1,17 +1,18 @@
 
-c_dir <- fs::path_expand("~/Desktop/cause_dir/")
+c_dir <- fs::path_expand("/project/compbio/cause_results/cause_grid3/")
 
-eqtl_dir <- fs::path_expand("/run/media/nwknoblauch/Data/eQTL_SumStats/gtex_v7_feathers/")
+eqtl_dir <- fs::path_expand("/scratch/midway2/nwknoblauch/eqtl/")
 all_files <- fs::path_file(fs::dir_ls(c_dir, glob = "*cause.RDS"))
-eqtl_files <- fs::path_file(fs::dir_ls(eqtl_dir, glob = "*feather"))
+eqtl_files <- fs::path_file(fs::dir_ls(eqtl_dir, glob = "*fst"))
 plan <- drake_plan(
     causedata = target(readRDS(fs::path(c_dir, all_files[x])),
                        transform = map(x = !!(seq_along(all_files)))),
     medz = target(median_Z(causedata), transform = map(causedata)),
     cause_df = target(scause_df(causedata$data), transform = map(causedata)),
-    all_snps = readRDS(file_in("all_snps.RDS")),
-    snp_df = readRDS(file_in("snp_df.RDS")),
-    gene_df = readRDS(file_in,"gene_df.RDS"),
+    all_snps = target(unique_col(cause_df, col = "snp"),
+                      transform = combine(cause_df)),
+    snp_df = target(annotate_snp_loc(all_snps), hpc = FALSE),
+    gene_df = target(retrieve_genes(), hpc = FALSE),
     anno_df = nearest_gene(snp_df, gene_df = gene_df),
     t_eqtl_df = target(read_eqtl_f(fs::path(eqtl_dir, eqtl_files[i])),
                        transform = map(i = !!seq_along(eqtl_files))),
@@ -21,10 +22,11 @@ plan <- drake_plan(
                      transform = combine(s_eqtl_df)),
     genelist = unique_col(eqtl_df, anno_df, col = "ensembl_gene_stable_id"),
     godf = target(retrieve_go_ids(genelist), hpc = FALSE),
-    # snp_gene_df = finalize_snp_gene(anno_df, eqtl_df, godf),
-    # sgm = snp_gene_mat(snp_gene_df, all_snps),
-    # res_df = target(
-    #     enrich_fun(cause_df, medz, sgm, file = all_files[x]),
-    #     transform = map(cause_df, medz, x = !!(seq_along(all_files)))
-    # ),
+    snp_gene_df = finalize_snp_gene(anno_df, eqtl_df, godf),
+    sgm = snp_gene_mat(snp_gene_df, all_snps),
+    res_df = target(
+        enrich_fun(cause_df, medz, sgm, file = all_files[x]),
+        transform = map(cause_df, medz, x = !!(seq_along(all_files)))
+    ),
+    trace = T,
     )

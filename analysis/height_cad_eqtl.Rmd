@@ -3,29 +3,52 @@ title: "Height CAD eQTL enrichment"
 output: html_document
 ---
 
+```{r echo=F,message=F,warning=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
 
-```{r,echo=F,message=F}
+
+# Changes from previous version
+
+
+1) There is now a column `method`, indicating whether a linear model or logistic regression was used
+2) For genes with multiple SNPs, the median value of `prob_Z1_conf` was used.
+
+
+
+```{r,message=F,warning=F}
 library(tidyverse)
+library(drake)
+# c("causedata_1L", "medz_causedata_1L", "cause_df_causedata_1L", 
+# "summ_cause_med_cause_df_causedata_1L", "summ_cause_samp_cause_df_causedata_1L", 
+# "genres_dfmed_1L_summ_cause_med_cause_df_causedata_1L_medz_causedata_1L", 
+# "genresmed_summ_cause_med_cause_df_causedata_1L_genres_dfmed_1L_summ_cause_med_cause_df_causedata_1L_medz_causedata_1L", 
+# "res_df_1L_cause_df_causedata_1L_medz_causedata_1L")
+gene_summ_df <- readd("summ_cause_med_cause_df_causedata_2L")
+res_df <- readd("res_df_2L_cause_df_causedata_2L_medz_causedata_2L")
+gene_df <- readd("genresmed_summ_cause_med_cause_df_causedata_2L_genres_dfmed_2L_summ_cause_med_cause_df_causedata_2L_medz_causedata_2L")
+loadd(godf)
+
 sig_term_snp <- readRDS("../data/eqtl_enrichment.RDS")
-df <- sig_term_snp$giant_height__vanderHarst_cad_learn_cause
+df <- sig_term_snp[["egg_bw__diagram_t2d_cause"]] 
+
+go_names <- distinct(godf,go_id,name_1006) %>% rename(GO_term=name_1006)
 ```
 
 
 ### Enriched pathways
-```{r,echo=F}
-df%>% 
-  select(go_id,GO_description=name_1006,logit_estimate=estimate,p_logit_BH=p_BH,snp) %>%
-  group_by(go_id,GO_description,logit_estimate,p_logit_BH) %>% summarise(n_snps=n_distinct(snp)) %>% 
-  distinct() %>% 
-  arrange(p_logit_BH) %>% 
+```{r}
+dplyr::filter(res_df,term!="(Intercept)",p_BH<0.05) %>% 
+  dplyr::select(-file) %>%  
+  inner_join(go_names) %>% 
+  dplyr::select(-term) %>% 
+  arrange(p_BH) %>% 
   DT::datatable()
 ```
 
-### SNPs in enriched pathways 
+### genes in enriched pathways 
 
 
-```{r,echo=F}
-df %>% 
-  select(snp,prob_Z1_conf,beta_hat_1,beta_hat_2,hgnc_symbol,go_id) %>%
-  group_by_at(vars(-go_id,-hgnc_symbol)) %>% summarise(genes=paste(unique(hgnc_symbol),collapse = ","),go_ids=paste(unique(go_id),collapse=",")) %>%  arrange(desc(prob_Z1_conf)) %>% DT::datatable()
+```{r}
+gene_df %>% DT::datatable()
 ```

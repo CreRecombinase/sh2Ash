@@ -1,9 +1,12 @@
 
-c_dir <- fs::path_expand("/project/compbio/cause_results/cause_grid3/")
+c_dir <- fs::path_expand(data_config$cause_dir)
 
-eqtl_dir <- fs::path_expand("/scratch/midway2/nwknoblauch/eqtl/")
+eqtl_dir <- fs::path_expand(data_config$eqtl_dir)
 all_files <- fs::path_file(fs::dir_ls(c_dir, glob = "*cause.RDS"))
-eqtl_files <- fs::path_file(fs::dir_ls(eqtl_dir, glob = "*fst"))
+
+
+all(file.exists(fs::path(c_dir, all_files)))
+eqtl_files <- fs::path_file(fs::dir_ls(eqtl_dir, glob = data_config$eqtl_ext))
 plan <- drake_plan(
     causedata = target(readRDS(fs::path(c_dir, all_files[x])),
                        transform = map(x = !!(seq_along(all_files)))),
@@ -25,7 +28,7 @@ plan <- drake_plan(
     snp_gene_df = finalize_snp_gene(anno_df, eqtl_df, godf),
     sgm = snp_gene_mat(snp_gene_df, all_snps),
     res_df = target(
-        enrich_fun(cause_df, medz, sgm, file = all_files[x]),
+        enrich_fun(cause_df = cause_df, mz = medz, snp_gene_mat = sgm, file = all_files[x]),
         transform = map(cause_df, medz, x = !!(seq_along(all_files)))
     ),
     trace = T,

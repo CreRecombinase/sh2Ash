@@ -1,0 +1,7 @@
+{
+    "cause_dir": "/project/compbio/cause_results/cause_grid3/",
+    "eqtl_dir": "/scratch/midway2/nwknoblauch/eqtl/",
+    "eqtl_ext":	"*fst",
+    "parallelism" : "clustermq",
+    "jobs" : 50
+}

@@ -1,0 +1,7 @@
+{
+    "cause_dir": "/home/nwknoblauch/Desktop/cause_dir/",
+    "eqtl_dir": "/run/media/nwknoblauch/Data/eQTL_SumStats/gtex_v7_feathers",
+    "eqtl_ext":	"*feather",
+    "parallelism": "future",
+    "jobs": 4
+}

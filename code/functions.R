@@ -149,8 +149,8 @@ finalize_snp_gene <- function(anno_df,eqtl_df,goids){
     dplyr::filter(go_id!="")
 }
 
-snp_gene_mat <- function(sg_df, all_snps,min_snps = 2L ){
-    snp_gene_mat <- dplyr::distinct(snp_gene_df, name, go_id) %>%
+snp_gene_mat <- function(sg_df, all_snps, min_snps = 2L ){
+    snp_gene_mat <- dplyr::distinct(sg_df, name, go_id) %>%
         dplyr::mutate(name = factor(name, levels = all_snps), go_id = factor(go_id))
     all_go <- levels(snp_gene_mat$go_id)
 
@@ -165,7 +165,7 @@ snp_gene_mat <- function(sg_df, all_snps,min_snps = 2L ){
 }
 
 
-calc_enrichment <- function(id, cause_df, sub_z, mz, snp_gene_mat){
+calc_enrichment <- function(id, cause_df, mz, snp_gene_mat){
 
     three_models <- function(prob_Z1_conf, is_pathway, go_id){
         dplyr::bind_rows(
@@ -174,6 +174,7 @@ calc_enrichment <- function(id, cause_df, sub_z, mz, snp_gene_mat){
                ) %>% dplyr::mutate(go_id = go_id)
     }
     cn <- colnames(snp_gene_mat)
+
     map_dfr(id, ~three_models(cause_df$prob_Z1_conf, as.integer(snp_gene_mat[, .x]), cn[.x])) %>%
         dplyr::group_by(method) %>%
         dplyr::mutate(p_BH = p.adjust(p.value, method = "BH"), p_Bon = p.adjust(p.value, method = "bonferroni")) %>%
@@ -185,31 +186,28 @@ calc_enrichment <- function(id, cause_df, sub_z, mz, snp_gene_mat){
 
 enrich_fun <- function(cause_df, mz, snp_gene_mat, file){
 
-#  sub_z <- magrittr::set_names(cause_df$prob_Z1_conf, cause_df$snp)
+
    cause_df <-   as_tibble(cause_df)
-    ##   ## dplyr::select(snp, prob_Z1_conf) %>%
-    ##   ## dplyr::inner_join(snp_gene_df, by = c("snp" = "name")) %>%
-    ##   ## dplyr::select(snp, gene, prob_Z1_conf, go_id, is_pathway) %>%
-    ##   ## dplyr::mutate(snp = factor(snp)) %>%
-    ##   ## dplyr::distinct(snp, prob_Z1_conf, go_id, is_pathway)
-    ##   if (nrow(tdf) > 0){
 
     num_cols <- ncol(snp_gene_mat)
-
+    sgm  <- snp_gene_mat[cause_df$snp, ]
     ret_df  <-
-            furrr::future_map_dfr(parallel::splitIndices(num_cols, 15), ~calc_enrichment(.x, cause_df, mz, snp_gene_mat),
-                                  options = furrr::future_options(
-                                                       globals = F,
-                                                       packages = c(
-                                                           "tidyr",
-                                                           "dplyr",
-                                                           "stats"
-                                                       ))) %>%
-            dplyr::mutate(file = file)
-        return(ret_df)
-
-    ## }
-    ## else{
-    ##     return(NULL)
-    ## }
+        furrr::future_map_dfr(
+                   parallel::splitIndices(num_cols, 15),
+                   ~calc_enrichment(
+    id = .x,
+    cause_df = cause_df,
+    mz = mz,
+    snp_gene_mat = sgm
+),
+options = furrr::future_options(
+                     globals = F,
+                     packages = c(
+                         "tidyr",
+                         "dplyr",
+                         "broom",
+                         "stats"
+                     ))) %>%
+    dplyr::mutate(file = file)
+    return(ret_df)
 }

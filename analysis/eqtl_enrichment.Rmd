@@ -1,0 +1,171 @@
+---
+title: "Gene Set Enrichment Analysis"
+date: "May 07, 2019"
+output: html_document
+---
+
+```{r echo=F,message=F,warning=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+# Changes from previous version
+
+
+1) There is now a column `method`, indicating whether a linear model or logistic regression was used
+2) For genes with multiple SNPs, the median value of `prob_Z1_conf` was used.
+
+
+# Birthweight T2D
+
+
+```{r,message=F,warning=F}
+library(tidyverse)
+library(drake)
+
+
+gene_summ_df <- readd("summ_cause_med_cause_df_causedata_1L")
+gr <- readd("genres_dfmed_1L_summ_cause_med_cause_df_causedata_1L_medz_causedata_1L")
+gene_df <- readd("genresmed_summ_cause_med_cause_df_causedata_1L_genres_dfmed_1L_summ_cause_med_cause_df_causedata_1L_medz_causedata_1L")
+loadd(godf)
+
+go_names <- distinct(godf,go_id,name_1006) %>% rename(GO_term=name_1006)
+```
+
+
+
+```{r}
+dplyr::filter(gr,term!="(Intercept)",p_BH<0.05) %>% 
+  dplyr::select(-file) %>%  
+  inner_join(go_names,by="go_id") %>% 
+  dplyr::select(-term) %>% 
+  arrange(p_BH) %>% 
+  DT::datatable(caption="Enriched Pathways(BW->T2D)")
+```
+
+### genes in enriched pathways 
+
+
+```{r}
+gene_df %>% DT::datatable(caption="Genes in Enriched Pathways(BW->T2D)")
+```
+
+# Height CAD
+
+
+
+
+```{r,message=F,warning=F}
+library(tidyverse)
+library(drake)
+
+
+gene_summ_df <- readd("summ_cause_med_cause_df_causedata_2L")
+gr <- readd("genres_dfmed_2L_summ_cause_med_cause_df_causedata_2L_medz_causedata_2L")
+gene_df <- readd("genresmed_summ_cause_med_cause_df_causedata_2L_genres_dfmed_2L_summ_cause_med_cause_df_causedata_2L_medz_causedata_2L")
+
+
+
+stopifnot(gr$file[1]=="giant_height__vanderHarst_cad_cause.RDS")
+```
+
+
+### Enriched pathways
+```{r}
+dplyr::filter(gr,term!="(Intercept)",p_BH<0.05) %>% 
+  dplyr::select(-file) %>%  
+  inner_join(go_names,by="go_id") %>% 
+  dplyr::select(-term) %>% 
+  arrange(p_BH) %>% 
+  DT::datatable(caption="Enriched Pathways(Height->CAD)")
+```
+
+### genes in enriched pathways 
+
+
+```{r}
+gene_df %>% DT::datatable(caption="Genes in Enriched Pathways(Height->CAD)")
+```
+
+
+
+
+# HDL CAD
+
+```{r,message=F,warning=F}
+library(tidyverse)
+library(drake)
+
+
+gene_summ_df <- readd("summ_cause_med_cause_df_causedata_3L")
+gr <- readd("genres_dfmed_3L_summ_cause_med_cause_df_causedata_3L_medz_causedata_3L")
+gene_df <- readd("genresmed_summ_cause_med_cause_df_causedata_3L_genres_dfmed_3L_summ_cause_med_cause_df_causedata_3L_medz_causedata_3L")
+
+
+
+stopifnot(gr$file[1]=="glg_hdl__vanderHarst_cad_cause.RDS")
+
+```
+
+
+
+### Enriched pathways
+```{r}
+dplyr::filter(gr,term!="(Intercept)",p_BH<0.05) %>% 
+  dplyr::select(-file) %>%  
+  inner_join(go_names,by="go_id") %>% 
+  dplyr::select(-term) %>% 
+  arrange(p_BH) %>% 
+  DT::datatable(caption="Enriched Pathways(HDL->CAD)")
+```
+
+### genes in enriched pathways 
+
+
+```{r}
+gene_df %>% DT::datatable(caption="Genes in Enriched Pathways(HDL->CAD)")
+```
+
+
+
+# LDL T2D
+
+```{r,message=F,warning=F}
+library(tidyverse)
+library(drake)
+
+
+gene_summ_df <- readd("summ_cause_med_cause_df_causedata_4L")
+gr <- readd("genres_dfmed_4L_summ_cause_med_cause_df_causedata_4L_medz_causedata_4L")
+gene_df <- readd("genresmed_summ_cause_med_cause_df_causedata_4L_genres_dfmed_4L_summ_cause_med_cause_df_causedata_4L_medz_causedata_4L")
+
+
+stopifnot(gr$file[1]=="glg_ldl__diagram_t2d_cause.RDS")
+
+
+```
+
+
+
+### Enriched pathways
+```{r}
+dplyr::filter(gr,term!="(Intercept)",p_BH<0.05) %>% 
+  dplyr::select(-file) %>%  
+  inner_join(go_names,by="go_id") %>% 
+  dplyr::select(-term) %>% 
+  arrange(p_BH) %>% 
+  DT::datatable(caption="Enriched Pathways(LDL->CAD)")
+  
+```
+
+### genes in enriched pathways 
+
+
+```{r}
+gene_df %>% DT::datatable(caption="Genes in Enriched Pathways(LDL->CAD)")
+```
+
+
+
+
+

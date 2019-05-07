@@ -148,21 +148,21 @@ stopifnot(gr$file[1]=="glg_ldl__diagram_t2d_cause.RDS")
 
 
 ### Enriched pathways
-```{r}
+```{r ldlt2dp}
 dplyr::filter(gr,term!="(Intercept)",p_BH<0.05) %>% 
   dplyr::select(-file) %>%  
   inner_join(go_names,by="go_id") %>% 
   dplyr::select(-term) %>% 
   arrange(p_BH) %>% 
-  DT::datatable(caption="Enriched Pathways(LDL->CAD)")
+  DT::datatable(caption="Enriched Pathways(LDL->T2D)")
   
 ```
 
 ### genes in enriched pathways 
 
 
-```{r}
-gene_df %>% DT::datatable(caption="Genes in Enriched Pathways(LDL->CAD)")
+```{r ldl_t2dg}
+gene_df %>% DT::datatable(caption="Genes in Enriched Pathways(LDL->T2D)")
 ```
 
 

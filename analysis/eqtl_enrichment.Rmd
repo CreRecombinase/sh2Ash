@@ -57,7 +57,7 @@ gene_df %>% DT::datatable(caption="Genes in Enriched Pathways(BW->T2D)")
 
 For the birthweight T2D results I permuted the `prob_Z1_conf` vector 100 times and repeated the analysis. Below I plot the original asymptotic $p$  and the permutation $p$ (i.e the proportion of permuted $p$ values less than the non-permuted $p$).  With the exception of two logistic $p$-values, they are remarkably consistent. 
 
-```{r}
+```{r permutationgen}
 perm_df <- map_df(1:100L,function(x){
   readd(glue::glue("genres_dfmedshuff_{x}L"),character_only = TRUE)
 })
@@ -71,9 +71,9 @@ p_res <- filter(my_df,term!="(Intercept)",go_id!="",!is.na(p.value_0)) %>%
     p_p=mean(p.value<p.value_0,na.rm=T)) %>% 
   ungroup()
 
-new_gr <- inner_join(gr,p_res)
+new_gr <- inner_join(gr,p_res) %>% rename(p_permutation=p_p)
 
-filter(new_gr,term!="(Intercept)") %>% ggplot(aes(x=p_p,y=p.value))+
+filter(new_gr,term!="(Intercept)") %>% ggplot(aes(x=p_permutation,y=p.value))+
   geom_point()+xlab("Permutation P")+ylab("Asymptotic P")+
   facet_wrap(~method)+
   geom_abline(slope=1,intercept=0)
@@ -81,12 +81,22 @@ filter(new_gr,term!="(Intercept)") %>% ggplot(aes(x=p_p,y=p.value))+
 ```
 
 ```{r}
-filter(new_gr,term!="(Intercept)") %>% ggplot(aes(x=p_p,y=p.value))+
+filter(new_gr,term!="(Intercept)") %>% ggplot(aes(x=p_permutation,y=p.value))+
   geom_point()+xlab("Permutation P")+ylab("Asymptotic P")+
   facet_wrap(~method)+
   geom_abline(slope=1,intercept=0)+scale_x_log10()+scale_y_log10()
 ```
 
+
+
+```{r}
+dplyr::filter(new_gr,term!="(Intercept)",p_BH<0.05) %>% 
+  dplyr::select(-file) %>%  
+  inner_join(go_names,by="go_id") %>% 
+  dplyr::select(-term) %>% 
+  arrange(p_BH) %>% 
+  DT::datatable(caption="(Permuted) Enriched Pathways(Height->CAD)")
+```
 
 
 # Height CAD

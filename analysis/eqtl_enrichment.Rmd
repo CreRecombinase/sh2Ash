@@ -27,6 +27,7 @@ library(drake)
 gene_summ_df <- readd("summ_cause_med_cause_df_causedata_1L")
 gr <- readd("genres_dfmed_1L_summ_cause_med_cause_df_causedata_1L_medz_causedata_1L")
 gene_df <- readd("genresmed_summ_cause_med_cause_df_causedata_1L_genres_dfmed_1L_summ_cause_med_cause_df_causedata_1L_medz_causedata_1L")
+shuff <- readd("genres_dfmedshuff_1L_summ_cause_med_cause_df_causedata_1L_medz_causedata_1L")
 loadd(godf)
 
 go_names <- distinct(godf,go_id,name_1006) %>% rename(GO_term=name_1006)
@@ -49,6 +50,44 @@ dplyr::filter(gr,term!="(Intercept)",p_BH<0.05) %>%
 ```{r}
 gene_df %>% DT::datatable(caption="Genes in Enriched Pathways(BW->T2D)")
 ```
+
+
+## Permuting cause results
+
+
+For the birthweight T2D results I permuted the `prob_Z1_conf` vector 100 times and repeated the analysis. Below I plot the original asymptotic $p$  and the permutation $p$ (i.e the proportion of permuted $p$ values less than the non-permuted $p$).  With the exception of two logistic $p$-values, they are remarkably consistent. 
+
+```{r}
+perm_df <- map_df(1:100L,function(x){
+  readd(glue::glue("genres_dfmedshuff_{x}L"),character_only = TRUE)
+})
+
+my_df <- rename_at(gr,vars(-term,-method,-go_id,-file),function(x){paste0(x,"_0")}) %>%
+  inner_join(perm_df)
+
+p_res <- filter(my_df,term!="(Intercept)",go_id!="",!is.na(p.value_0)) %>%
+  group_by(method,go_id) %>% 
+  summarize(
+    p_p=mean(p.value<p.value_0,na.rm=T)) %>% 
+  ungroup()
+
+new_gr <- inner_join(gr,p_res)
+
+filter(new_gr,term!="(Intercept)") %>% ggplot(aes(x=p_p,y=p.value))+
+  geom_point()+xlab("Permutation P")+ylab("Asymptotic P")+
+  facet_wrap(~method)+
+  geom_abline(slope=1,intercept=0)
+
+```
+
+```{r}
+filter(new_gr,term!="(Intercept)") %>% ggplot(aes(x=p_p,y=p.value))+
+  geom_point()+xlab("Permutation P")+ylab("Asymptotic P")+
+  facet_wrap(~method)+
+  geom_abline(slope=1,intercept=0)+scale_x_log10()+scale_y_log10()
+```
+
+
 
 # Height CAD
 
